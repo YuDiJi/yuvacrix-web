@@ -1,0 +1,156 @@
+/* globals.css — YuvaCrix Design Tokens for Tailwind v4 
+ * ========================================================
+ * All custom tokens registered as CSS custom properties.
+ * Tailwind v4 uses @theme instead of tailwind.config.js
+ */
+
+/* ── Google Fonts ──────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap");
+
+@import "tailwindcss";
+
+:root {
+  /* ── Backgrounds ───────────────────────────────────────── */
+  --color-bg-base: #edf0f5;
+  --color-bg-card: #ffffff;
+  --color-bg-tint: #eef4ff;
+  --color-bg-border: #e8ecf2;
+
+  /* ── Brand ─────────────────────────────────────────────── */
+  --color-navy: #0d1b3e;
+  --color-brand: #1b3fa0;
+  --color-sky: #4b8bff;
+  --color-violet: #7c3aed;
+
+  /* ── Cricket States ────────────────────────────────────── */
+  --color-live: #ff3b30;
+  --color-four: #22c55e;
+  --color-six: #f59e0b;
+
+  /* ── Text ──────────────────────────────────────────────── */
+  --color-text-primary: #0d1b3e;
+  --color-text-body: #374151;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-text-inverse: #ffffff;
+
+  /* ── Fonts ─────────────────────────────────────────────── */
+  --font-display: "Barlow Condensed", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  /* ── Border Radius ─────────────────────────────────────── */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 0.875rem;
+
+  /* ── Shadows ───────────────────────────────────────────── */
+  --shadow-card: 0 1px 4px rgba(13, 27, 62, 0.06);
+  --shadow-button: 0 4px 16px rgba(27, 63, 160, 0.3);
+  --shadow-hero: 0 8px 32px rgba(13, 27, 62, 0.18);
+  --shadow-live: 0 4px 12px rgba(255, 59, 48, 0.25);
+}
+
+/* ── Base Global Styles ────────────────────────────────────── */
+@layer base {
+  html {
+    font-family: var(--font-body);
+    color: var(--color-text-body);
+    background-color: var(--color-bg-base);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  /* Mobile-first: max-width container centred on desktop */
+  body {
+    /* max-width: 430px; */
+    /* margin-inline: auto; */
+    min-height: 100dvh;
+    background: var(--color-bg-base);
+    position: relative;
+  }
+
+  @media (min-width: 768px) {
+    body {
+      background: #c9d1df; /* Desktop chrome — darker to frame the app */
+    }
+
+    body {
+      box-shadow: 0 0 80px rgba(13, 27, 62, 0.2);
+    }
+  }
+}
+
+/* ── Utility Layer ─────────────────────────────────────────── */
+@layer utilities {
+  /* Typography helpers */
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .text-hero-score {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  .text-team-name {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+  }
+
+  .text-section-label {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+  }
+
+  .text-cta {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .text-body {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-body);
+  }
+
+  .text-meta {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-text-muted);
+  }
+
+  /* Fixture signature: 3px red left border — NEVER skip this */
+  .fixture-bar {
+    border-left: 3px solid var(--color-live);
+  }
+
+  /* Safe area padding for mobile notch/home bar */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+}
