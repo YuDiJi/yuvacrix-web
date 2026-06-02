@@ -19,8 +19,6 @@ const baseQueryWithInterceptor: BaseQueryFn<
 
   // Handle Unauthorized
   if (result.error?.status === 401) {
-    // console.log("Unauthorized");
-
     // Try refresh token
     const refreshResult = await baseQuery(
       {
@@ -36,7 +34,6 @@ const baseQueryWithInterceptor: BaseQueryFn<
       result = await baseQuery(args, api, extraOptions);
     } else {
       // Refresh failed
-      // console.log("Session expired");
 
       // Optional:
       api.dispatch(logout());

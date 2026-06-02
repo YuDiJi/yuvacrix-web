@@ -29,8 +29,6 @@ export default function SideDrawer({
 
   const user = useAppSelector(selectUser);
 
-  console.log(user);
-
   async function handleLogout() {
     try {
       await logoutApi().unwrap();
