@@ -87,7 +87,7 @@
 
 // Button.displayName = "Button";
 
-import { cn } from "@/src/lib/cn";
+import { cn } from "@/lib/cn";
 import { ButtonHTMLAttributes, forwardRef, ReactNode } from "react";
 
 type ButtonVariant =
@@ -204,7 +204,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         className={cn(
           // Base — Barlow Condensed uppercase (non-negotiable CTA rule)
-          "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
+          "font-family-name:(--font-display) font-bold uppercase tracking-[0.06em]",
           "inline-flex items-center justify-center",
           "transition-all duration-150 ease-out",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-sky)] focus-visible:ring-offset-2",

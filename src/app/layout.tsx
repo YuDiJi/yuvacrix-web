@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
+import ReduxProvider from "@/store/provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,7 +37,7 @@ export default function RootLayout({
           antialiased
         "
       >
-        {children}
+        <ReduxProvider>{children}</ReduxProvider>
       </body>
     </html>
   );
