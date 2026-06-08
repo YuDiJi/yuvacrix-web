@@ -12,6 +12,7 @@ import { drawerSections } from "./constant";
 import Link from "next/link";
 import { selectUser } from "@/store/auth/authSelectors";
 import Image from "next/image";
+import { useGetPlayerQuery } from "@/store/api/playerApi";
 
 export default function SideDrawer({
   open,
@@ -28,6 +29,8 @@ export default function SideDrawer({
   const router = useRouter();
 
   const user = useAppSelector(selectUser);
+
+  const { data, isLoading } = useGetPlayerQuery();
 
   async function handleLogout() {
     try {
@@ -102,21 +105,22 @@ export default function SideDrawer({
         <div className="px-4 pt-4">
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 px-4 py-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-sky) font-(family-name:--font-display) text-sm font-black text-white shadow-[0_2px_8px_rgba(75,139,255,0.35)]">
-              {user?.avatarUrl ? (
-                <Image
-                  src={user?.avatarUrl}
-                  alt={user.fullName ?? "User avatar"}
-                  fill
-                  className="object-cover"
-                  sizes="40px"
-                />
+              {data?.player?.profileImageUrl ? (
+                // <Image
+                //   src={data?.player?.profileImageUrl}
+                //   alt={data?.player?.fullName ?? "User Profile Pic"}
+                //   fill
+                //   className="object-cover"
+                //   sizes="40px"
+                // />
+                <p>{data?.player?.fullName?.charAt(0)?.toUpperCase()}</p>
               ) : (
-                (user?.fullName?.charAt(0)?.toUpperCase() ?? "Y")
+                (data?.player?.fullName?.charAt(0)?.toUpperCase() ?? "Y")
               )}
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-white">
-                {user?.fullName || "User Name"}
+                {data?.player?.fullName || "User"}
               </p>
 
               <p className="text-[11px] font-medium text-white/50">

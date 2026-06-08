@@ -1,8 +1,3 @@
-// src/app/(marketing)/login/_components/OtpInput.tsx
-// No "use client" needed — this is always rendered inside LoginForm which is
-// already a client component. It inherits the client boundary automatically,
-// and function props like onChange are perfectly valid within the same tree.
-
 import { useRef, type KeyboardEvent } from "react";
 import { cn } from "@/lib/cn";
 

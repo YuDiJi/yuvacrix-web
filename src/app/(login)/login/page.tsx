@@ -1,9 +1,8 @@
-// src/app/(marketing)/login/page.tsx
 // ─── Server Component — no "use client" ──────────────────────────────────────
 // Only the interactive children carry "use client", keeping this RSC boundary.
 
-import { CricketBackdrop } from "@/components/login/Cricketbackdrop";
-import { LoginForm } from "@/components/login/Loginform";
+import { CricketBackdrop } from "./Cricketbackdrop";
+import { LoginForm } from "./Loginform";
 
 export const metadata = {
   title: "Sign In — YuvaCrix",
