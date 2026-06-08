@@ -1,4 +1,3 @@
-// src/app/(marketing)/login/_components/CricketBackdrop.tsx
 // ─── Server Component — no "use client" ──────────────────────────────────────
 // Pure decorative markup, zero JS sent to the client.
 

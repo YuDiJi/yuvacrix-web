@@ -1,4 +1,3 @@
-// src/app/(marketing)/login/_components/LoginForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -52,13 +51,11 @@ export function LoginForm() {
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("phone");
-  // const [name, setName] = useState("");
   const [otp, setOtp] = useState("");
   const [shaking, setShaking] = useState(false);
   const [mobile, setMobile] = useState("");
 
   const countdown = useCountdown(30, step === "otp");
-  // const nameValid = name.trim().length >= 2;
   const phoneValid = /^\d{10}$/.test(mobile);
   const otpComplete = otp.replace(/\D/g, "").length === 6;
 
@@ -69,6 +66,7 @@ export function LoginForm() {
   const dispatch = useAppDispatch();
 
   const loading = sendOtpState.isLoading || verifyOtpState.isLoading;
+
   const errorMessage =
     (sendOtpState.error as any)?.data?.message ||
     (verifyOtpState.error as any)?.data?.message ||
@@ -111,11 +109,13 @@ export function LoginForm() {
         otp,
       }).unwrap();
 
-      const user = await getMe(undefined).unwrap();
+      dispatch(setCredentials(response));
 
-      dispatch(setCredentials(user));
-
-      router.push("/dashboard");
+      if (response.user.isProfileCompleted) {
+        router.push("/dashboard");
+      } else {
+        router.push("/on-boarding");
+      }
     } catch (error) {
       console.error(error);
 
@@ -162,35 +162,6 @@ export function LoginForm() {
           </p>
 
           <div className="mt-7 flex flex-1 flex-col gap-5">
-            {/* Name input */}
-            {/* <div>
-              <label className="text-section-label mb-2 block">Full Name</label>
-              <input
-                type="text"
-                placeholder="Rohit Kumar"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => {
-                  dispatch(clearError());
-                  setName(e.target.value);
-                }}
-                onKeyDown={(e) =>
-                  e.key === "Enter" &&
-                  nameValid &&
-                  phoneValid &&
-                  handleSendOtp()
-                }
-                className={cn(
-                  "h-14 w-full rounded-2xl border-2 px-4 outline-none transition-all duration-150",
-                  "font-(family-name:--font-display) text-xl font-bold tracking-[0.04em] text-(--color-text-primary)",
-                  "placeholder:font-medium placeholder:tracking-normal placeholder:text-(--color-text-muted) placeholder:text-base",
-                  name
-                    ? "border-(--color-sky) focus:border-(--color-sky) focus:shadow-[0_0_0_3px_rgba(75,139,255,0.12)]"
-                    : "border-(--color-bg-border) focus:border-(--color-sky) focus:shadow-[0_0_0_3px_rgba(75,139,255,0.12)]",
-                )}
-              />
-            </div> */}
-
             {/* Phone input */}
             <div>
               <label className="text-section-label mb-2 block">

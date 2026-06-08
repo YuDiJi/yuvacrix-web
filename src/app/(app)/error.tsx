@@ -17,7 +17,7 @@ export default function Error({ reset }: Props) {
       </h1>
 
       <p className="mt-3 max-w-sm text-sm text-(--color-text-muted)">
-        We couldn't load this page. Please try again.
+        We couldn&apos;t load this page. Please try again.
       </p>
 
       <button

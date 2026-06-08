@@ -1,4 +1,4 @@
-import { User } from "@/types/user";
+import { MeResponse, User } from "@/types/user";
 import { baseApi } from "./baseApi";
 
 export const authApi = baseApi.injectEndpoints({
@@ -16,7 +16,7 @@ export const authApi = baseApi.injectEndpoints({
     verifyOtp: builder.mutation<
       {
         token: string;
-        user: any;
+        user: User;
       },
       {
         mobile: string;
@@ -34,9 +34,9 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ["Auth"],
     }),
 
-    getMe: builder.query<User, void>({
+    getMe: builder.query<MeResponse, void>({
       query: () => ({
-        url: "/auth/me",
+        url: "/users/me",
         method: "GET",
       }),
       providesTags: ["Auth"],
@@ -44,7 +44,7 @@ export const authApi = baseApi.injectEndpoints({
 
     updateProfile: builder.mutation({
       query: (body) => ({
-        url: "/profile",
+        url: "/users/me",
         method: "PATCH",
         body,
       }),
@@ -64,6 +64,7 @@ export const authApi = baseApi.injectEndpoints({
 export const {
   useSendOtpMutation,
   useVerifyOtpMutation,
+  useUpdateProfileMutation,
   useLazyGetMeQuery,
   useGetMeQuery,
   useLogoutMutation,

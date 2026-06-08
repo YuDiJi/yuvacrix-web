@@ -45,7 +45,7 @@ type DrawerSection = {
 
 export const bottomNav = [
   { label: "Home", icon: Home, href: "/dashboard" },
-  { label: "My Cricket", icon: Trophy, href: "/matches", hasLive: true },
+  { label: "My Cricket", icon: Trophy, href: "/my-cricket", hasLive: true },
   { label: "More", icon: MoreHorizontal, href: null },
 ] as const;
 
@@ -61,9 +61,17 @@ export const drawerSections: DrawerSection[] = [
         badge: "PRO",
         badgeColor: "violet",
       },
-      { label: "My Cricket", icon: ShieldCheck, href: "/myCricket" },
-      { label: "Start a Match", icon: PlayCircle, href: "/startMatch" },
-      { label: "Add a Tournament/Series", icon: Trophy, href: "/tournaments" },
+      { label: "My Cricket", icon: ShieldCheck, href: "/my-cricket" },
+      {
+        label: "Start a Match",
+        icon: PlayCircle,
+        href: "/start-match",
+      },
+      {
+        label: "Add a Tournament/Series",
+        icon: Trophy,
+        href: "/add-tournaments-series",
+      },
       // {
       //   label: "Live Scores",
       //   icon: Zap,
