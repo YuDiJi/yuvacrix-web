@@ -164,9 +164,9 @@ export function OnboardingProfileForm() {
         gender,
         dateOfBirth: dob,
         createdSource: "USER_ONBOARDING",
-        createdByActorId: user.user._id,
+        createdByActorId: user.user.id,
         createdByActorType: "USER",
-        userId: user.user._id,
+        userId: user.user.id,
         // claimMobile: user.user.mobile,
       }).unwrap();
       router.push("/on-boarding/profile-picture");

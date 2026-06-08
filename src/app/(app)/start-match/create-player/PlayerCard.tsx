@@ -5,7 +5,7 @@ import React from "react";
 const PlayerCard = ({ player }: { player: Player }) => {
   return (
     <label
-      key={player.id}
+      key={player?.id}
       className="bg-white p-3 rounded-xl shadow-sm flex items-center justify-between cursor-pointer"
     >
       <div className="flex items-center gap-3">
@@ -29,13 +29,13 @@ const PlayerCard = ({ player }: { player: Player }) => {
             className="font-(family-name:--font-display) text-base font-black text-white"
             style={{ letterSpacing: "0.04em" }}
           >
-            {player.fullName.charAt(0).toUpperCase()}
+            {player?.fullName.charAt(0).toUpperCase()}
           </span>
           {/* // )} */}
         </div>
         <div>
           <h4 className="font-bold text-slate-900 text-sm">
-            {player.fullName}
+            {player?.fullName}
           </h4>
           {/* <p className="text-[11px] text-slate-500">
                   {player.role} {player.hand && `• ${player.hand}`}{" "}
