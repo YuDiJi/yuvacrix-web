@@ -8,11 +8,21 @@ import { Button } from "@/components/common/Button";
 import { cn } from "@/lib/cn";
 import Image from "next/image";
 import { ImageUploader } from "@/components/common/ImageUploader";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAppDispatch } from "@/store/hooks";
+import {
+  setActiveTeam,
+  setTeamA,
+  setTeamB,
+} from "@/store/startMatch/startMatchSlice";
 
 export default function CreateTeamPage() {
   const { setHeader } = useHeader();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const searchParams = useSearchParams();
+  const teamType = searchParams.get("team");
 
   const [createTeam, { isLoading, isError, isSuccess }] =
     useCreateTeamMutation();
@@ -50,9 +60,16 @@ export default function CreateTeamPage() {
 
       console.log(response);
 
+      if (teamType === "A") {
+        dispatch(setTeamA(response));
+        dispatch(setActiveTeam("A"));
+      } else {
+        dispatch(setTeamB(response));
+        dispatch(setActiveTeam("B"));
+      }
+
       router.push("/start-match/create-player?team=" + response.name);
     } catch (err: any) {
-      // setError("Failed to save team. Please try again.");
       const message =
         err?.data?.message ||
         err?.error ||

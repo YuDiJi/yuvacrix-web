@@ -1,6 +1,11 @@
 import { CreatePlayerDto, GetPlayerResponse } from "@/types/player";
 import { baseApi } from "./baseApi";
-import { CreateTeamDto, GetTeamResponse } from "@/types/team";
+import {
+  AddTeamMemberDto,
+  CreateTeamDto,
+  Team,
+  TeamMember,
+} from "@/types/team";
 
 export const teamApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -11,20 +16,76 @@ export const teamApi = baseApi.injectEndpoints({
         body,
       }),
     }),
-    // updatePlayer: builder.mutation({
-    //   query: (body: Partial<CreatePlayerDto>) => ({
-    //     url: "/players/me",
-    //     method: "PATCH",
-    //     body,
-    //   }),
-    //   invalidatesTags: ["Auth", "Player"],
-    // }),
-    getOwnedTeam: builder.query<GetTeamResponse, void>({
+
+    getOwnedTeam: builder.query<Team[], void>({
       query: () => ({
         url: "/teams/me/owned",
       }),
+      providesTags: ["Team"],
     }),
+
+    getTeamDetail: builder.query<Team, { teamId: string }>({
+      query: ({ teamId }) => ({
+        url: `/teams/${teamId}`,
+      }),
+      providesTags: ["Team"],
+    }),
+
+    getTeamMembers: builder.query<TeamMember[], { teamId: string }>({
+      query: ({ teamId }: { teamId: string }) => ({
+        url: `/teams/${teamId}/members`,
+      }),
+      providesTags: ["Members"],
+    }),
+
+    addTeamMember: builder.mutation<
+      void,
+      { teamId: string; body: AddTeamMemberDto }
+    >({
+      query: ({ teamId, body }) => ({
+        url: `/teams/${teamId}/members`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Members", "Team"],
+    }),
+
+    removeTeamMember: builder.mutation<
+      void,
+      { teamId: string; playerId: string }
+    >({
+      query: ({ teamId, playerId }) => ({
+        url: `/teams/${teamId}/members/${playerId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Members", "Team"],
+    }),
+
+    // setTeamMemberRole: builder.mutation<
+    //   void,
+    //   {
+    //     teamId: string;
+    //     playerId: string;
+    //     body: {
+    //       role: "CAPTAIN" | "WICKET_KEEPER";
+    //     };
+    //   }
+    // >({
+    //   query: ({ teamId, playerId, body }) => ({
+    //     url: `/teams/${teamId}/members/${playerId}/roles`,
+    //     method: "PATCH",
+    //     body,
+    //   }),
+    //   invalidatesTags: ["Members", "Team"],
+    // }),
   }),
 });
 
-export const { useCreateTeamMutation, useGetOwnedTeamQuery } = teamApi;
+export const {
+  useCreateTeamMutation,
+  useGetOwnedTeamQuery,
+  useGetTeamMembersQuery,
+  useAddTeamMemberMutation,
+  useRemoveTeamMemberMutation,
+  useGetTeamDetailQuery,
+} = teamApi;

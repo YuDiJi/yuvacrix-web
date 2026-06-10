@@ -13,6 +13,7 @@ import Link from "next/link";
 import { selectUser } from "@/store/auth/authSelectors";
 import Image from "next/image";
 import { useGetPlayerQuery } from "@/store/api/playerApi";
+import { resetMatch } from "@/store/startMatch/startMatchSlice";
 
 export default function SideDrawer({
   open,
@@ -170,6 +171,11 @@ export default function SideDrawer({
                   <Link
                     key={item.label}
                     href={item.href}
+                    onClick={() => {
+                      if (item.href === "/start-match") {
+                        dispatch(resetMatch());
+                      }
+                    }}
                     className={cn(
                       "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 active:scale-[0.98]",
                       active
