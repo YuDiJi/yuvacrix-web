@@ -9,7 +9,7 @@ export const playerApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Auth"],
+      invalidatesTags: ["Auth", "Player"],
     }),
 
     updatePlayer: builder.mutation({
