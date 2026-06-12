@@ -2,8 +2,11 @@ import { cn } from "@/lib/cn";
 import { ArrowLeft, Bell, Menu } from "lucide-react";
 import LogoMark from "./LogoMark";
 import { isBottomNavRoute } from "./routeHelpers";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useHeader } from "@/providers/HeaderProvider";
+import { routeConfig } from "./config/routeConfig";
+import { useAppSelector } from "@/store/hooks";
+import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 
 function Header({
   onMenuClick,
@@ -15,13 +18,28 @@ function Header({
   const router = useRouter();
   const showBottomNav = isBottomNavRoute(pathname);
 
-  const { header } = useHeader();
+  const teamA = useAppSelector(selectTeamA);
+  const teamB = useAppSelector(selectTeamB);
 
-  const pageTitle = header.title;
-  const showBackButton = header.showBackButton ?? false;
-  const showNotifications = header.showNotifications;
+  const { header } = useHeader();
+  const searchParams = useSearchParams();
+
+  type RoutePath = keyof typeof routeConfig;
+
+  const config =
+    pathname in routeConfig ? routeConfig[pathname as RoutePath] : undefined;
+
+  const pageTitle =
+    config?.getTitle?.({ searchParams, teamA, teamB }) ?? config?.title ?? "";
 
   const isHome = pathname === "/dashboard";
+  const rootRoutes = ["/dashboard", "/my-cricket"];
+
+  const showBackButton = config?.showBackButton ?? false;
+  // const showNotifications = header.showNotifications;
+
+  console.log(header);
+  console.log(teamA);
 
   return (
     <header className="safe-top relative z-30 flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-(--color-navy) px-4">

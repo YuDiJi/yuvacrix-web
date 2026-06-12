@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useHeader } from "@/providers/HeaderProvider";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/common/Button";
 import {
@@ -22,7 +21,6 @@ import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 type Step = "SEARCH_MOBILE" | "CREATE_PLAYER";
 
 export default function CreatePlayerPage() {
-  const { setHeader } = useHeader();
   const router = useRouter();
 
   const activeTeam = useAppSelector((state) => state.startMatch.activeTeam);
@@ -31,11 +29,6 @@ export default function CreatePlayerPage() {
   const teamB = useAppSelector(selectTeamB);
 
   const currentTeam = activeTeam === "A" ? teamA : teamB;
-
-  console.log(currentTeam);
-  console.log(activeTeam);
-  console.log(teamA);
-  console.log(teamB);
 
   const [step, setStep] = useState<Step>("SEARCH_MOBILE");
   const [players, setPlayers] = useState<Player[]>([]);
@@ -50,14 +43,6 @@ export default function CreatePlayerPage() {
     useCreatePlayerMutation();
   const [addTeamMember, { isLoading: isAddingTeam }] =
     useAddTeamMemberMutation();
-
-  useEffect(() => {
-    setHeader({
-      title: "Add Player",
-      showBackButton: true,
-      showNotifications: false,
-    });
-  }, [setHeader]);
 
   // ── Reset to mobile search ────────────────────────────────────────────────
   function resetFlow() {

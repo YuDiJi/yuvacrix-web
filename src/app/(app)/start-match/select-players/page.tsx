@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useHeader } from "@/providers/HeaderProvider";
 import {
   Search,
@@ -26,6 +26,7 @@ import {
   setTeamARoles,
   setTeamBRoles,
 } from "@/store/startMatch/startMatchSlice";
+import { PlayerList } from "@/components/Players/Playerlist";
 
 // ─── Inline delete confirmation (replaces window.confirm) ─────────────────────
 
@@ -87,14 +88,6 @@ export default function SelectPlayersPage() {
   const [confirmError, setConfirmError] = useState("");
 
   const dispatch = useAppDispatch();
-
-  useEffect(() => {
-    setHeader({
-      title: "Team Setup",
-      showBackButton: true,
-      showNotifications: false,
-    });
-  }, [setHeader]);
 
   const {
     data: allPlayers,
@@ -348,7 +341,6 @@ export default function SelectPlayersPage() {
                     isThisRemoving && "opacity-50",
                   )}
                 >
-                  {/* Avatar */}
                   <div
                     className={cn(
                       "h-12 w-12 shrink-0 overflow-hidden rounded-full border-2",
@@ -377,7 +369,6 @@ export default function SelectPlayersPage() {
                     )}
                   </div>
 
-                  {/* Name + assigned role label */}
                   <div className="flex-1 min-w-0">
                     <p className="truncate text-sm font-bold text-(--color-text-primary)">
                       {player.fullName}
@@ -385,15 +376,14 @@ export default function SelectPlayersPage() {
                     {(isCaptain || isKeeper) && (
                       <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-(--color-brand)">
                         {isCaptain && isKeeper
-                          ? "Captain · WK-Batter"
+                          ? "Captain · Wicket-Keeper"
                           : isCaptain
                             ? "Captain"
-                            : "WK-Batter"}
+                            : "Wicket-Keeper"}
                       </p>
                     )}
                   </div>
 
-                  {/* Captain (C) */}
                   <button
                     onClick={() =>
                       setCaptainId(isCaptain ? null : player.playerId)
@@ -420,7 +410,6 @@ export default function SelectPlayersPage() {
                     </span>
                   </button>
 
-                  {/* Wicketkeeper (WK) */}
                   <button
                     onClick={() =>
                       setKeeperId(isKeeper ? null : player.playerId)
@@ -454,7 +443,6 @@ export default function SelectPlayersPage() {
                     </svg>
                   </button>
 
-                  {/* Delete */}
                   <button
                     onClick={() =>
                       setConfirmRemoveId(isConfirming ? null : player.playerId)
@@ -476,7 +464,6 @@ export default function SelectPlayersPage() {
                   </button>
                 </div>
 
-                {/* Inline delete confirmation — no browser dialog */}
                 {isConfirming && (
                   <DeleteConfirmRow
                     onConfirm={() => handleRemove(player.playerId)}
@@ -503,7 +490,7 @@ export default function SelectPlayersPage() {
       </div>
 
       {/* Footer */}
-      <div className="safe-bottom fixed bottom-0 w-full shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3">
+      <div className="safe-bottom fixed bottom-0 md:max-w-[430px] w-full shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3">
         {/* Role-save error */}
         {confirmError && (
           <div className="mb-2.5 flex items-center gap-2 rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 px-3 py-2">

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useGetOwnedTeamQuery } from "@/store/api/teamApi";
 import Image from "next/image";
 import { cn } from "@/lib/cn";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   setActiveTeam,
@@ -25,14 +25,6 @@ export default function SelectTeamPage() {
 
   const teamA = useAppSelector(selectTeamA);
   const teamB = useAppSelector(selectTeamB);
-
-  useEffect(() => {
-    setHeader({
-      title: `Select Team ${teamType?.toUpperCase() || ""}`,
-      showBackButton: true,
-      showNotifications: false,
-    });
-  }, [setHeader]);
 
   const { data: teams, isSuccess, isError } = useGetOwnedTeamQuery();
 
@@ -224,7 +216,7 @@ export default function SelectTeamPage() {
       <button
         onClick={() => router.push("/start-match/create-team?team=" + teamType)}
         className={cn(
-          "fixed bottom-20 right-4 z-20",
+          "fixed bottom-10 right-4 md:right-[38%]  z-20",
           "flex h-14 w-14 items-center justify-center rounded-2xl",
           "bg-(--color-brand) text-white",
           "shadow-[0_8px_24px_rgba(27,63,160,0.40)]",
