@@ -49,8 +49,6 @@ export default function CreateTeamPage() {
         sportType: "CRICKET",
       }).unwrap();
 
-      console.log(response);
-
       if (teamType === "A") {
         dispatch(setTeamA(response));
         dispatch(setActiveTeam("A"));
