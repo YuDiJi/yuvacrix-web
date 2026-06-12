@@ -18,8 +18,7 @@ export interface PlayerListItem {
   playerId: string;
   fullName: string;
   profileImageUrl?: string | null;
-  /** Optional — displayed as subtitle when present */
-  role?: string;
+  roles?: string[];
 }
 
 /** All state + callbacks the parent must provide */
@@ -34,17 +33,12 @@ export interface PlayerListProps {
   onKeeperChange: (playerId: string | null) => void;
 
   // ── Playing selection (lineup modes only) ──────────────────────────────
-  /** IDs of players who ARE playing. Undefined = not in lineup mode. */
   selectedPlayerIds?: Set<string>;
   onSelectionChange?: (playerId: string, selected: boolean) => void;
 
   // ── Delete (team-management only) ──────────────────────────────────────
   onDelete?: (playerId: string) => Promise<void>;
-
-  // ── Optional search ────────────────────────────────────────────────────
   showSearch?: boolean;
-
-  // ── Optional empty state ───────────────────────────────────────────────
   emptyMessage?: string;
 }
 

@@ -38,9 +38,6 @@ function Header({
   const showBackButton = config?.showBackButton ?? false;
   // const showNotifications = header.showNotifications;
 
-  console.log(header);
-  console.log(teamA);
-
   return (
     <header className="safe-top relative z-30 flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-(--color-navy) px-4">
       {/* Hamburger */}

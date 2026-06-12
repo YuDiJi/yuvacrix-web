@@ -318,18 +318,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
 
       setLineupSheetOpen(false);
 
-      if (mode === "FLEXIBLE") {
-        router.push(`/start-match/lineup?matchId=${matchId}&mode=FLEXIBLE`);
-        return;
-      }
-
-      // router.push(
-      //   `/start-match/fixed-lineup?matchId=${matchId}&mode=FIXED`,
-      // );
-
-      router.push(
-        `/start-match/lineup?matchId=${matchId}&teamAId=${match.match.teamAId}&teamBId=${match.match.teamBId}&mode=${mode}`,
-      );
+      router.push(`/start-match/line-up?matchId=${matchId}&mode=${mode}`);
     } catch (err: any) {
       setLineupError(
         err?.data?.message ?? "Failed to create match. Please try again.",

@@ -119,38 +119,6 @@ export function PlayerCard({
           isMuted && "opacity-50",
         )}
       >
-        {/* ── Playing toggle checkbox (lineup modes only) ──────────────── */}
-        {isLineupMode && onSelectionToggle && (
-          <button
-            onClick={onSelectionToggle}
-            className={cn(
-              "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 active:scale-90",
-              isSelected
-                ? "border-(--color-brand) bg-(--color-brand)"
-                : "border-(--color-bg-border) bg-(--color-bg-base) hover:border-(--color-sky)/50",
-            )}
-            aria-label={isSelected ? "Deselect player" : "Select player"}
-          >
-            {isSelected && (
-              <svg
-                width="8"
-                height="8"
-                viewBox="0 0 8 8"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M1.5 4L3 5.5L6.5 2"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            )}
-          </button>
-        )}
-
         {/* ── Avatar ───────────────────────────────────────────────────── */}
         <div
           className={cn(
@@ -195,10 +163,6 @@ export function PlayerCard({
                   : "Wicket-Keeper"}
             </p>
           )}
-          {/* Optional role from data */}
-          {!isCaptain && !isKeeper && player.role && (
-            <p className="mt-0.5 text-meta truncate">{player.role}</p>
-          )}
         </div>
 
         {/* ── Captain (C) ──────────────────────────────────────────────── */}
@@ -242,6 +206,26 @@ export function PlayerCard({
         >
           <WKIcon active={isKeeper && isSelected} />
         </button>
+
+        {/* ── Playing toggle checkbox (lineup modes only) ──────────────── */}
+        {isLineupMode && onSelectionToggle && (
+          <button
+            type="button"
+            onClick={onSelectionToggle}
+            className={cn(
+              "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-200",
+              isSelected ? "bg-(--color-brand)" : "bg-(--color-bg-border)",
+            )}
+            aria-label={isSelected ? "Mark as not playing" : "Mark as playing"}
+          >
+            <span
+              className={cn(
+                "inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200",
+                isSelected ? "translate-x-6" : "translate-x-1",
+              )}
+            />
+          </button>
+        )}
 
         {/* ── Delete (team-management only) ────────────────────────────── */}
         {isTeamMgmt && (

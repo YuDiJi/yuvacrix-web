@@ -26,11 +26,7 @@ export function PlayerList({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return players;
-    return players.filter(
-      (p) =>
-        p.fullName.toLowerCase().includes(q) ||
-        p.role?.toLowerCase().includes(q),
-    );
+    return players.filter((p) => p.fullName.toLowerCase().includes(q));
   }, [players, query]);
 
   return (
@@ -49,7 +45,7 @@ export function PlayerList({
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name or role..."
+            placeholder="Search players..."
             className="flex-1 bg-transparent text-sm font-medium text-(--color-text-primary) outline-none placeholder:text-(--color-text-muted)"
           />
         </div>

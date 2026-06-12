@@ -52,6 +52,10 @@ export const routeConfig: Record<string, RouteConfig> = {
       `CREATE TEAM ${searchParams.get("team") ?? ""}`,
   },
 
+  "/start-match/line-up": {
+    title: "SELECT TEAM LINE-UP",
+    showBackButton: true,
+  },
   "/start-match/toss": {
     title: "TOSS",
     showBackButton: true,
