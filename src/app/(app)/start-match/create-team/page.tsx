@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useHeader } from "@/providers/HeaderProvider";
-import { Camera, Users, MapPin } from "lucide-react";
+import { Users, MapPin } from "lucide-react";
 import { useCreateTeamMutation } from "@/store/api/teamApi";
 import { Button } from "@/components/common/Button";
 import { cn } from "@/lib/cn";
@@ -17,7 +17,6 @@ import {
 } from "@/store/startMatch/startMatchSlice";
 
 export default function CreateTeamPage() {
-  const { setHeader } = useHeader();
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -34,14 +33,6 @@ export default function CreateTeamPage() {
   const [error, setError] = useState("");
 
   const isValid = name.trim().length >= 2 && city.trim().length >= 2;
-
-  useEffect(() => {
-    setHeader({
-      title: "Create Team",
-      showBackButton: true,
-      showNotifications: false,
-    });
-  }, [setHeader]);
 
   async function createTeamHandler() {
     if (!isValid) {
