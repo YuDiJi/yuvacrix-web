@@ -13,3 +13,7 @@ export const selectTeamBCaptain = (state: RootState) =>
   state.startMatch.teamBCaptain;
 export const selectTeamBKeeper = (state: RootState) =>
   state.startMatch.teamBKeeper;
+
+export const selectMatchId = (state: RootState) => state.startMatch.matchId;
+export const selectLineUpMode = (state: RootState) =>
+  state.startMatch.lineUpMode;

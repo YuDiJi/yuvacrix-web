@@ -9,6 +9,12 @@ import { useAppSelector } from "@/store/hooks";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 import { useHeader } from "@/providers/HeaderProvider";
 
+import {
+  useSubmitTossMutation,
+  useStartMatchMutation,
+} from "@/store/api/matchApi";
+import { Button } from "@/components/common/Button";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type CoinFace = "heads" | "tails";
@@ -283,7 +289,7 @@ function TeamAvatar({
 
   if (logoUrl) {
     return (
-      <div className={cn("rounded-full overflow-hidden flex-shrink-0", dim)}>
+      <div className={cn("rounded-full overflow-hidden shrink-0", dim)}>
         <Image
           src={logoUrl}
           alt={name}
@@ -306,13 +312,13 @@ function TeamAvatar({
   return (
     <div
       className={cn(
-        "rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--color-navy)]",
+        "rounded-full flex items-center justify-center shrink-0 bg-(--color-navy)",
         dim,
       )}
     >
       <span
         className={cn(
-          "font-[family-name:var(--font-display)] font-black text-white",
+          "font-(family-name:--font-display) font-black text-white",
           textSize,
         )}
       >
@@ -341,15 +347,15 @@ function TeamWinnerCard({
       className={cn(
         "flex-1 flex flex-col items-center gap-3 py-5 px-3 rounded-2xl border-2 transition-all duration-200 active:scale-[0.97]",
         selected
-          ? "border-[var(--color-brand)] bg-[var(--color-bg-tint)] shadow-[0_4px_16px_rgba(27,63,160,0.14)]"
-          : "border-[var(--color-bg-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-brand)]/30",
+          ? "border-(--color-brand) bg-(--color-bg-tint) shadow-[0_4px_16px_rgba(27,63,160,0.14)]"
+          : "border-(--color-bg-border) bg-(--color-bg-card) hover:border-(--color-brand)/30",
       )}
     >
       <TeamAvatar name={name} logoUrl={logoUrl} size="lg" />
       <span
         className={cn(
-          "font-[family-name:var(--font-display)] font-black uppercase tracking-[0.04em] text-base transition-colors",
-          selected ? "text-[var(--color-brand)]" : "text-[var(--color-navy)]",
+          "font-(family-name:--font-display) font-black uppercase tracking-[0.04em] text-base transition-colors",
+          selected ? "text-(--color-brand)" : "text-(--color-navy)",
         )}
       >
         {name}
@@ -360,8 +366,8 @@ function TeamWinnerCard({
         className={cn(
           "w-4 h-4 rounded-full border-2 transition-all duration-200",
           selected
-            ? "border-[var(--color-brand)] bg-[var(--color-brand)]"
-            : "border-[var(--color-bg-border)]",
+            ? "border-(--color-brand) bg-(--color-brand)"
+            : "border-(--color-bg-border)",
         )}
       >
         {selected && (
@@ -393,8 +399,8 @@ function DecisionCard({
       className={cn(
         "flex-1 flex items-center justify-center gap-2.5 py-4 px-3 rounded-2xl border-2 transition-all duration-200 active:scale-[0.97]",
         selected
-          ? "border-[var(--color-brand)] bg-[var(--color-bg-tint)] shadow-[0_4px_16px_rgba(27,63,160,0.14)]"
-          : "border-[var(--color-bg-border)] bg-[var(--color-bg-card)] hover:border-[var(--color-brand)]/30",
+          ? "border-(--color-brand) bg-(--color-bg-tint) shadow-[0_4px_16px_rgba(27,63,160,0.14)]"
+          : "border-(--color-bg-border) bg-(--color-bg-card) hover:border-(--color-brand)/30",
       )}
     >
       {/* Icon */}
@@ -404,7 +410,7 @@ function DecisionCard({
           height="20"
           viewBox="0 0 24 24"
           fill="none"
-          className="flex-shrink-0"
+          className="shrink-0"
         >
           <path
             d="M4 20L14 10M14 10L17 7C18.5 5.5 20.5 5.5 21 7C21.5 8.5 20 10 18.5 10L14 10Z"
@@ -430,7 +436,7 @@ function DecisionCard({
           height="20"
           viewBox="0 0 24 24"
           fill="none"
-          className="flex-shrink-0"
+          className="shrink-0"
         >
           <circle
             cx="12"
@@ -460,10 +466,8 @@ function DecisionCard({
 
       <span
         className={cn(
-          "font-[family-name:var(--font-display)] font-black uppercase tracking-[0.06em] text-sm transition-colors",
-          selected
-            ? "text-[var(--color-brand)]"
-            : "text-[var(--color-text-secondary)]",
+          "font-(family-name:--font-display) font-black uppercase tracking-[0.06em] text-sm transition-colors",
+          selected ? "text-(--color-brand)" : "text-(--color-text-secondary)",
         )}
       >
         {isBat ? "Bat First" : "Bowl First"}
@@ -481,11 +485,17 @@ export default function TossClient() {
   const teamA = useAppSelector(selectTeamA);
   const teamB = useAppSelector(selectTeamB);
 
+  const matchId = useAppSelector((state) => state.startMatch.matchId);
+
+  const [submitToss, { isLoading: isSubmittingToss }] = useSubmitTossMutation();
+  const [startMatch, { isLoading: isStartingMatch }] = useStartMatchMutation();
+
   const [flipState, setFlipState] = useState<FlipState>("idle");
   const [coinFace, setCoinFace] = useState<CoinFace>("heads");
   const [flipCount, setFlipCount] = useState(0); // tracks number of flips for animation
   const [tossWinner, setTossWinner] = useState<"A" | "B" | null>(null);
   const [decision, setDecision] = useState<Decision>(null);
+  const isLoading = isSubmittingToss || isStartingMatch;
 
   const coinRef = useRef<HTMLDivElement>(null);
   const flipTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -527,10 +537,33 @@ export default function TossClient() {
 
   const canContinue = tossWinner !== null && decision !== null;
 
-  const handleContinue = () => {
-    if (!canContinue) return;
-    // TODO: dispatch toss result to redux store before navigating
-    router.push("/start-match/playing-xi");
+  // const handleContinue = () => {
+  //   if (!canContinue) return;
+  //   router.push("/start-match/playing-xi");
+  // };
+
+  const handleContinue = async () => {
+    if (!canContinue || !matchId || !teamA || !teamB) {
+      return;
+    }
+
+    try {
+      const wonByTeamId = tossWinner === "A" ? teamA.id : teamB.id;
+
+      await submitToss({
+        matchId,
+        wonByTeamId,
+        decision: decision!,
+      }).unwrap();
+
+      await startMatch({
+        matchId,
+      }).unwrap();
+
+      router.push("/start-match/start-innings");
+    } catch (error) {
+      console.error("Failed to submit toss", error);
+    }
   };
 
   if (!teamA || !teamB) return null;
@@ -567,7 +600,7 @@ export default function TossClient() {
         }
       `}</style>
 
-      <div className="flex min-h-full flex-col bg-[var(--color-bg-base)]">
+      <div className="flex min-h-full flex-col bg-(--color-bg-base)">
         <div className="flex flex-1 flex-col gap-6 px-4 pt-8 pb-6">
           {/* ── Coin ───────────────────────────────────────────── */}
           <div className="flex flex-col items-center gap-5">
@@ -591,7 +624,7 @@ export default function TossClient() {
 
             {/* Flip result label */}
             {flipState === "done" && (
-              <p className="fade-slide-up font-[family-name:var(--font-display)] font-black uppercase tracking-widest text-xs text-[var(--color-text-muted)]">
+              <p className="fade-slide-up font-(family-name:--font-display) font-black uppercase tracking-widest text-xs text-(--color-text-muted)">
                 {coinFace === "heads" ? "Heads!" : "Tails!"}
               </p>
             )}
@@ -601,10 +634,10 @@ export default function TossClient() {
               onClick={handleFlip}
               disabled={flipState === "flipping"}
               className={cn(
-                "px-8 py-3 rounded-full bg-[var(--color-bg-card)] border border-[var(--color-bg-border)]",
-                "font-[family-name:var(--font-display)] font-black uppercase tracking-[0.06em] text-sm text-[var(--color-brand)]",
-                "shadow-[var(--shadow-card)] transition-all duration-200",
-                "hover:bg-[var(--color-bg-tint)] hover:border-[var(--color-brand)]/30",
+                "px-8 py-3 rounded-full bg-(--color-bg-card) border border-(--color-bg-border)",
+                "font-(family-name:--font-display) font-black uppercase tracking-[0.06em] text-sm text-(--color-brand)",
+                "shadow-(--shadow-card) transition-all duration-200",
+                "hover:bg-(--color-bg-tint) hover:border-(--color-brand)/30",
                 "active:scale-95",
                 flipState === "flipping" && "opacity-50 cursor-not-allowed",
               )}
@@ -614,7 +647,7 @@ export default function TossClient() {
           </div>
 
           {/* ── Toss Winner ─────────────────────────────────────── */}
-          <div className="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-bg-border)] p-4 shadow-[var(--shadow-card)]">
+          <div className="bg-(--color-bg-card) rounded-2xl border border-(--color-bg-border) p-4 shadow-(--shadow-card)">
             <p className="text-section-label mb-3">Toss Winner</p>
             <div className="flex gap-3">
               <TeamWinnerCard
@@ -641,7 +674,7 @@ export default function TossClient() {
           {/* ── Decision ────────────────────────────────────────── */}
           <div
             className={cn(
-              "bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-bg-border)] p-4 shadow-[var(--shadow-card)] transition-opacity duration-300",
+              "bg-(--color-bg-card) rounded-2xl border border-(--color-bg-border) p-4 shadow-(--shadow-card) transition-opacity duration-300",
               tossWinner === null
                 ? "opacity-40 pointer-events-none"
                 : "opacity-100",
@@ -663,28 +696,28 @@ export default function TossClient() {
           </div>
 
           {/* ── Result sentence ─────────────────────────────────── */}
-          <p className="text-center text-sm text-[var(--color-text-secondary)] leading-relaxed min-h-[1.5rem]">
+          <p className="text-center text-sm text-(--color-text-secondary) leading-relaxed min-h-[1.5rem]">
             {winnerTeam && decisionLabel ? (
               <span className="fade-slide-up inline-block">
-                <span className="font-semibold text-[var(--color-navy)]">
+                <span className="font-semibold text-(--color-navy)">
                   {winnerTeam.name}
                 </span>
                 {" won the toss and elected to "}
-                <span className="font-semibold text-[var(--color-brand)]">
+                <span className="font-semibold text-(--color-brand)">
                   {decisionLabel} first
                 </span>
                 {"."}
               </span>
             ) : winnerTeam ? (
-              <span className="text-[var(--color-text-muted)]">
-                <span className="font-medium text-[var(--color-navy)]">
+              <span className="text-(--color-text-muted)">
+                <span className="font-medium text-(--color-navy)">
                   {winnerTeam.name}
                 </span>
                 {" won the toss and elected to "}
-                <span className="text-[var(--color-text-muted)]">…</span>
+                <span className="text-(--color-text-muted)">…</span>
               </span>
             ) : (
-              <span className="text-[var(--color-text-muted)] italic text-xs">
+              <span className="text-(--color-text-muted) italic text-xs">
                 Select toss winner and decision above
               </span>
             )}
@@ -693,21 +726,14 @@ export default function TossClient() {
 
         {/* ── Continue button ──────────────────────────────────── */}
         <div className="safe-bottom shrink-0 px-4 pb-4">
-          <button
+          <Button
             onClick={handleContinue}
-            disabled={!canContinue}
-            className={cn(
-              "w-full flex items-center justify-center gap-2 py-4 rounded-2xl",
-              "font-[family-name:var(--font-display)] font-black uppercase tracking-[0.06em] text-sm",
-              "transition-all duration-300",
-              canContinue
-                ? "bg-[var(--color-brand)] text-white shadow-[var(--shadow-button)] active:scale-[0.98]"
-                : "bg-[var(--color-brand)]/30 text-white/60 cursor-not-allowed",
-            )}
+            disabled={!canContinue || isLoading}
+            fullWidth
+            rightIcon={<ChevronRight size={16} />}
           >
-            Continue to Match
-            <ChevronRight size={16} />
-          </button>
+            {isLoading ? "Starting Match..." : "Continue to Match"}
+          </Button>
         </div>
       </div>
     </>

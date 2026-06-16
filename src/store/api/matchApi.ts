@@ -2,6 +2,8 @@ import { baseApi } from "./baseApi";
 import {
   CreateMatchDto,
   CreateMatchResponse,
+  GetMatchByIdResponse,
+  GetMyMatchesResponse,
   SubmitTeamCaptainWKRequest,
   SubmitTeamLineupRequest,
 } from "@/types/match";
@@ -14,6 +16,7 @@ export const matchApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
+      invalidatesTags: ["Matches"],
     }),
 
     updateCaptianWK: builder.mutation<void, SubmitTeamCaptainWKRequest>({
@@ -22,6 +25,7 @@ export const matchApi = baseApi.injectEndpoints({
         method: "PATCH",
         body,
       }),
+      invalidatesTags: ["Matches"],
     }),
 
     submitTeamLineup: builder.mutation<void, SubmitTeamLineupRequest>({
@@ -30,6 +34,64 @@ export const matchApi = baseApi.injectEndpoints({
         method: "PUT",
         body,
       }),
+      invalidatesTags: ["Matches"],
+    }),
+
+    markReadyForToss: builder.mutation<void, { matchId: string }>({
+      query: ({ matchId }) => ({
+        url: `/matches/${matchId}/ready-for-toss`,
+        method: "POST",
+        body: {},
+      }),
+      invalidatesTags: ["Matches"],
+    }),
+
+    submitToss: builder.mutation<
+      void,
+      {
+        matchId: string;
+        wonByTeamId: string;
+        decision: "BAT" | "BOWL";
+      }
+    >({
+      query: ({ matchId, wonByTeamId, decision }) => ({
+        url: `/matches/${matchId}/toss`,
+        method: "POST",
+        body: {
+          wonByTeamId,
+          decision,
+        },
+      }),
+      invalidatesTags: ["Matches"],
+    }),
+
+    startMatch: builder.mutation<void, { matchId: string }>({
+      query: ({ matchId }) => ({
+        url: `/matches/${matchId}/start`,
+        method: "POST",
+        body: {},
+      }),
+    }),
+
+    getMyMatches: builder.query<any, void>({
+      query: () => ({
+        url: "/matches/me/created",
+      }),
+      providesTags: ["Matches"],
+    }), /////////////////// add types later
+
+    getMyMatchesOverview: builder.query<GetMyMatchesResponse, void>({
+      query: () => ({
+        url: "/matches/me/overview",
+      }),
+      providesTags: ["Matches"],
+    }),
+
+    getMatchById: builder.query<GetMatchByIdResponse, { matchId: string }>({
+      query: ({ matchId }) => ({
+        url: `/matches/${matchId}`,
+      }),
+      providesTags: ["Matches"],
     }),
   }),
 });
@@ -38,4 +100,10 @@ export const {
   useCreateMatchMutation,
   useUpdateCaptianWKMutation,
   useSubmitTeamLineupMutation,
+  useSubmitTossMutation,
+  useStartMatchMutation,
+  useMarkReadyForTossMutation,
+  useGetMyMatchesQuery,
+  useGetMyMatchesOverviewQuery,
+  useGetMatchByIdQuery,
 } = matchApi;

@@ -4,12 +4,14 @@ import storage from "redux-persist/lib/storage";
 
 import authReducer from "./auth/authSlice";
 import startMatchReducer from "./startMatch/startMatchSlice";
+import scoringReducer from "./scoring/scoringSlice";
+
 import { baseApi } from "./api/baseApi";
 
 const rootReducer = combineReducers({
   auth: authReducer,
   startMatch: startMatchReducer,
-
+  scoring: scoringReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 

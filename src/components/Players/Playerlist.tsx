@@ -6,7 +6,51 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { PlayerCard } from "./Playercard";
-import type { PlayerListProps } from "./Types";
+import type { PlayerListItem, PlayerListProps } from "./Types";
+
+import {
+  DndContext,
+  DragEndEvent,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+
+import { CSS } from "@dnd-kit/utilities";
+
+function SortablePlayerRow({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        touchAction: "none",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function PlayerList({
   players,
@@ -18,16 +62,69 @@ export function PlayerList({
   selectedPlayerIds,
   onSelectionChange,
   onDelete,
+  orderedPlayerIds,
+  onPlayerReorder,
   showSearch = true,
   emptyMessage = "No players in roster",
 }: PlayerListProps) {
   const [query, setQuery] = useState("");
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+  );
+  console.log(players);
+  console.log(query);
+  const orderedPlayers = useMemo(() => {
+    const basePlayers = orderedPlayerIds?.length
+      ? (orderedPlayerIds
+          .map((id) => players.find((p) => p.playerId === id))
+          .filter(Boolean) as PlayerListItem[])
+      : players;
 
-  const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return players;
-    return players.filter((p) => p.fullName.toLowerCase().includes(q));
-  }, [players, query]);
+
+    if (!q) {
+      return basePlayers;
+    }
+
+    return basePlayers.filter((p) => p.fullName.toLowerCase().includes(q));
+  }, [players, orderedPlayerIds, query]);
+
+  console.log(orderedPlayers);
+  console.log(orderedPlayerIds);
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    console.log("active", active.id);
+    console.log("over", over?.id);
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = orderedPlayerIds?.indexOf(String(active.id)) ?? -1;
+
+    const newIndex = orderedPlayerIds?.indexOf(String(over.id)) ?? -1;
+
+    console.log({
+      oldIndex,
+      newIndex,
+      orderedPlayerIds,
+    });
+
+    if (oldIndex < 0 || newIndex < 0) {
+      return;
+    }
+
+    const newOrder = arrayMove(orderedPlayerIds!, oldIndex, newIndex);
+
+    console.log("newOrder", newOrder);
+
+    onPlayerReorder?.(newOrder);
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -52,51 +149,69 @@ export function PlayerList({
       )}
 
       {/* ── Cards ───────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-2.5">
-        {filtered.length === 0 ? (
-          <p className="py-8 text-center text-sm italic text-(--color-text-muted)">
-            {query ? `No players match "${query}"` : emptyMessage}
-          </p>
-        ) : (
-          filtered.map((player) => {
-            // In team-management mode every player is always "selected"
-            const isSelected =
-              mode === "team-management"
-                ? true
-                : (selectedPlayerIds?.has(player.playerId) ?? true);
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={() => console.log("drag start")}
+        onDragMove={() => console.log("drag move")}
+        onDragOver={(e) => console.log("drag over", e.over?.id)}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => console.log("drag cancel")}
+      >
+        <SortableContext
+          items={orderedPlayers.map((p) => p.playerId)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="flex flex-col gap-2.5">
+            {orderedPlayers.length === 0 ? (
+              <p className="py-8 text-center text-sm italic text-(--color-text-muted)">
+                {query ? `No players match "${query}"` : emptyMessage}
+              </p>
+            ) : (
+              orderedPlayers.map((player) => {
+                const isSelected =
+                  mode === "team-management"
+                    ? true
+                    : (selectedPlayerIds?.has(player.playerId) ?? true);
 
-            return (
-              <PlayerCard
-                key={player.playerId}
-                player={player}
-                mode={mode}
-                isCaptain={captainId === player.playerId}
-                isKeeper={keeperId === player.playerId}
-                isSelected={isSelected}
-                onCaptainToggle={() =>
-                  onCaptainChange(
-                    captainId === player.playerId ? null : player.playerId,
-                  )
-                }
-                onKeeperToggle={() =>
-                  onKeeperChange(
-                    keeperId === player.playerId ? null : player.playerId,
-                  )
-                }
-                onSelectionToggle={
-                  onSelectionChange
-                    ? () => onSelectionChange(player.playerId, !isSelected)
-                    : undefined
-                }
-                onDelete={onDelete}
-              />
-            );
-          })
-        )}
-      </div>
+                return (
+                  <SortablePlayerRow key={player.playerId} id={player.playerId}>
+                    <PlayerCard
+                      player={player}
+                      mode={mode}
+                      isCaptain={captainId === player.playerId}
+                      isKeeper={keeperId === player.playerId}
+                      isSelected={isSelected}
+                      onCaptainToggle={() =>
+                        onCaptainChange(
+                          captainId === player.playerId
+                            ? null
+                            : player.playerId,
+                        )
+                      }
+                      onKeeperToggle={() =>
+                        onKeeperChange(
+                          keeperId === player.playerId ? null : player.playerId,
+                        )
+                      }
+                      onSelectionToggle={
+                        onSelectionChange
+                          ? () =>
+                              onSelectionChange(player.playerId, !isSelected)
+                          : undefined
+                      }
+                      onDelete={onDelete}
+                    />
+                  </SortablePlayerRow>
+                );
+              })
+            )}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {/* ── End of list marker ──────────────────────────────────────────── */}
-      {filtered.length > 0 && !query && (
+      {orderedPlayers.length > 0 && !query && (
         <p className="py-2 text-center text-xs italic text-(--color-text-muted)">
           No more players in roster
         </p>

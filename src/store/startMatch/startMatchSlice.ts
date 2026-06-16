@@ -17,6 +17,9 @@ type StartMatchState = {
   teamBKeeper: MatchPlayerRole | null;
 
   activeTeam: "A" | "B" | null;
+
+  matchId: string | null;
+  lineUpMode: "FIXED" | "FLEXIBLE";
 };
 
 const initialState: StartMatchState = {
@@ -30,6 +33,9 @@ const initialState: StartMatchState = {
   teamBKeeper: null,
 
   activeTeam: null,
+
+  matchId: null,
+  lineUpMode: "FLEXIBLE",
 };
 
 const startMatchSlice = createSlice({
@@ -72,13 +78,55 @@ const startMatchSlice = createSlice({
       state.teamBKeeper = action.payload.keeper;
     },
 
+    setMatchIdMode: (
+      state,
+      action: PayloadAction<{
+        matchId: string;
+        lineUpMode: "FIXED" | "FLEXIBLE";
+      }>,
+    ) => {
+      state.matchId = action.payload.matchId;
+      state.lineUpMode = action.payload.lineUpMode;
+    },
+
+    setMatchContext: (
+      state,
+      action: PayloadAction<{
+        matchId: string;
+        lineUpMode: "FIXED" | "FLEXIBLE";
+
+        teamA: Team;
+        teamB: Team;
+
+        teamACaptain: MatchPlayerRole | null;
+        teamAKeeper: MatchPlayerRole | null;
+
+        teamBCaptain: MatchPlayerRole | null;
+        teamBKeeper: MatchPlayerRole | null;
+      }>,
+    ) => {
+      state.matchId = action.payload.matchId;
+      state.lineUpMode = action.payload.lineUpMode;
+
+      state.teamA = action.payload.teamA;
+      state.teamB = action.payload.teamB;
+
+      state.teamACaptain = action.payload.teamACaptain;
+      state.teamAKeeper = action.payload.teamAKeeper;
+
+      state.teamBCaptain = action.payload.teamBCaptain;
+      state.teamBKeeper = action.payload.teamBKeeper;
+    },
+
     resetMatch: (state) => {
       state.teamA = null;
       state.teamB = null;
-      state.teamACaptain;
-      state.teamAKeeper;
-      state.teamBCaptain;
-      state.teamBKeeper;
+      state.teamACaptain = null;
+      state.teamAKeeper = null;
+      state.teamBCaptain = null;
+      state.teamBKeeper = null;
+      state.matchId = null;
+      state.lineUpMode = "FLEXIBLE";
     },
   },
 });
@@ -89,6 +137,8 @@ export const {
   setTeamARoles,
   setTeamBRoles,
   setActiveTeam,
+  setMatchIdMode,
+  setMatchContext,
   resetMatch,
 } = startMatchSlice.actions;
 

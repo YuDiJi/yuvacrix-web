@@ -15,6 +15,21 @@ export type PitchType =
   | "MATTING"
   | "OTHER";
 
+export type LineupMode = "FIXED" | "FLEXIBLE";
+
+export type TossDecision = "BAT" | "BOWL";
+
+export type MatchStatus =
+  | "DRAFT"
+  | "SCHEDULED"
+  | "READY_FOR_TOSS"
+  | "TOSS_DONE"
+  | "LIVE"
+  | "INNINGS_BREAK"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "ABANDONED";
+
 export interface Venue {
   city: string;
   groundName: string;
@@ -26,7 +41,7 @@ export interface ScoringSettings {
   wagonWheelForRuns: number[];
 }
 
-export interface Officials {
+export interface MatchOfficials {
   scorerUserIds: string[];
   umpireNames: string[];
   liveStreamerUserIds: string[];
@@ -39,21 +54,21 @@ export interface CreateMatchDto {
   matchType: MatchType;
   oversLimit: number;
   oversPerBowler: number;
-  lineupMode?: "FLEXIBLE" | "FIXED";
+  lineupMode?: LineupMode;
   ballType: BallType;
   venue: Venue;
   scheduledAt?: string;
   scoringSettings?: ScoringSettings;
-  officials?: Officials;
+  officials?: MatchOfficials;
 }
 
 export type CreateMatchForm = {
   teamAId: string;
   teamBId: string;
-  matchType: string;
+  matchType: MatchType;
   oversLimit: number;
   oversPerBowler: number;
-  ballType: string;
+  ballType: BallType;
 };
 
 export interface SubmitLineupPlayerDto {
@@ -92,10 +107,133 @@ export interface CreateMatchResponse {
     id: string;
     matchId: string;
     teamId: string;
-    side: "TEAM_A" | "TEAM_B";
+    side: MatchSide;
     captainId: string | null;
     wicketKeeperId: string | null;
   }>;
 
   players: unknown[];
+}
+
+export interface MatchActor {
+  actorType: "USER";
+  actorId: string;
+}
+
+export interface MatchRules {
+  matchType: MatchType;
+  oversLimit: number;
+  oversPerBowler: number;
+  lineupMode: LineupMode;
+}
+
+export interface MatchEnvironment {
+  ballType: BallType;
+  venueSnapshot: Venue;
+}
+
+export interface MatchTeam {
+  teamId: string;
+  name: string;
+  shortName: string;
+  logoUrl: string | null;
+
+  captainId: string | null;
+  viceCaptainId: string | null;
+  wicketKeeperId: string | null;
+
+  squadCount: number;
+  playingXiCount: number;
+}
+
+export interface MatchToss {
+  wonByTeamId: string;
+  decision: TossDecision;
+  electedAt: string;
+  updatedBy: MatchActor;
+}
+
+export interface MatchResult {
+  // add fields when backend finalizes schema
+}
+
+export interface Match {
+  matchId: string;
+  status: MatchStatus;
+
+  seriesId: string | null;
+
+  matchType: MatchType;
+  lineupMode: LineupMode;
+
+  oversLimit: number;
+  oversPerBowler: number;
+
+  scheduledAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+
+  teamA: MatchTeam;
+  teamB: MatchTeam;
+
+  venue: Venue;
+  ballType: BallType;
+
+  toss: MatchToss | null;
+  result: MatchResult | null;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type GetMyMatchesResponse = Match[];
+
+export type MatchSide = "TEAM_A" | "TEAM_B";
+
+export interface MatchDetailsTeam {
+  id: string;
+  matchId: string;
+
+  teamId: string;
+  side: MatchSide;
+
+  teamNameSnapshot: string;
+  teamShortNameSnapshot: string;
+
+  captainId: string | null;
+  viceCaptainId: string | null;
+  wicketKeeperId: string | null;
+
+  squadCount: number;
+  playingXiCount: number;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MatchDetailsPlayer {
+  id: string;
+  matchId: string;
+
+  teamId: string;
+  playerId: string;
+
+  playerNameSnapshot: string;
+
+  isPlayingXi: boolean;
+  isSubstitute: boolean;
+
+  battingOrder: number;
+
+  isCaptain: boolean;
+  isWicketKeeper: boolean;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetMatchByIdResponse {
+  match: Match;
+  teams: MatchDetailsTeam[];
+  players: MatchDetailsPlayer[];
 }
