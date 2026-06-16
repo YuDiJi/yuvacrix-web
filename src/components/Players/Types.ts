@@ -35,6 +35,8 @@ export interface PlayerListProps {
   // ── Playing selection (lineup modes only) ──────────────────────────────
   selectedPlayerIds?: Set<string>;
   onSelectionChange?: (playerId: string, selected: boolean) => void;
+  orderedPlayerIds?: string[];
+  onPlayerReorder?: (playerIds: string[]) => void;
 
   // ── Delete (team-management only) ──────────────────────────────────────
   onDelete?: (playerId: string) => Promise<void>;
@@ -46,6 +48,11 @@ export interface PlayerListProps {
 export interface PlayerCardProps {
   player: PlayerListItem;
   mode: PlayerListMode;
+
+  dragHandleProps?: {
+    attributes: any;
+    listeners: any;
+  };
 
   isCaptain: boolean;
   isKeeper: boolean;

@@ -54,7 +54,7 @@ export const baseApi = createApi({
 
   baseQuery: baseQueryWithInterceptor,
 
-  tagTypes: ["Auth", "Player", "Members", "Team"],
+  tagTypes: ["Auth", "Player", "Members", "Team", "Matches"],
 
   endpoints: () => ({}),
 });

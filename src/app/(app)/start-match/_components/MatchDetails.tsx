@@ -21,7 +21,7 @@ import {
   selectTeamBCaptain,
   selectTeamBKeeper,
 } from "@/store/startMatch/selectors";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useGetTeamDetailQuery } from "@/store/api/teamApi";
 import {
   useCreateMatchMutation,
@@ -30,6 +30,7 @@ import {
 import type { MatchType, BallType, PitchType } from "@/types/match";
 import { LineupModeSheet } from "./LineupModeSheet";
 import ScheduleModal from "./ScheduleModal";
+import { setMatchIdMode } from "@/store/startMatch/startMatchSlice";
 
 // ─── Zod schema ───────────────────────────────────────────────────────────────
 
@@ -201,6 +202,7 @@ function FieldError({ message }: { message?: string }) {
 
 const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [createMatch, { isLoading: isCreating }] = useCreateMatchMutation();
   const [submitTeamLineup, { isLoading: isSubmittingLineup }] =
     useSubmitTeamLineupMutation();
@@ -318,7 +320,14 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
 
       setLineupSheetOpen(false);
 
-      router.push(`/start-match/line-up?matchId=${matchId}&mode=${mode}`);
+      dispatch(
+        setMatchIdMode({
+          matchId: matchId,
+          lineUpMode: mode,
+        }),
+      );
+
+      router.push(`/start-match/line-up`);
     } catch (err: any) {
       setLineupError(
         err?.data?.message ?? "Failed to create match. Please try again.",
@@ -370,7 +379,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
       <div className="flex-1 overflow-y-auto pb-24">
         <div className="flex flex-col gap-3 p-4">
           {/* Match Type */}
-          <div className="fixture-bar rounded-r-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+          <div className="fixture-bar rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
             <p className="text-section-label mb-3">
               Match Type <span className="text-(--color-live)">*</span>
             </p>
@@ -400,7 +409,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
           </div>
 
           {/* Overs */}
-          <div className="fixture-bar rounded-r-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+          <div className="fixture-bar rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
             <div className="flex items-start gap-6">
               <div className="flex-1">
                 <p className="text-section-label mb-1.5">
@@ -448,7 +457,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
           </div>
 
           {/* Location */}
-          <div className="fixture-bar flex flex-col gap-4 rounded-r-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+          <div className="fixture-bar flex flex-col gap-4 rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
             <div>
               <p className="text-section-label mb-1.5">
                 City / Town <span className="text-(--color-live)">*</span>
@@ -488,7 +497,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
           </div>
 
           {/* Ball Type */}
-          <div className="fixture-bar rounded-r-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+          <div className="fixture-bar rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
             <p className="text-section-label mb-3">
               Ball Type <span className="text-(--color-live)">*</span>
             </p>
@@ -560,7 +569,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
           </div>
 
           {/* Pitch Type */}
-          <div className="fixture-bar rounded-r-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+          <div className="fixture-bar rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
             <p className="text-section-label mb-3">Pitch Type</p>
             <Controller
               name="pitchType"
@@ -588,7 +597,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
           </div>
 
           {/* Match Officials */}
-          <div className="fixture-bar rounded-r-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+          <div className="fixture-bar rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
             <p className="text-section-label mb-4">Match Officials</p>
             <div className="flex items-center justify-around">
               {[

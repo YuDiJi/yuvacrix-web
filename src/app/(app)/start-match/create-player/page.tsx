@@ -22,6 +22,8 @@ type Step = "SEARCH_MOBILE" | "CREATE_PLAYER";
 
 export default function CreatePlayerPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
 
   const activeTeam = useAppSelector((state) => state.startMatch.activeTeam);
 
@@ -127,8 +129,20 @@ export default function CreatePlayerPage() {
   }
 
   // ── Final: done → navigate ────────────────────────────────────────────────
+
   function handleDone() {
-    router.push(`/start-match/select-players`);
+    switch (from) {
+      case "line-up":
+        router.push(`/start-match/line-up`);
+        break;
+
+      case "tournament":
+        router.push("/tournament");
+        break;
+
+      default:
+        router.push("/start-match/select-players");
+    }
   }
 
   const primaryLabel =

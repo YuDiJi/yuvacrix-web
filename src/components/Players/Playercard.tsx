@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Trash2 } from "lucide-react";
+import { Trash2, GripVertical } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { PlayerCardProps } from "./Types";
 
@@ -81,6 +81,7 @@ export function PlayerCard({
   onKeeperToggle,
   onSelectionToggle,
   onDelete,
+  dragHandleProps,
 }: PlayerCardProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -119,6 +120,13 @@ export function PlayerCard({
           isMuted && "opacity-50",
         )}
       >
+        {/* ── Drag & Drop Grip ────────────────────────────────────────── */}
+
+        {mode === "fixed-lineup" && (
+          <div className="cursor-grab active:cursor-grabbing text-(--color-text-muted)">
+            <GripVertical {...dragHandleProps} className="cursor-grab" />
+          </div>
+        )}
         {/* ── Avatar ───────────────────────────────────────────────────── */}
         <div
           className={cn(

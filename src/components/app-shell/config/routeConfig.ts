@@ -60,4 +60,11 @@ export const routeConfig: Record<string, RouteConfig> = {
     title: "TOSS",
     showBackButton: true,
   },
+
+  "/scoring": {
+    title: "Scoring",
+    showBackButton: true,
+    // getTitle: ({ teamA, teamB }) =>
+    //   teamA ? teamA.name : teamB ? teamB.name : "Scoring",
+  },
 } as const;
