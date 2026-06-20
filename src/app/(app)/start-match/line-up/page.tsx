@@ -619,8 +619,6 @@ export default function LineupPage() {
                   if (activeTab === "A") {
                     if (!teamA) return;
 
-                    console.log(teamA);
-
                     dispatch(setTeamA(teamA));
                     dispatch(setActiveTeam("A"));
                   } else {

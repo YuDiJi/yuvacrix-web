@@ -46,37 +46,37 @@ export function LineupModeSheet({
           <div className="h-1.5 w-10 rounded-full bg-(--color-bg-border)" />
         </div>
 
-        <div className="px-5 pb-8 pt-2">
+        <div className="px-5 pb-6 pt-2">
           {/* Header */}
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="font-display text-2xl font-black uppercase tracking-[0.04em] text-(--color-navy)">
+            <h3 className="font-display text-xl font-black uppercase tracking-[0.04em] text-(--color-navy)">
               Choose Lineup Mode
             </h3>
             <Info size={20} className="shrink-0 text-(--color-navy)" />
           </div>
-          <p className="mb-6 text-sm font-medium leading-relaxed text-(--color-text-secondary)">
+          <p className="mb-6 text-xs font-medium leading-relaxed text-(--color-text-secondary)">
             Select how team lineups will be managed before the toss.
           </p>
 
           {/* Option cards */}
-          <div className="mb-6 flex flex-col gap-4">
+          <div className="mb-4 flex flex-col gap-4">
             {/* Flexible Lineup Card */}
             <button
               type="button"
               onClick={() => setSelected("FLEXIBLE")}
               className={cn(
-                "flex flex-col rounded-2xl border-2 p-5 text-left transition-all duration-150 active:scale-[0.98]",
+                "flex flex-col rounded-2xl border-2 p-4 text-left transition-all duration-150 active:scale-[0.98]",
                 selected === "FLEXIBLE"
                   ? "border-(--color-brand) bg-(--color-bg-tint) shadow-sm"
                   : "border-(--color-bg-border) bg-(--color-bg-card) hover:border-(--color-text-muted)",
               )}
             >
               {/* Top Row: Icon & Badges */}
-              <div className="mb-4 flex w-full items-center justify-between">
+              <div className="mb-3 flex w-full items-center justify-between">
                 {/* Icon */}
                 <div
                   className={cn(
-                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
                     selected === "FLEXIBLE"
                       ? "bg-(--color-brand)/15 text-(--color-brand)"
                       : "bg-(--color-bg-base) text-(--color-text-muted)",
@@ -89,24 +89,24 @@ export function LineupModeSheet({
                 </div>
 
                 {/* Right Badges */}
-                {selected === "FLEXIBLE" && (
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-(--color-live) px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
-                      Recommended
-                    </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-(--color-live) px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm">
+                    Recommended
+                  </span>
+                  {selected === "FLEXIBLE" && (
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-(--color-brand) text-white shadow-sm">
                       <Check size={14} strokeWidth={4} />
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* Bottom Row: Text */}
               <div>
-                <h4 className="mb-1 font-display text-lg font-black uppercase tracking-[0.04em] text-(--color-navy)">
+                <h4 className="mb-1 font-display text-md font-black uppercase tracking-[0.04em] text-(--color-navy)">
                   Flexible Lineup
                 </h4>
-                <p className="text-sm font-medium leading-snug text-(--color-text-secondary)">
+                <p className="text-xs font-medium leading-snug text-(--color-text-secondary)">
                   Player order can be decided during scoring. Best for most
                   matches.
                 </p>
@@ -118,17 +118,17 @@ export function LineupModeSheet({
               type="button"
               onClick={() => setSelected("FIXED")}
               className={cn(
-                "flex flex-col rounded-2xl border-2 p-5 text-left transition-all duration-150 active:scale-[0.98]",
+                "flex flex-col rounded-2xl border-2 p-4 text-left transition-all duration-150 active:scale-[0.98]",
                 selected === "FIXED"
                   ? "border-(--color-brand) bg-(--color-bg-tint) shadow-sm"
                   : "border-(--color-bg-border) bg-(--color-bg-card) hover:border-(--color-text-muted)",
               )}
             >
               {/* Top Row: Icon & Badges */}
-              <div className="mb-4 flex w-full items-center justify-between">
+              <div className="mb-3 flex w-full items-center justify-between">
                 <div
                   className={cn(
-                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
                     selected === "FIXED"
                       ? "bg-(--color-brand)/15 text-(--color-brand)"
                       : "bg-(--color-bg-base) text-(--color-text-muted)",
@@ -148,10 +148,10 @@ export function LineupModeSheet({
 
               {/* Bottom Row: Text */}
               <div>
-                <h4 className="mb-1 font-display text-lg font-black uppercase tracking-[0.04em] text-(--color-navy)">
+                <h4 className="mb-1 font-display text-md font-black uppercase tracking-[0.04em] text-(--color-navy)">
                   Fixed Lineup
                 </h4>
-                <p className="text-sm font-medium leading-snug text-(--color-text-secondary)">
+                <p className="text-xs font-medium leading-snug text-(--color-text-secondary)">
                   Configure complete playing order before toss. Batting sequence
                   is locked.
                 </p>
@@ -160,12 +160,12 @@ export function LineupModeSheet({
           </div>
 
           {/* Pro Tip */}
-          <div className="mb-6 flex items-start gap-3 rounded-xl border border-(--color-bg-border) bg-(--color-bg-card) p-4 shadow-sm">
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-(--color-bg-border) bg-(--color-bg-card) p-2 shadow-sm">
             <Lightbulb
               size={18}
               className="mt-0.5 shrink-0 text-(--color-brand)"
             />
-            <p className="text-sm font-medium leading-relaxed text-(--color-text-secondary)">
+            <p className="text-xs font-medium leading-relaxed text-(--color-text-secondary)">
               <strong className="font-bold text-(--color-navy)">
                 Pro Tip:
               </strong>{" "}
@@ -193,7 +193,7 @@ export function LineupModeSheet({
           {/* Submit Button (Custom Component) */}
           <Button
             variant="primary"
-            size="lg"
+            size="md"
             fullWidth
             loading={loading}
             onClick={() => onContinue(selected)}

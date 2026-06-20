@@ -354,8 +354,6 @@ export default function MatchesPage() {
     isError,
   } = useGetMyMatchesOverviewQuery();
 
-  console.log(matches);
-
   // In a real app, team names would be fetched/cached separately.
   // Here we derive a short display from teamId last chars as placeholder.
   // Replace with a team name lookup map from your store/cache.
@@ -403,7 +401,6 @@ export default function MatchesPage() {
   };
 
   const handleMatchClick = (match: Match) => {
-    console.log(match);
     dispatch(
       setMatchContext({
         matchId: match.matchId,
@@ -457,8 +454,6 @@ export default function MatchesPage() {
 
     router.push(getMatchRoute(match));
   };
-
-  console.log(filtered);
 
   return (
     <div className="flex min-h-full flex-col bg-(--color-bg-base)">
