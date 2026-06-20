@@ -1,14 +1,21 @@
 import {
-  StartFirstInningRequest,
-  StartFirstInningResponse,
+  ScoringState,
+  StartInningsRequest,
+  StartInningsResponse,
 } from "@/types/innings";
 import { baseApi } from "./baseApi";
+import {
+  ChangeBowlerRequest,
+  RecordBallRequest,
+  RecordBallResponse,
+  UndoBallResponse,
+} from "@/types/scoring";
 
 export const scoringApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     startFirstInning: builder.mutation<
-      StartFirstInningResponse,
-      StartFirstInningRequest
+      StartInningsResponse,
+      StartInningsRequest
     >({
       query: ({ matchId, ...body }) => ({
         url: `/match/${matchId}/scoring/innings/start`,
@@ -17,62 +24,61 @@ export const scoringApi = baseApi.injectEndpoints({
       }),
     }),
 
-    // GET /matches/:matchId/scoring/state
-    // getScoringState: builder.query<GetStateResponse, { matchId: string }>({
-    //   query: ({ matchId }) => `/matches/${matchId}/scoring/state`,
-    // }),
+    getScoringState: builder.query<ScoringState, string>({
+      query: (matchId) => ({
+        url: `/match/${matchId}/scoring/state`,
+      }),
+      providesTags: ["ScoringState"],
+    }),
 
-    // // POST /matches/:matchId/scoring/balls
-    // recordBall: builder.mutation<
-    //   RecordBallResponse,
-    //   { matchId: string; body: RecordBallRequest }
-    // >({
-    //   query: ({ matchId, body }) => ({
-    //     url: `/matches/${matchId}/scoring/balls`,
-    //     method: "POST",
-    //     body,
-    //   }),
-    // }),
+    recordBall: builder.mutation<RecordBallResponse, RecordBallRequest>({
+      query: ({ matchId, ...body }) => ({
+        url: `/match/${matchId}/scoring/balls`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["ScoringState"],
+    }),
 
-    // // DELETE /matches/:matchId/scoring/balls/last
-    // undoLastBall: builder.mutation<UndoBallResponse, { matchId: string }>({
-    //   query: ({ matchId }) => ({
-    //     url: `/matches/${matchId}/scoring/balls/last`,
-    //     method: "DELETE",
-    //   }),
-    // }),
+    undoLastBall: builder.mutation<
+      unknown,
+      {
+        matchId: string;
+        inningsId: string;
+        reason: string;
+      }
+    >({
+      query: ({ matchId, inningsId, reason }) => ({
+        url: `/match/${matchId}/scoring/balls/last`,
+        method: "DELETE", // change to POST if your backend expects POST
+        body: {
+          inningsId,
+          reason,
+        },
+      }),
+      invalidatesTags: ["ScoringState"],
+    }),
 
-    // // POST /matches/:matchId/scoring/strike
-    // changeStrike: builder.mutation<
-    //   { state: GetStateResponse["state"] },
-    //   { matchId: string; body: SelectStrikeRequest }
-    // >({
-    //   query: ({ matchId, body }) => ({
-    //     url: `/matches/${matchId}/scoring/strike`,
-    //     method: "POST",
-    //     body,
-    //   }),
-    // }),
+    changeBowler: builder.mutation<void, ChangeBowlerRequest>({
+      query: ({ matchId, inningsId, bowlerId, reason }) => ({
+        url: `/match/${matchId}/scoring/bowler`,
+        method: "POST",
+        body: {
+          inningsId,
+          bowlerId,
+          reason,
+        },
+      }),
 
-    // // POST /matches/:matchId/scoring/overs/next
-    // nextOver: builder.mutation<
-    //   RecordBallResponse,
-    //   { matchId: string; body: NextOverRequest }
-    // >({
-    //   query: ({ matchId, body }) => ({
-    //     url: `/matches/${matchId}/scoring/overs/next`,
-    //     method: "POST",
-    //     body,
-    //   }),
-    // }),
+      invalidatesTags: ["ScoringState", "Matches"],
+    }),
   }),
 });
 
 export const {
   useStartFirstInningMutation,
-  // useGetScoringStateQuery,
-  // useRecordBallMutation,
-  // useUndoLastBallMutation,
-  // useChangeStrikeMutation,
-  // useNextOverMutation,
+  useGetScoringStateQuery,
+  useRecordBallMutation,
+  useUndoLastBallMutation,
+  useChangeBowlerMutation,
 } = scoringApi;

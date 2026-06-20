@@ -75,8 +75,7 @@ export function PlayerList({
       },
     }),
   );
-  console.log(players);
-  console.log(query);
+
   const orderedPlayers = useMemo(() => {
     const basePlayers = orderedPlayerIds?.length
       ? (orderedPlayerIds
@@ -93,13 +92,8 @@ export function PlayerList({
     return basePlayers.filter((p) => p.fullName.toLowerCase().includes(q));
   }, [players, orderedPlayerIds, query]);
 
-  console.log(orderedPlayers);
-  console.log(orderedPlayerIds);
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-
-    console.log("active", active.id);
-    console.log("over", over?.id);
 
     if (!over || active.id === over.id) {
       return;
@@ -109,19 +103,11 @@ export function PlayerList({
 
     const newIndex = orderedPlayerIds?.indexOf(String(over.id)) ?? -1;
 
-    console.log({
-      oldIndex,
-      newIndex,
-      orderedPlayerIds,
-    });
-
     if (oldIndex < 0 || newIndex < 0) {
       return;
     }
 
     const newOrder = arrayMove(orderedPlayerIds!, oldIndex, newIndex);
-
-    console.log("newOrder", newOrder);
 
     onPlayerReorder?.(newOrder);
   }
@@ -152,11 +138,11 @@ export function PlayerList({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
-        onDragStart={() => console.log("drag start")}
-        onDragMove={() => console.log("drag move")}
-        onDragOver={(e) => console.log("drag over", e.over?.id)}
+        // onDragStart={() => console.log("drag start")}
+        // onDragMove={() => console.log("drag move")}
+        // onDragOver={(e) => console.log("drag over", e.over?.id)}
         onDragEnd={handleDragEnd}
-        onDragCancel={() => console.log("drag cancel")}
+        // onDragCancel={() => console.log("drag cancel")}
       >
         <SortableContext
           items={orderedPlayers.map((p) => p.playerId)}

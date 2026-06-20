@@ -1,6 +1,6 @@
-export interface StartFirstInningRequest {
+export interface StartInningsRequest {
   matchId: string;
-  inningsNumber: 1;
+  inningsNumber: 1 | 2;
   battingTeamId: string;
   bowlingTeamId: string;
   strikerId: string;
@@ -15,6 +15,147 @@ export interface Extras {
   byes: number;
   legByes: number;
   penalties: number;
+}
+
+export interface OverBall {
+  sequenceNumber: number;
+  symbol: string;
+  runs: number;
+  isLegalDelivery: boolean;
+  isWicket: boolean;
+  isExtra: boolean;
+}
+
+export interface CurrentOver {
+  overNumber: number;
+  bowlerId: string;
+  runs: number;
+  wickets: number;
+  extras: number;
+  balls: OverBall[];
+  completed: boolean;
+}
+
+export interface BallRuns {
+  batRuns: number;
+  totalRuns: number;
+}
+
+export interface BallFlags {
+  isLegalDelivery: boolean;
+  isBoundary: boolean;
+  isWicket: boolean;
+  isExtra: boolean;
+  isFreeHit: boolean;
+  createsFreeHit: boolean;
+  overCompleted: boolean;
+  inningsCompleted: boolean;
+}
+
+export interface ScoreAfterBall {
+  totalRuns: number;
+  wickets: number;
+  extrasTotal: number;
+  legalBalls: number;
+  oversText: string;
+
+  strikerId: string;
+  nonStrikerId: string;
+  bowlerId: string;
+
+  targetRuns: number | null;
+  runsRequired: number | null;
+  ballsRemaining: number | null;
+
+  inningsVersion: number;
+}
+
+export interface CreatedBy {
+  actorType: "USER" | "SYSTEM";
+  actorId: string;
+}
+
+export interface BallEvent {
+  id: string;
+  matchId: string;
+  inningsId: string;
+
+  clientEventId: string;
+  clientRecordedAt: string | null;
+
+  sequenceNumber: number;
+  overNumber: number;
+  ballNumber: number;
+  legalBallNumber: number;
+
+  battingTeamId: string;
+  bowlingTeamId: string;
+
+  strikerId: string;
+  nonStrikerId: string;
+  bowlerId: string;
+
+  eventType: "NORMAL" | "WIDE" | "NO_BALL" | "BYE" | "LEG_BYE";
+
+  runs: BallRuns;
+
+  extras: unknown | null;
+  wicket: unknown | null;
+
+  flags: BallFlags;
+
+  wagonWheel: unknown | null;
+  shot: unknown | null;
+  bowling: unknown | null;
+
+  scoreAfterBall: ScoreAfterBall;
+
+  createdBy: CreatedBy;
+
+  isRevoked: boolean;
+  revokedAt: string | null;
+  revokedBy: string | null;
+  revokeReason: string | null;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CompletedOverBall {
+  ballEventId: string;
+  sequenceNumber: number;
+  overNumber: number;
+  ballNumber: number;
+  legalBallNumber: number;
+  symbol: string;
+
+  label: string;
+  runs: number;
+
+  isLegalDelivery: boolean;
+  isBoundary: boolean;
+  isWicket: boolean;
+  isExtra: boolean;
+
+  extraType: string | null;
+  wicketType: string | null;
+}
+
+export interface LastCompletedOver {
+  overNumber: number;
+  displayOverNumber: number;
+
+  bowlerId: string;
+  bowlerName: string | null;
+
+  balls: CompletedOverBall[];
+
+  legalBalls: number;
+  totalRuns: number;
+  wickets: number;
+  extras: number;
+
+  display: string;
 }
 
 export interface ScoringState {
@@ -53,8 +194,10 @@ export interface ScoringState {
 
   pendingSyncSupported: boolean;
 
-  lastBall: unknown | null;
-  currentOver: unknown | null;
+  lastBall: BallEvent | null;
+  currentOver: CurrentOver | null;
+  lastCompletedOver: LastCompletedOver | null;
+  currentBowlerFigures: { display: string } | null;
 }
 
 export interface Innings {
@@ -92,7 +235,7 @@ export interface Innings {
   completionReason: string | null;
 }
 
-export interface StartFirstInningResponse {
+export interface StartInningsResponse {
   innings: Innings;
   state: ScoringState;
 }

@@ -432,8 +432,6 @@ export default function StartInningsPage() {
   const [startFirstInning, { isLoading: isStartingInnings }] =
     useStartFirstInningMutation();
 
-  console.log(data);
-
   // ── Derived teams & players ──────────────────────────────────────────────
 
   const toss = data?.match.toss;
@@ -508,11 +506,6 @@ export default function StartInningsPage() {
   const disabledBatterIds = [striker?.playerId, nonStriker?.playerId].filter(
     Boolean,
   ) as string[];
-
-  console.log(striker);
-  console.log(nonStriker);
-  console.log(bowler);
-  console.log(openRole);
 
   // ── KEY FIX: batch both state updates together ───────────────────────────
   // React 18 batches these in the same render, so pendingStyle is truthy
