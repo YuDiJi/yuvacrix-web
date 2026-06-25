@@ -6,6 +6,7 @@ import { Button } from "@/components/common/Button";
 import { BallChip } from "./BallChip";
 import { MatchDetailsPlayer } from "@/types/match";
 import { useMemo } from "react";
+import { useContinueCurrentOverMutation } from "@/store/api/scoringApi";
 
 interface Props {
   open: boolean;
@@ -15,6 +16,8 @@ interface Props {
   totalRuns?: number;
   wickets?: number;
   players: MatchDetailsPlayer[] | undefined;
+  matchId: string | null;
+  inningsId: string | undefined;
 
   onContinueThisOver: () => void;
 }
@@ -28,8 +31,27 @@ export function OverCompletedSheet({
   wickets,
   onContinueThisOver,
   players,
+  matchId,
+  inningsId,
 }: Props) {
-  console.log(players);
+  const [continueCurrentOver, { isLoading: isContinuingCurrentOver }] =
+    useContinueCurrentOverMutation();
+
+  const handleContinueCurrentOver = async () => {
+    if (!matchId || !inningsId) return;
+
+    try {
+      // await continueCurrentOver({
+      //   matchId,
+      //   inningsId,
+      //   reason: "Continue this over",
+      // }).unwrap();
+
+      onContinueThisOver();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const playersById = useMemo(() => {
     return new Map((players ?? []).map((player) => [player.playerId, player]));
@@ -116,7 +138,11 @@ export function OverCompletedSheet({
         >
           Start next over
         </Button>
-        <Button onClick={onContinueThisOver} size="sm" variant="secondary">
+        <Button
+          onClick={handleContinueCurrentOver}
+          size="sm"
+          variant="secondary"
+        >
           Continue this over
         </Button>
       </div>
