@@ -1,8 +1,4 @@
-"use client";
-
-import { useState } from "react";
-import { cn } from "@/lib/cn";
-import { DialogBottom } from "@/components/common/DialogBottom"; // Adjust import path
+import React, { useState } from "react";
 import {
   Target,
   Hand,
@@ -22,7 +18,6 @@ import {
 } from "lucide-react";
 import { WicketType } from "@/types/scoring";
 
-// Mocking the specific out types with standard icons as placeholders
 const OUT_OPTIONS: {
   id: WicketType;
   label: string;
@@ -46,21 +41,17 @@ const OUT_OPTIONS: {
   { id: "RETIRED", label: "Retired", icon: DoorOpen },
 ];
 
-interface OutSheetProps {
-  open: boolean;
-  onClose: () => void;
-  //   onSelect: (type: OutType) => void;
+interface WicketTypeSelectorProps {
+  onSelect: (wicketType: WicketType) => void;
 }
 
-export function OutSheet({ open, onClose }: OutSheetProps) {
+const WicketTypeSelector = ({ onSelect }: WicketTypeSelectorProps) => {
   const [showAll, setShowAll] = useState(true);
 
-  // Toggle between showing top 8 common outs or all 16 outs
   const displayedOptions = showAll ? OUT_OPTIONS : OUT_OPTIONS.slice(0, 8);
 
   return (
-    <DialogBottom open={open} onClose={onClose}>
-      {/* Header Divider */}
+    <div>
       <div className="flex items-center gap-4 mb-6 pt-2">
         <div className="h-px bg-slate-200 flex-1" />
         <span className="text-slate-500 text-sm font-medium tracking-wide">
@@ -68,13 +59,11 @@ export function OutSheet({ open, onClose }: OutSheetProps) {
         </span>
         <div className="h-px bg-slate-200 flex-1" />
       </div>
-
-      {/* Out Types Grid */}
       <div className="grid grid-cols-4 gap-y-6 gap-x-2">
         {displayedOptions.map((option) => (
           <button
             key={option.id}
-            // onClick={() => onSelect(option.id)}
+            onClick={() => onSelect(option.id)}
             className="flex flex-col items-center group transition-all"
           >
             {/* Circular Icon Container */}
@@ -89,7 +78,6 @@ export function OutSheet({ open, onClose }: OutSheetProps) {
           </button>
         ))}
       </div>
-
       {/* Show More / Show Less Toggle Button */}
       <button
         onClick={() => setShowAll(!showAll)}
@@ -97,6 +85,8 @@ export function OutSheet({ open, onClose }: OutSheetProps) {
       >
         {showAll ? "Show less" : "Show more"}
       </button>
-    </DialogBottom>
+    </div>
   );
-}
+};
+
+export default WicketTypeSelector;

@@ -1,7 +1,8 @@
 import { Button } from "@/components/common/Button";
+import { DialogBottom } from "@/components/common/DialogBottom";
 import { PlayerPickerSheet } from "@/components/Players/PlayerPickerSheet";
 import { cn } from "@/lib/cn";
-import { useChangeBowlerMutation } from "@/store/api/scoringApi";
+import { useStartNextOverMutation } from "@/store/api/scoringApi";
 import { MatchDetailsPlayer } from "@/types/match";
 import { useEffect, useState } from "react";
 
@@ -12,7 +13,8 @@ export function NextBowlerSheet({
   oversText,
   matchId,
   inningsId,
-  reason,
+  bowlingTeamId,
+  currentBowlerId,
 }: {
   open: boolean;
   players: MatchDetailsPlayer[] | undefined;
@@ -20,12 +22,14 @@ export function NextBowlerSheet({
   oversText: string | undefined;
   matchId: string | null;
   inningsId: string | undefined;
-  reason: string | undefined;
+  bowlingTeamId: string | undefined;
+  currentBowlerId: string | undefined;
 }) {
   const [selectedBowler, setSelectedBowler] =
     useState<MatchDetailsPlayer | null>(null);
 
-  const [changeBowler, { isLoading }] = useChangeBowlerMutation();
+  const [startNextOver, { isLoading: isStartingNextOver }] =
+    useStartNextOverMutation();
 
   useEffect(() => {
     if (open) {
@@ -37,11 +41,10 @@ export function NextBowlerSheet({
     if (!selectedBowler || !matchId || !inningsId) return;
 
     try {
-      await changeBowler({
+      await startNextOver({
         matchId,
         inningsId,
         bowlerId: selectedBowler.playerId,
-        reason: reason,
       }).unwrap();
 
       onClose();
@@ -50,27 +53,38 @@ export function NextBowlerSheet({
     }
   };
 
+  const battingPlayers = players?.filter(
+    (player) => player.teamId === bowlingTeamId,
+  );
+
   return (
-    <div>
+    <DialogBottom open={open} onClose={() => {}}>
       <PlayerPickerSheet
         open={open}
-        players={players}
+        players={battingPlayers}
         title="Select Bowler"
         subTitle={`For over ${oversText}`}
-        disabledIds={[]}
+        disabledIds={currentBowlerId ? [currentBowlerId] : []}
         selectedPlayerId={selectedBowler?.playerId}
         onSelect={setSelectedBowler}
-        onClose={() => {}}
-        footer={
-          <Button
-            fullWidth
-            disabled={!selectedBowler || isLoading}
-            onClick={handleContinue}
-          >
-            Continue Scoring
-          </Button>
-        }
+        // onClose={() => {}}
+        // footer={
+        //   <Button
+        //     fullWidth
+        //     disabled={!selectedBowler || isStartingNextOver}
+        //     onClick={handleContinue}
+        //   >
+        //     Continue Scoring
+        //   </Button>
+        // }
       />
-    </div>
+      <Button
+        fullWidth
+        disabled={!selectedBowler || isStartingNextOver}
+        onClick={handleContinue}
+      >
+        Continue Scoring
+      </Button>
+    </DialogBottom>
   );
 }

@@ -8,8 +8,8 @@ import {
   useRecordBallMutation,
 } from "@/store/api/scoringApi";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { ExtraType, NextActionType } from "@/types/scoring";
-import { useState } from "react";
+import { ExtraType } from "@/types/scoring";
+import { useEffect, useState } from "react";
 import { WideBallSheet } from "./WideBall";
 import { NoBallSheet } from "./NoBall";
 import { ByeSheet } from "./Bye";
@@ -18,13 +18,16 @@ import { RunningSheet } from "./Running";
 import { useGetMatchByIdQuery } from "@/store/api/matchApi";
 import { useMemo } from "react";
 import { UndoSheet } from "./Undo";
-import { OutSheet } from "./Out";
+import { OutSheet } from "./out/Out";
 import { OverCompletedSheet } from "./OverCompleted";
 import { NextBowlerSheet } from "./NextBowler";
 import { Button } from "@/components/common/Button";
 import { cn } from "@/lib/cn";
 import { BallChip } from "./BallChip";
 import { ScoringState } from "@/types/innings";
+import NextBatterSheet from "./NextBatter";
+import { WICKET_CONFIG } from "./out/constant";
+import SelectStrikerSheet from "./SelectStriker";
 
 export type DialogType =
   | "WIDE"
@@ -39,12 +42,9 @@ type ScoringFlow =
   | "IDLE"
   | "OVER_COMPLETED"
   | "SELECT_NEXT_BOWLER"
+  | "SELECT_NEXT_BATTER"
+  // | "SELECT_STRIKER"
   | "AWAITING_NEXT_OVER";
-
-interface NextAction {
-  type: NextActionType;
-  reason?: string;
-}
 
 export default function ScoringPage() {
   const matchId = useAppSelector(selectMatchId);
@@ -57,7 +57,6 @@ export default function ScoringPage() {
   const [recordBall, { isLoading: isRecording }] = useRecordBallMutation();
 
   const [openDialog, setOpenDialog] = useState<null | DialogType>(null);
-  const [nextAction, setNextAction] = useState<NextAction | null>(null);
   const [flow, setFlow] = useState<ScoringFlow>("IDLE");
   const [completedOverSnapshot, setCompletedOverSnapshot] =
     useState<ScoringState | null>(null);
@@ -67,21 +66,6 @@ export default function ScoringPage() {
       (matchData?.players ?? []).map((player) => [player.playerId, player]),
     );
   }, [matchData?.players]);
-
-  function handleNextAction(action?: NextAction) {
-    if (!action) return;
-
-    setNextAction(action);
-
-    switch (action.type) {
-      case "SELECT_NEXT_BOWLER":
-        setFlow("OVER_COMPLETED");
-        break;
-
-      default:
-        setFlow("IDLE");
-    }
-  }
 
   async function handleRuns(batRuns: number) {
     if (!state || !matchId) return;
@@ -101,7 +85,6 @@ export default function ScoringPage() {
       }
 
       setOpenDialog(null);
-      handleNextAction(response.nextAction);
     } catch (error) {
       console.error(error);
     }
@@ -131,11 +114,30 @@ export default function ScoringPage() {
       }
 
       setOpenDialog(null);
-      handleNextAction(response.nextAction);
     } catch (error) {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    if (!state || flow !== "IDLE") return;
+
+    if (flow !== "IDLE") return;
+
+    if (state.requiresNewBatter) {
+      return setFlow("SELECT_NEXT_BATTER");
+    }
+
+    if (state.overCompleted) {
+      return setFlow("OVER_COMPLETED");
+    }
+
+    if (state.requiresBowlerSelection) {
+      return setFlow("SELECT_NEXT_BOWLER");
+    }
+
+    return setFlow("IDLE");
+  }, [state]);
 
   const scoringLocked = flow === "AWAITING_NEXT_OVER";
 
@@ -161,14 +163,12 @@ export default function ScoringPage() {
 
   const resetFlow = () => {
     setFlow("IDLE");
-    setNextAction(null);
     setCompletedOverSnapshot(null);
   };
 
-  console.log(state);
-  console.log(flow);
-  console.log(nextAction);
-  console.log(completedOverSnapshot);
+  console.log(flow, state);
+  // console.log(flow);
+  //   console.log(completedOverSnapshot);
 
   return (
     // 'absolute inset-x-0 bottom-0 top-14' strictly forces the layout to fit
@@ -493,12 +493,13 @@ export default function ScoringPage() {
           matchId={matchId}
           onDone={() => {
             setFlow("IDLE");
-            setNextAction(null);
           }}
         />
         <OutSheet
           open={openDialog === "OUT"}
           onClose={() => setOpenDialog(null)}
+          state={state}
+          players={matchData?.players}
         />
         <OverCompletedSheet
           open={flow === "OVER_COMPLETED"}
@@ -513,6 +514,8 @@ export default function ScoringPage() {
           players={matchData?.players}
           totalRuns={state?.totalRuns}
           wickets={state?.wickets}
+          matchId={matchId}
+          inningsId={state?.inningsId}
         />
 
         <NextBowlerSheet
@@ -522,8 +525,22 @@ export default function ScoringPage() {
           oversText={state?.oversText}
           matchId={matchId}
           inningsId={state?.inningsId}
-          reason={nextAction?.reason}
+          bowlingTeamId={state?.bowlingTeamId}
+          currentBowlerId={state?.currentBowlerId}
         />
+
+        <NextBatterSheet
+          open={flow === "SELECT_NEXT_BATTER"}
+          onClose={resetFlow}
+          players={matchData?.players}
+          state={state}
+        />
+        {/* <SelectStrikerSheet
+          open={flow === "SELECT_STRIKER"}
+          onClose={resetFlow}
+          players={matchData?.players}
+          state={state}
+        /> */}
       </div>
 
       {/* 4. BOTTOM ACTION SHEET TRIGGER */}

@@ -1,3 +1,5 @@
+import { WicketType } from "./scoring";
+
 export interface StartInningsRequest {
   matchId: string;
   inningsNumber: 1 | 2;
@@ -100,7 +102,10 @@ export interface BallEvent {
   runs: BallRuns;
 
   extras: unknown | null;
-  wicket: unknown | null;
+  wicket: {
+    type: WicketType;
+    dismissedPlayerId: string;
+  } | null;
 
   flags: BallFlags;
 

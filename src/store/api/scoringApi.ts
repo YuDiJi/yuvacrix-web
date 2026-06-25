@@ -5,9 +5,12 @@ import {
 } from "@/types/innings";
 import { baseApi } from "./baseApi";
 import {
+  ChangeBatterRequest,
   ChangeBowlerRequest,
+  ContinueCurrentOverRequest,
   RecordBallRequest,
   RecordBallResponse,
+  StartNextOverRequest,
   UndoBallResponse,
 } from "@/types/scoring";
 
@@ -30,6 +33,16 @@ export const scoringApi = baseApi.injectEndpoints({
       }),
       providesTags: ["ScoringState"],
     }),
+
+    // getInningsState: builder.query<
+    //   ScoringState,
+    //   { matchId: string; number: number }
+    // >({
+    //   query: ({ matchId, number }) => ({
+    //     url: `/match/${matchId}/scoring/state?inningsNumber=${number}`,
+    //   }),
+    //   providesTags: ["ScoringState"],
+    // }),
 
     recordBall: builder.mutation<RecordBallResponse, RecordBallRequest>({
       query: ({ matchId, ...body }) => ({
@@ -59,7 +72,7 @@ export const scoringApi = baseApi.injectEndpoints({
       invalidatesTags: ["ScoringState"],
     }),
 
-    changeBowler: builder.mutation<void, ChangeBowlerRequest>({
+    changeBowlerManually: builder.mutation<void, ChangeBowlerRequest>({
       query: ({ matchId, inningsId, bowlerId, reason }) => ({
         url: `/match/${matchId}/scoring/bowler`,
         method: "POST",
@@ -69,7 +82,44 @@ export const scoringApi = baseApi.injectEndpoints({
           reason,
         },
       }),
+      invalidatesTags: ["ScoringState", "Matches"],
+    }),
 
+    changeStrikeManually: builder.mutation<void, ChangeBatterRequest>({
+      query: ({ matchId, inningsId, strikerId, nonStrikerId, reason }) => ({
+        url: `/match/${matchId}/scoring/strike`,
+        method: "POST",
+        body: {
+          inningsId,
+          strikerId,
+          nonStrikerId,
+          reason,
+        },
+      }),
+      invalidatesTags: ["ScoringState", "Matches"],
+    }),
+
+    startNextOver: builder.mutation<void, StartNextOverRequest>({
+      query: ({ matchId, inningsId, bowlerId }) => ({
+        url: `/match/${matchId}/scoring/overs/next`,
+        method: "POST",
+        body: {
+          inningsId,
+          bowlerId,
+        },
+      }),
+      invalidatesTags: ["ScoringState", "Matches"],
+    }),
+
+    continueCurrentOver: builder.mutation<void, ContinueCurrentOverRequest>({
+      query: ({ matchId, inningsId, reason }) => ({
+        url: `/match/${matchId}/scoring/overs/continue`,
+        method: "POST",
+        body: {
+          inningsId,
+          reason,
+        },
+      }),
       invalidatesTags: ["ScoringState", "Matches"],
     }),
   }),
@@ -80,5 +130,9 @@ export const {
   useGetScoringStateQuery,
   useRecordBallMutation,
   useUndoLastBallMutation,
-  useChangeBowlerMutation,
+  useChangeBowlerManuallyMutation,
+  useStartNextOverMutation,
+  useContinueCurrentOverMutation,
+  useChangeStrikeManuallyMutation,
+  // useGetInningsStateQuery,
 } = scoringApi;

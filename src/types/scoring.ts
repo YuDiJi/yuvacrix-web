@@ -28,6 +28,8 @@ export type WicketType =
   | "TIMED_OUT"
   | "RETIRED";
 
+export type DismissalEnd = "STRIKER" | "NON_STRIKER";
+
 export interface RecordBallRequest {
   matchId: string;
 
@@ -42,6 +44,13 @@ export interface RecordBallRequest {
   extra?: {
     type: ExtraType;
     additionalRuns: number;
+  };
+
+  wicket?: {
+    type: WicketType;
+    dismissedPlayerId: string;
+    fielderIds?: string[];
+    dismissalEnd?: DismissalEnd;
   };
 }
 
@@ -66,4 +75,39 @@ export interface ChangeBowlerRequest {
   inningsId: string;
   bowlerId: string;
   reason?: string;
+}
+export interface StartNextOverRequest {
+  matchId: string;
+  inningsId: string;
+  bowlerId: string;
+}
+export interface ContinueCurrentOverRequest {
+  matchId: string;
+  inningsId: string;
+  reason?: string;
+}
+
+export interface ChangeBatterRequest {
+  matchId: string;
+  inningsId: string;
+  strikerId: string;
+  nonStrikerId: string;
+  reason?: string;
+}
+
+export interface WicketFlowState {
+  batRuns?: number;
+
+  extraType?: ExtraType;
+  additionalRuns?: number;
+
+  wicketType?: WicketType;
+  dismissedPlayerId?: string;
+  fielderIds: string[];
+  dismissalEnd?: DismissalEnd;
+
+  // isWideBall?: boolean;
+  // isNoBall?: boolean;
+  // dontCountBall?: boolean;
+  // canBatAgain?: boolean;
 }

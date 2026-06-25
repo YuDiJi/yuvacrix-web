@@ -38,6 +38,7 @@ export function DialogBottom({
           "shadow-[0_-8px_48px_rgba(13,27,62,0.20)]",
           "transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
           open ? "translate-y-0" : "translate-y-full",
+          "max-h-[85vh] flex flex-col", // <-- add
           className,
         )}
       >
@@ -47,7 +48,7 @@ export function DialogBottom({
         </div>
 
         {/* Content Area */}
-        <div className="px-5 pb-8">{children}</div>
+        <div className="px-5 pb-8 flex-1 min-h-0">{children}</div>
       </div>
     </>
   );

@@ -219,6 +219,7 @@ export interface MatchDetailsPlayer {
   playerId: string;
 
   playerNameSnapshot: string;
+  profileImageUrl?: string;
 
   isPlayingXi: boolean;
   isSubstitute: boolean;
