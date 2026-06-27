@@ -1,8 +1,20 @@
 import React, { useState } from "react";
-import { ExtraType, WicketFlowState, WicketType } from "@/types/scoring";
+import {
+  ExtraType,
+  RecordBallRequest,
+  WicketFlowState,
+  WicketType,
+} from "@/types/scoring";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/common/Button";
 import { WICKET_CONFIG } from "./constant";
+
+type DeliveryTypeRunsSelectorProps = {
+  wicketType: WicketType;
+  form: WicketFlowState;
+  setForm: React.Dispatch<React.SetStateAction<WicketFlowState>>;
+  onContinue: () => void;
+};
 
 const deliveryType: Array<{ label: string; value: ExtraType }> = [
   { label: "WD", value: "WIDE" },
@@ -15,67 +27,83 @@ const runs = [0, 1, 2, 3, 4];
 
 export default function DeliveryTypeRunsSelector({
   wicketType,
-  value,
+  form,
+  setForm,
   onContinue,
-}: {
-  wicketType: WicketType;
-  value: WicketFlowState;
-  onContinue: (value: any) => void;
-}) {
+}: DeliveryTypeRunsSelectorProps) {
   const config = WICKET_CONFIG[wicketType];
 
-  const [selectedType, setSelectedType] = useState<ExtraType | null>(null); // delivery type
+  // const [selectedType, setSelectedType] = useState<ExtraType | null>(null); // delivery type
   // Specific state for when NB is selected
-  const [nbSubType, setNbSubType] = useState<"BAT" | "BYE" | "LEG_BYE" | null>(
-    null,
-  );
+  // const [nbSubType, setNbSubType] = useState<"BAT" | "BYE" | "LEG_BYE" | null>(
+  //   null,
+  // );
 
-  const [selectedRun, setSelectedRun] = useState<number | null>(null);
+  // const [selectedRun, setSelectedRun] = useState<number | null>(null);
+
+  const selectedType = form.extraType;
+  const selectedRun = form.selectedRuns;
+  const dontCountBall = form.dontCountBall;
 
   // Custom Run State
   const [isCustomRunActive, setIsCustomRunActive] = useState(false);
   const [customRunValue, setCustomRunValue] = useState<string>("");
 
-  // Checkbox states
-  // const [isBoundary, setIsBoundary] = useState(false);
-  const [dontCountBall, setDontCountBall] = useState(false);
-
-  // --- Handlers ---
-
   const handleTypeSelect = (value: ExtraType) => {
-    setSelectedType((prev) => (prev === value ? null : value));
-    if (value !== "NO_BALL") {
-      setNbSubType(null);
-    }
+    setForm((prev) => ({
+      ...prev,
+      extraType: prev.extraType === value ? undefined : value,
+    }));
   };
 
   const handleRunSelect = (run: number) => {
-    setSelectedRun((prev) => (prev === run ? null : run));
+    setForm((prev) => ({
+      ...prev,
+      selectedRuns: prev.selectedRuns === run ? undefined : run,
+      // additionalRuns: prev.additionalRuns === run ? undefined : run,
+    }));
+
     setIsCustomRunActive(false);
     setCustomRunValue("");
   };
 
   const handleCustomRunClick = () => {
     setIsCustomRunActive(true);
-    setSelectedRun(null);
+
+    setForm((prev) => ({
+      ...prev,
+      additionalRuns: undefined,
+    }));
   };
 
   const handleCustomRunChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
 
-    // Only allow empty string or numbers
     if (val === "" || /^\d+$/.test(val)) {
       const numVal = parseInt(val, 10);
-      // Cap at max 7 as requested
+
       if (val === "" || (numVal >= 0 && numVal <= 7)) {
         setCustomRunValue(val);
+
+        // setForm((prev) => ({
+        //   ...prev,
+        //   additionalRuns: val ? Number(val) : undefined,
+        // }));
+
+        setForm((prev) => ({
+          ...prev,
+          selectedRuns: val ? Number(val) : undefined,
+        }));
       }
     }
   };
 
   return (
     <div className="flex flex-col gap-6 mt-4 pb-4">
-      {(config.deliveryUI === "FULL" || dontCountBall) && (
+      {/* {(!config.confirmOption || dontCountBall) && ( */}
+      {(!config.confirmOption ||
+        config.confirmOption !== "DONT_COUNT_BALL" ||
+        !dontCountBall) && (
         <>
           {/* --- DELIVERY TYPE --- */}
           <div>
@@ -151,14 +179,19 @@ export default function DeliveryTypeRunsSelector({
             </div>
 
             {/* --- NO BALL CONDITIONAL OPTIONS --- */}
-            {selectedType === "NO_BALL" && selectedRun && (
+            {selectedType === "NO_BALL" && selectedRun !== undefined && (
               <div className="flex gap-5 mt-4 ml-1 bg-(--color-bg-base) p-3 rounded-xl border border-(--color-bg-border)">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     name="nb_type"
-                    checked={nbSubType === "BAT"}
-                    onChange={() => setNbSubType("BAT")}
+                    checked={form.nbRunSource === "BAT"}
+                    onChange={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        nbRunSource: "BAT",
+                      }))
+                    }
                     className="w-4 h-4 text-(--color-brand) focus:ring-(--color-brand) border-(--color-bg-border)"
                   />
                   <span className="text-body font-medium text-(--color-text-body)">
@@ -169,8 +202,13 @@ export default function DeliveryTypeRunsSelector({
                   <input
                     type="radio"
                     name="nb_type"
-                    checked={nbSubType === "BYE"}
-                    onChange={() => setNbSubType("BYE")}
+                    checked={form.nbRunSource === "BYE"}
+                    onChange={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        nbRunSource: "BYE",
+                      }))
+                    }
                     className="w-4 h-4 text-(--color-brand) focus:ring-(--color-brand) border-(--color-bg-border)"
                   />
                   <span className="text-body font-medium text-(--color-text-body)">
@@ -181,8 +219,13 @@ export default function DeliveryTypeRunsSelector({
                   <input
                     type="radio"
                     name="nb_type"
-                    checked={nbSubType === "LEG_BYE"}
-                    onChange={() => setNbSubType("LEG_BYE")}
+                    checked={form.nbRunSource === "LEG_BYE"}
+                    onChange={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        nbRunSource: "LEG_BYE",
+                      }))
+                    }
                     className="w-4 h-4 text-(--color-brand) focus:ring-(--color-brand) border-(--color-bg-border)"
                   />
                   <span className="text-body font-medium text-(--color-text-body)">
@@ -222,13 +265,20 @@ export default function DeliveryTypeRunsSelector({
           </span>
         </label> */}
 
-        {config.deliveryUI === "DONT_COUNT_BALL" && (
+        {config.confirmOption === "DONT_COUNT_BALL" && (
           <label className="flex items-center gap-3 cursor-pointer group">
             <div className="relative flex items-center justify-center">
               <input
                 type="checkbox"
-                checked={dontCountBall}
-                onChange={(e) => setDontCountBall(e.target.checked)}
+                // checked={dontCountBall}
+                // onChange={(e) => setDontCountBall(e.target.checked)}
+                checked={form.dontCountBall ?? false}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    dontCountBall: e.target.checked,
+                  }))
+                }
                 className="peer appearance-none w-5 h-5 rounded border-2 border-(--color-bg-border) checked:border-(--color-brand) checked:bg-(--color-brand) transition-colors cursor-pointer group-hover:border-(--color-brand)/50"
               />
               <svg
@@ -248,63 +298,10 @@ export default function DeliveryTypeRunsSelector({
             </span>
           </label>
         )}
-
-        {config.deliveryUI === "WIDE_CHECKBOX" && (
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative flex items-center justify-center">
-              <input
-                type="checkbox"
-                // checked={dontCountBall}
-                // onChange={(e) => setDontCountBall(e.target.checked)}
-                className="peer appearance-none w-5 h-5 rounded border-2 border-(--color-bg-border) checked:border-(--color-brand) checked:bg-(--color-brand) transition-colors cursor-pointer group-hover:border-(--color-brand)/50"
-              />
-              <svg
-                className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
-                viewBox="0 0 14 10"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="1.5 6 4.5 9 10.5 1" />
-              </svg>
-            </div>
-            <span className="text-body font-medium text-(--color-text-body)">
-              Wide
-            </span>
-          </label>
-        )}
-        {config.deliveryUI === "NO_BALL_CHECKBOX" && (
-          <label className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative flex items-center justify-center">
-              <input
-                type="checkbox"
-                // checked={dontCountBall}
-                // onChange={(e) => setDontCountBall(e.target.checked)}
-                className="peer appearance-none w-5 h-5 rounded border-2 border-(--color-bg-border) checked:border-(--color-brand) checked:bg-(--color-brand) transition-colors cursor-pointer group-hover:border-(--color-brand)/50"
-              />
-              <svg
-                className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
-                viewBox="0 0 14 10"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="1.5 6 4.5 9 10.5 1" />
-              </svg>
-            </div>
-            <span className="text-body font-medium text-(--color-text-body)">
-              No Ball
-            </span>
-          </label>
-        )}
       </div>
 
       {/* --- CONTINUE BUTTON --- */}
-      <Button>Continue</Button>
+      <Button onClick={onContinue}>Continue</Button>
     </div>
   );
 }

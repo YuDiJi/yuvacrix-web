@@ -2,7 +2,7 @@ import { useState } from "react";
 import { DialogBottom } from "@/components/common/DialogBottom"; // Adjust import path
 
 import WicketTypeSelector from "./WicketTypeSelector";
-import { OutFlowStep, WICKET_CONFIG } from "./constant";
+import { BuildRunsResult, OutFlowStep, WICKET_CONFIG } from "./constant";
 import {
   RecordBallRequest,
   WicketFlowState,
@@ -12,7 +12,6 @@ import FielderSelector from "./FielderSelector";
 import DismissedBatterSelector from "./DismissedBatterSelector";
 import { ScoringState } from "@/types/innings";
 import { MatchDetailsPlayer } from "@/types/match";
-import WicketKeeperSelector from "./WicketKeeperSelector";
 import DeliveryTypeRunsSelector from "./DeliveryTypeRunsSelector";
 import Confirm from "./ConfirmSelector";
 import { useRecordBallMutation } from "@/store/api/scoringApi";
@@ -37,6 +36,9 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
     useRecordBallMutation();
 
   const handleWicketTypeSelect = (wicketType: WicketType) => {
+    setForm({
+      fielderIds: [],
+    });
     const config = WICKET_CONFIG[wicketType];
 
     setForm((prev) => ({
@@ -86,7 +88,92 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
     setStep(flow[currentIndex - 1]);
   };
 
+  const buildRunsAndExtras = (form: WicketFlowState): BuildRunsResult => {
+    const runs = form.selectedRuns ?? 0;
+
+    // Normal runs
+    if (!form.extraType) {
+      return {
+        runs: {
+          batRuns: runs,
+        },
+      };
+    }
+
+    // Wide
+    if (form.extraType === "WIDE") {
+      return {
+        extra: {
+          type: "WIDE",
+          additionalRuns: runs,
+        },
+      };
+    }
+
+    // Bye
+    if (form.extraType === "BYE") {
+      return {
+        extra: {
+          type: "BYE",
+          additionalRuns: runs,
+        },
+      };
+    }
+
+    // Leg Bye
+    if (form.extraType === "LEG_BYE") {
+      return {
+        extra: {
+          type: "LEG_BYE",
+          additionalRuns: runs,
+        },
+      };
+    }
+
+    if (form.extraType === "NO_BALL") {
+      if (form.nbRunSource === "BAT") {
+        return {
+          runs: {
+            batRuns: runs,
+          },
+          extra: {
+            type: "NO_BALL",
+            additionalRuns: 0,
+          },
+        };
+      }
+
+      if (form.nbRunSource === "BYE") {
+        return {
+          extra: {
+            type: "NO_BALL",
+            additionalRuns: runs,
+          },
+        };
+      }
+
+      if (form.nbRunSource === "LEG_BYE") {
+        return {
+          extra: {
+            type: "NO_BALL",
+            additionalRuns: runs,
+          },
+        };
+      }
+
+      return {
+        extra: {
+          type: "NO_BALL",
+          additionalRuns: 0,
+        },
+      };
+    }
+
+    return {};
+  };
+
   const buildWicketPayload = (form: WicketFlowState): RecordBallRequest => {
+    const scoring = buildRunsAndExtras(form);
     const wicket: NonNullable<RecordBallRequest["wicket"]> = {
       type: form.wicketType!,
       dismissedPlayerId: form.dismissedPlayerId!,
@@ -97,7 +184,7 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
     }
 
     if (form.dismissalEnd) {
-      // wicket.dismissalEnd = form.dismissalEnd;
+      wicket.dismissalEnd = form.dismissalEnd;
     }
 
     const payload: RecordBallRequest = {
@@ -105,19 +192,16 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
       inningsId: state!.inningsId,
       clientEventId: crypto.randomUUID(),
 
-      runs: {
-        batRuns: form.batRuns ?? 0,
+      wicket,
+
+      runs: scoring.runs ?? {
+        batRuns: 0,
       },
 
-      wicket,
+      ...(scoring.extra && {
+        extra: scoring.extra,
+      }),
     };
-
-    if (form.extraType) {
-      payload.extra = {
-        type: form.extraType,
-        additionalRuns: form.additionalRuns ?? 0,
-      };
-    }
 
     return payload;
   };
@@ -142,10 +226,14 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
     }
   };
 
-  console.log(step, form);
-
   return (
-    <DialogBottom open={open} onClose={onClose}>
+    <DialogBottom
+      open={open}
+      onClose={() => {
+        onClose();
+        setStep("SELECT_WICKET_TYPE");
+      }}
+    >
       {step !== "SELECT_WICKET_TYPE" && (
         <button onClick={goBack}>
           <ArrowLeft size={20} />
@@ -210,21 +298,16 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
         {step === "SELECT_DELIVERY_TYPE_AND_RUNS" && (
           <DeliveryTypeRunsSelector
             wicketType={form.wicketType!}
-            value={form}
-            onContinue={(values) => {
-              setForm((prev) => ({
-                ...prev,
-                ...values,
-              }));
-
-              goToNextStep();
-            }}
+            form={form}
+            setForm={setForm}
+            onContinue={goToNextStep}
           />
         )}
 
         {step === "CONFIRM" && (
           <Confirm
             form={form}
+            setForm={setForm}
             players={players}
             onSubmit={() => {
               handleOut();

@@ -8,13 +8,18 @@ import { MatchDetailsPlayer } from "@/types/match";
 import { useMemo } from "react";
 import { useContinueCurrentOverMutation } from "@/store/api/scoringApi";
 
+type CompletionSheetMode = "OVER_COMPLETED" | "INNINGS_COMPLETED";
+
 interface Props {
+  mode: CompletionSheetMode;
   open: boolean;
   onClose: () => void;
   onContinue: () => void;
   lastCompletedOver: LastCompletedOver | undefined | null;
   totalRuns?: number;
   wickets?: number;
+  oversText?: string;
+  extras?: number;
   players: MatchDetailsPlayer[] | undefined;
   matchId: string | null;
   inningsId: string | undefined;
@@ -22,13 +27,16 @@ interface Props {
   onContinueThisOver: () => void;
 }
 
-export function OverCompletedSheet({
+export function CompletionSheet({
+  mode,
   open,
   onClose,
   onContinue,
   lastCompletedOver,
   totalRuns,
   wickets,
+  oversText,
+  extras,
   onContinueThisOver,
   players,
   matchId,
@@ -65,7 +73,9 @@ export function OverCompletedSheet({
     <DialogBox open={open} onClose={onClose} className="p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-medium text-[#d33a41]">Over complete</h2>
+        <h2 className="text-xl font-medium text-[#d33a41]">
+          {mode === "OVER_COMPLETED" ? "Over complete" : "Innings complete"}
+        </h2>
         <button
           onClick={onClose}
           className="text-slate-600 hover:text-slate-900 transition-colors"
@@ -85,7 +95,7 @@ export function OverCompletedSheet({
           </div>
           <div className="flex-1 py-3 flex flex-col items-center">
             <span className="text-2xl font-bold text-slate-800">
-              {lastCompletedOver?.displayOverNumber}
+              {oversText}
             </span>
             <span className="text-[10px] text-slate-600 font-medium">
               Overs
@@ -98,9 +108,7 @@ export function OverCompletedSheet({
             </span>
           </div>
           <div className="flex-1 py-3 flex flex-col items-center">
-            <span className="text-2xl font-bold text-slate-800">
-              {lastCompletedOver?.extras}
-            </span>
+            <span className="text-2xl font-bold text-slate-800">{extras}</span>
             <span className="text-[10px] text-slate-600 font-medium">
               Extras
             </span>
@@ -108,24 +116,28 @@ export function OverCompletedSheet({
         </div>
       </div>
 
-      {/* Bowler Info */}
-      <p className="text-sm text-slate-700 mb-3">
-        End of over {lastCompletedOver?.overNumber} by {bowlerName ?? ""}
-      </p>
+      {mode === "OVER_COMPLETED" && (
+        <>
+          {/* Bowler Info */}
+          <p className="text-sm text-slate-700 mb-3">
+            End of over {lastCompletedOver?.overNumber} by {bowlerName ?? ""}
+          </p>
 
-      {/* Ball-by-ball summary for the over */}
-      <div className="flex items-center justify-between mb-6 gap-3">
-        <div className="flex items-start gap-1.5 overflow-x-auto scrollbar-none">
-          {/* {lastCompletedOver?.display?.split(" ").map((ball, i) => ( */}
-          {lastCompletedOver?.balls?.map((ball) => (
-            <BallChip key={ball.sequenceNumber} ball={ball} />
-          ))}
-        </div>
+          {/* Ball-by-ball summary for the over */}
+          <div className="flex items-center justify-between mb-6 gap-3">
+            <div className="flex items-start gap-1.5 overflow-x-auto scrollbar-none">
+              {/* {lastCompletedOver?.display?.split(" ").map((ball, i) => ( */}
+              {lastCompletedOver?.balls?.map((ball) => (
+                <BallChip key={ball.sequenceNumber} ball={ball} />
+              ))}
+            </div>
 
-        <div className="shrink-0 text-sm font-semibold text-slate-800">
-          = {lastCompletedOver?.totalRuns ?? 0}
-        </div>
-      </div>
+            <div className="shrink-0 text-sm font-semibold text-slate-800">
+              = {lastCompletedOver?.totalRuns ?? 0}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Actions */}
       <div className="flex flex-col gap-2">
@@ -136,7 +148,8 @@ export function OverCompletedSheet({
           }}
           size="sm"
         >
-          Start next over
+          {mode === "INNINGS_COMPLETED" && "Start next innings"}
+          {mode === "OVER_COMPLETED" && "Start next over"}
         </Button>
         <Button
           onClick={handleContinueCurrentOver}

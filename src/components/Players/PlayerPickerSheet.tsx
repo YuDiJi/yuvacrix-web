@@ -134,6 +134,7 @@ export function PlayerPickerSheet({
               const isDisabled = disabledIds.includes(player.playerId);
               const isSelected = selectedPlayerId === player.playerId;
               const tag = roleTag(player);
+
               return (
                 <button
                   key={player.playerId}

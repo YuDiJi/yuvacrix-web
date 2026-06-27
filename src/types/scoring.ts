@@ -98,6 +98,8 @@ export interface ChangeBatterRequest {
 export interface WicketFlowState {
   batRuns?: number;
 
+  wicketKeeperId?: string;
+
   extraType?: ExtraType;
   additionalRuns?: number;
 
@@ -106,8 +108,10 @@ export interface WicketFlowState {
   fielderIds: string[];
   dismissalEnd?: DismissalEnd;
 
-  // isWideBall?: boolean;
-  // isNoBall?: boolean;
-  // dontCountBall?: boolean;
-  // canBatAgain?: boolean;
+  nextBatterId?: string;
+
+  dontCountBall?: boolean;
+  selectedRuns?: number;
+
+  nbRunSource?: "BAT" | "BYE" | "LEG_BYE";
 }

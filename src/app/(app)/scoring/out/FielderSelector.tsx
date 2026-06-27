@@ -33,14 +33,21 @@ const FielderSelector = ({
     (player) => player.teamId === state?.bowlingTeamId,
   );
 
-  // A player already picked in another slot can't be picked again
   const disabledIds = useMemo(() => {
-    const ids = state?.currentBowlerId ? [state.currentBowlerId] : [];
-    fielders.forEach((f, i) => {
-      if (f && i !== activeSlot) ids.push(f.playerId);
+    const ids: string[] = [];
+
+    if (state?.currentBowlerId) {
+      ids.push(state.currentBowlerId);
+    }
+
+    fielders.forEach((fielder, index) => {
+      if (index !== activeSlot && fielder) {
+        ids.push(fielder.playerId);
+      }
     });
+
     return ids;
-  }, [state?.currentBowlerId, fielders, activeSlot]);
+  }, [fielders, activeSlot, state?.currentBowlerId]);
 
   const slotLabel = (slot: number) =>
     numberOfFielders === 1
@@ -58,11 +65,15 @@ const FielderSelector = ({
       return next;
     });
 
-    // Auto-advance to the next empty slot, otherwise close the sheet
-    const nextEmptySlot = fielders.findIndex(
-      (f, i) => i !== activeSlot && f === null,
-    );
-    setActiveSlot(nextEmptySlot !== -1 ? nextEmptySlot : null);
+    if (numberOfFielders === 2) {
+      if (activeSlot === 0 && !isDirectHit) {
+        setActiveSlot(1);
+      } else {
+        setActiveSlot(1);
+      }
+    } else {
+      setActiveSlot(0);
+    }
   }
 
   const allSelected = isDirectHit
@@ -78,7 +89,6 @@ const FielderSelector = ({
       .join("");
   }
 
-  console.log(fielders);
   return (
     <div className="flex flex-col h-full min-h-0 gap-2">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
@@ -106,7 +116,9 @@ const FielderSelector = ({
               <button
                 key={slot}
                 type="button"
-                onClick={() => setActiveSlot(slot)}
+                onClick={() => {
+                  setActiveSlot(slot);
+                }}
                 className={cn(
                   "flex-1 flex items-center gap-3 rounded-2xl border-2 p-3 text-left transition-all duration-200",
                   "active:scale-[0.98]",
@@ -215,9 +227,7 @@ const FielderSelector = ({
         // subTitle={`For over ${oversText}`}
         disabledIds={disabledIds}
         selectedPlayerId={
-          activeSlot !== null
-            ? (fielders[activeSlot]?.playerId ?? undefined)
-            : undefined
+          activeSlot !== null ? fielders[activeSlot]?.playerId : undefined
         }
         onSelect={handleSelect}
       />

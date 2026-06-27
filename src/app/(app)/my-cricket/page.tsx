@@ -384,8 +384,10 @@ export default function MatchesPage() {
         return `/start-match`;
 
       case "TOSS_DONE":
-      case "LIVE":
         return `/start-match/start-innings`;
+
+      case "LIVE":
+        return `/scoring`;
 
       case "INNINGS_BREAK":
       case "COMPLETED":
