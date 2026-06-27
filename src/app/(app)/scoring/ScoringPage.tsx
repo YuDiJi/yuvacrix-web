@@ -564,7 +564,7 @@ export default function ScoringPage() {
           mode={"MATCH_COMPLETED"}
           onClose={() => {}}
           onContinue={() => {
-            router.push(`/start-match/start-innings`);
+            // router.push(`/start-match/start-innings`);
           }}
           onContinueThisOver={() => {
             setFlow("AWAITING_NEXT_OVER");
