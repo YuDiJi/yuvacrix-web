@@ -6,9 +6,15 @@ import { Button } from "@/components/common/Button";
 import { BallChip } from "./BallChip";
 import { MatchDetailsPlayer } from "@/types/match";
 import { useMemo } from "react";
-import { useContinueCurrentOverMutation } from "@/store/api/scoringApi";
+import {
+  useCompleteInningsMutation,
+  useContinueCurrentOverMutation,
+} from "@/store/api/scoringApi";
 
-type CompletionSheetMode = "OVER_COMPLETED" | "INNINGS_COMPLETED";
+type CompletionSheetMode =
+  | "OVER_COMPLETED"
+  | "INNINGS_COMPLETED"
+  | "MATCH_COMPLETED";
 
 interface Props {
   mode: CompletionSheetMode;
@@ -42,19 +48,13 @@ export function CompletionSheet({
   matchId,
   inningsId,
 }: Props) {
-  const [continueCurrentOver, { isLoading: isContinuingCurrentOver }] =
-    useContinueCurrentOverMutation();
+  const [completeInnings, { isLoading: isContinuingCurrentOver }] =
+    useCompleteInningsMutation();
 
   const handleContinueCurrentOver = async () => {
     if (!matchId || !inningsId) return;
 
     try {
-      // await continueCurrentOver({
-      //   matchId,
-      //   inningsId,
-      //   reason: "Continue this over",
-      // }).unwrap();
-
       onContinueThisOver();
     } catch (error) {
       console.error(error);
@@ -73,8 +73,14 @@ export function CompletionSheet({
     <DialogBox open={open} onClose={onClose} className="p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-medium text-[#d33a41]">
-          {mode === "OVER_COMPLETED" ? "Over complete" : "Innings complete"}
+        <h2 className="text-xl text-(--color-brand) font-semibold">
+          {mode === "OVER_COMPLETED"
+            ? "Over complete"
+            : mode === "INNINGS_COMPLETED"
+              ? "Innings complete"
+              : mode === "MATCH_COMPLETED"
+                ? "Match result"
+                : ""}
         </h2>
         <button
           onClick={onClose}
@@ -85,36 +91,44 @@ export function CompletionSheet({
       </div>
 
       {/* Stats Box */}
-      <div className="border border-slate-100 rounded-xl overflow-hidden mb-5">
-        <div className="flex bg-[#f7f8fa] divide-x divide-white">
-          <div className="flex-1 py-3 flex flex-col items-center">
-            <span className="text-2xl font-bold text-slate-800">
-              {totalRuns}
-            </span>
-            <span className="text-[10px] text-slate-600 font-medium">Runs</span>
-          </div>
-          <div className="flex-1 py-3 flex flex-col items-center">
-            <span className="text-2xl font-bold text-slate-800">
-              {oversText}
-            </span>
-            <span className="text-[10px] text-slate-600 font-medium">
-              Overs
-            </span>
-          </div>
-          <div className="flex-1 py-3 flex flex-col items-center">
-            <span className="text-2xl font-bold text-slate-800">{wickets}</span>
-            <span className="text-[10px] text-slate-600 font-medium">
-              Wickets
-            </span>
-          </div>
-          <div className="flex-1 py-3 flex flex-col items-center">
-            <span className="text-2xl font-bold text-slate-800">{extras}</span>
-            <span className="text-[10px] text-slate-600 font-medium">
-              Extras
-            </span>
+      {(mode === "INNINGS_COMPLETED" || mode === "OVER_COMPLETED") && (
+        <div className="border border-slate-100 rounded-xl overflow-hidden mb-5">
+          <div className="flex bg-[#f7f8fa] divide-x divide-white">
+            <div className="flex-1 py-3 flex flex-col items-center">
+              <span className="text-2xl font-bold text-slate-800">
+                {totalRuns}
+              </span>
+              <span className="text-[10px] text-slate-600 font-medium">
+                Runs
+              </span>
+            </div>
+            <div className="flex-1 py-3 flex flex-col items-center">
+              <span className="text-2xl font-bold text-slate-800">
+                {oversText}
+              </span>
+              <span className="text-[10px] text-slate-600 font-medium">
+                Overs
+              </span>
+            </div>
+            <div className="flex-1 py-3 flex flex-col items-center">
+              <span className="text-2xl font-bold text-slate-800">
+                {wickets}
+              </span>
+              <span className="text-[10px] text-slate-600 font-medium">
+                Wickets
+              </span>
+            </div>
+            <div className="flex-1 py-3 flex flex-col items-center">
+              <span className="text-2xl font-bold text-slate-800">
+                {extras}
+              </span>
+              <span className="text-[10px] text-slate-600 font-medium">
+                Extras
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {mode === "OVER_COMPLETED" && (
         <>
@@ -150,6 +164,7 @@ export function CompletionSheet({
         >
           {mode === "INNINGS_COMPLETED" && "Start next innings"}
           {mode === "OVER_COMPLETED" && "Start next over"}
+          {mode === "MATCH_COMPLETED" && "End Match"}
         </Button>
         <Button
           onClick={handleContinueCurrentOver}

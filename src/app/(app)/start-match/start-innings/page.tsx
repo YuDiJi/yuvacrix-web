@@ -21,7 +21,7 @@ import { useGetMatchByIdQuery } from "@/store/api/matchApi";
 import { BattingStyle, BowlingStyle } from "@/types/player";
 import {
   useGetScoringStateQuery,
-  useStartFirstInningMutation,
+  useStartInningMutation,
 } from "@/store/api/scoringApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -432,8 +432,8 @@ export default function StartInningsPage() {
   //   matchId ? { matchId } : skipToken,
   // );
 
-  const [startFirstInning, { isLoading: isStartingInnings }] =
-    useStartFirstInningMutation();
+  const [startInning, { isLoading: isStartingInnings }] =
+    useStartInningMutation();
 
   const { data: matchData, isLoading: isMatchDataLoading } =
     useGetMatchByIdQuery(matchId ? { matchId } : skipToken);
@@ -454,24 +454,34 @@ export default function StartInningsPage() {
 
   const tossDecision = toss?.decision === "BAT" ? "Bat First" : "Bowl First";
 
-  const battingTeamId =
+  const firstInningsBattingTeamId =
     toss?.decision === "BAT"
       ? toss?.wonByTeamId
       : toss?.wonByTeamId === teamA?.teamId
         ? teamB?.teamId
         : teamA?.teamId;
 
+  const firstInningsBowlingTeamId =
+    firstInningsBattingTeamId === teamA?.teamId ? teamB?.teamId : teamA?.teamId;
+
+  const isSecondInnings = !!state;
+
+  const battingTeamId = isSecondInnings
+    ? firstInningsBowlingTeamId
+    : firstInningsBattingTeamId;
+
+  const bowlingTeamId = isSecondInnings
+    ? firstInningsBattingTeamId
+    : firstInningsBowlingTeamId;
+
   const battingTeamName =
     battingTeamId === teamA?.teamId
       ? (teamA?.teamNameSnapshot ?? "Batting Team")
       : (teamB?.teamNameSnapshot ?? "Batting Team");
 
-  const bowlingTeamId =
-    battingTeamId === teamA?.teamId ? teamB?.teamId : teamA?.teamId;
-
   const allPlayers = matchData?.players ?? [];
 
-  const batters: InningsPlayer[] = useMemo(
+  const batters = useMemo(
     () =>
       allPlayers
         .filter((p) => p.teamId === battingTeamId && p.isPlayingXi)
@@ -483,14 +493,13 @@ export default function StartInningsPage() {
           isWicketKeeper: p.isWicketKeeper,
           battingOrder: p.battingOrder,
         })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [allPlayers.length, battingTeamId],
+    [allPlayers, battingTeamId],
   );
 
   const bowlingPlayers: InningsPlayer[] = useMemo(
     () =>
       allPlayers
-        .filter((p) => p.teamId !== battingTeamId && p.isPlayingXi)
+        .filter((p) => p.teamId === bowlingTeamId && p.isPlayingXi)
         .map((p) => ({
           playerId: p.playerId,
           fullName: p.playerNameSnapshot,
@@ -498,8 +507,7 @@ export default function StartInningsPage() {
           isWicketKeeper: p.isWicketKeeper,
           battingOrder: p.battingOrder,
         })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [allPlayers.length, battingTeamId],
+    [allPlayers, bowlingTeamId],
   );
 
   // ── Selection state ──────────────────────────────────────────────────────
@@ -568,9 +576,9 @@ export default function StartInningsPage() {
       return;
     }
     try {
-      const response = await startFirstInning({
+      const response = await startInning({
         matchId,
-        inningsNumber: 1,
+        inningsNumber: isSecondInnings ? 2 : 1,
         battingTeamId: battingTeamId,
         bowlingTeamId: bowlingTeamId,
         strikerId: striker.playerId,

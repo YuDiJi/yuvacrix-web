@@ -111,6 +111,8 @@ export interface WicketFlowState {
   nextBatterId?: string;
 
   dontCountBall?: boolean;
+  canBatAgain?: boolean;
+
   selectedRuns?: number;
 
   nbRunSource?: "BAT" | "BYE" | "LEG_BYE";
