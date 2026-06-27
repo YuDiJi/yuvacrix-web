@@ -19,7 +19,10 @@ import { selectMatchId } from "@/store/startMatch/selectors";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useGetMatchByIdQuery } from "@/store/api/matchApi";
 import { BattingStyle, BowlingStyle } from "@/types/player";
-import { useStartFirstInningMutation } from "@/store/api/scoringApi";
+import {
+  useGetScoringStateQuery,
+  useStartFirstInningMutation,
+} from "@/store/api/scoringApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -425,18 +428,24 @@ export default function StartInningsPage() {
   const router = useRouter();
   const matchId = useAppSelector(selectMatchId);
 
-  const { data, isLoading } = useGetMatchByIdQuery(
-    matchId ? { matchId } : skipToken,
-  );
+  // const { data, isLoading } = useGetMatchByIdQuery(
+  //   matchId ? { matchId } : skipToken,
+  // );
 
   const [startFirstInning, { isLoading: isStartingInnings }] =
     useStartFirstInningMutation();
 
+  const { data: matchData, isLoading: isMatchDataLoading } =
+    useGetMatchByIdQuery(matchId ? { matchId } : skipToken);
+  const { data: state } = useGetScoringStateQuery(matchId ?? skipToken);
+
+  console.log(state);
+
   // ── Derived teams & players ──────────────────────────────────────────────
 
-  const toss = data?.match.toss;
-  const teamA = data?.teams.find((t) => t.side === "TEAM_A");
-  const teamB = data?.teams.find((t) => t.side === "TEAM_B");
+  const toss = matchData?.match.toss;
+  const teamA = matchData?.teams.find((t) => t.side === "TEAM_A");
+  const teamB = matchData?.teams.find((t) => t.side === "TEAM_B");
 
   const tossWinnerName =
     toss?.wonByTeamId === teamA?.teamId
@@ -460,7 +469,7 @@ export default function StartInningsPage() {
   const bowlingTeamId =
     battingTeamId === teamA?.teamId ? teamB?.teamId : teamA?.teamId;
 
-  const allPlayers = data?.players ?? [];
+  const allPlayers = matchData?.players ?? [];
 
   const batters: InningsPlayer[] = useMemo(
     () =>
@@ -569,7 +578,6 @@ export default function StartInningsPage() {
         bowlerId: bowler?.playerId,
       }).unwrap();
 
-      console.log(response); // store FIRST_INNINGS_ID
       router.push("/scoring");
     } catch (error) {
       console.error(error);
@@ -605,14 +613,14 @@ export default function StartInningsPage() {
                 className="mt-1 font-(family-name:--font-display) text-3xl font-black uppercase text-white"
                 style={{ letterSpacing: "0.04em", lineHeight: 1.05 }}
               >
-                {isLoading ? (
+                {isMatchDataLoading ? (
                   <span className="inline-block h-8 w-48 animate-pulse rounded-lg bg-white/20" />
                 ) : (
                   battingTeamName
                 )}
               </h1>
             </div>
-            {tossWinnerName && !isLoading && (
+            {tossWinnerName && !isMatchDataLoading && (
               <div className="mt-4 flex items-start gap-3 rounded-2xl bg-white/10 px-4 py-3">
                 <Info size={16} className="mt-0.5 shrink-0 text-white/70" />
                 <p className="text-sm font-medium leading-snug text-white/80">

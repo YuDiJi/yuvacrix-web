@@ -19,7 +19,7 @@ import { useGetMatchByIdQuery } from "@/store/api/matchApi";
 import { useMemo } from "react";
 import { UndoSheet } from "./Undo";
 import { OutSheet } from "./out/Out";
-import { OverCompletedSheet } from "./OverCompleted";
+import { CompletionSheet } from "./CompletionSheet";
 import { NextBowlerSheet } from "./NextBowler";
 import { Button } from "@/components/common/Button";
 import { cn } from "@/lib/cn";
@@ -28,6 +28,7 @@ import { ScoringState } from "@/types/innings";
 import NextBatterSheet from "./NextBatter";
 import { WICKET_CONFIG } from "./out/constant";
 import SelectStrikerSheet from "./SelectStriker";
+import { useRouter } from "next/navigation";
 
 export type DialogType =
   | "WIDE"
@@ -43,10 +44,11 @@ type ScoringFlow =
   | "OVER_COMPLETED"
   | "SELECT_NEXT_BOWLER"
   | "SELECT_NEXT_BATTER"
-  // | "SELECT_STRIKER"
-  | "AWAITING_NEXT_OVER";
+  | "AWAITING_NEXT_OVER"
+  | "START_NEXT_INNINGS";
 
 export default function ScoringPage() {
+  const router = useRouter();
   const matchId = useAppSelector(selectMatchId);
   const { data: matchData } = useGetMatchByIdQuery(
     matchId ? { matchId } : skipToken,
@@ -136,6 +138,10 @@ export default function ScoringPage() {
       return setFlow("SELECT_NEXT_BOWLER");
     }
 
+    if (state.inningsCompleted) {
+      return setFlow("START_NEXT_INNINGS");
+    }
+
     return setFlow("IDLE");
   }, [state]);
 
@@ -161,14 +167,20 @@ export default function ScoringPage() {
     ? playersById.get(displayState.currentBowlerId)
     : undefined;
 
+  const battingTeam = matchData?.teams.find(
+    (team) => team.teamId === displayState?.battingTeamId,
+  );
+  const bowlingTeam = matchData?.teams.find(
+    (team) => team.teamId === displayState?.bowlingTeamId,
+  );
+  const tossWinner = matchData?.teams?.find(
+    (team) => team.teamId === matchData?.match?.toss?.wonByTeamId,
+  );
+
   const resetFlow = () => {
     setFlow("IDLE");
     setCompletedOverSnapshot(null);
   };
-
-  console.log(flow, state);
-  // console.log(flow);
-  //   console.log(completedOverSnapshot);
 
   return (
     // 'absolute inset-x-0 bottom-0 top-14' strictly forces the layout to fit
@@ -177,6 +189,9 @@ export default function ScoringPage() {
       {/* 1. HERO SECTION (Navy Background) */}
       <div className="bg-(--color-navy) text-white pb-10 rounded-b-sm shrink-0">
         <div className="flex flex-col items-center pt-6 px-4">
+          <h3 className="text-2xl font-bold leading-none text-(--color-six)/80 uppercase font-display text-center">
+            {battingTeam?.teamNameSnapshot}
+          </h3>
           <div className="flex items-baseline font-display">
             <span className="text-[3.5rem] font-black leading-none tracking-tight">
               {displayState?.score ?? "0/0"}
@@ -187,17 +202,18 @@ export default function ScoringPage() {
           </div>
 
           <p className="mt-2 text-[10px] font-bold text-white/60 uppercase tracking-widest font-display text-center">
-            Black panther won the toss and elected to field
+            {tossWinner?.teamNameSnapshot} won the toss and elected to{" "}
+            {matchData?.match?.toss?.decision}
           </p>
 
-          <div className="mt-2 flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-md">
+          {/* <div className="mt-2 flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-md">
             <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest font-display">
               Match ID: 25578100
             </span>
             <button className="text-white/40 hover:text-white/80 transition-colors">
               <Copy size={12} />
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -501,8 +517,9 @@ export default function ScoringPage() {
           state={state}
           players={matchData?.players}
         />
-        <OverCompletedSheet
+        <CompletionSheet
           open={flow === "OVER_COMPLETED"}
+          mode={"OVER_COMPLETED"}
           onClose={() => {}}
           onContinue={() => {
             setFlow("SELECT_NEXT_BOWLER");
@@ -516,6 +533,27 @@ export default function ScoringPage() {
           wickets={state?.wickets}
           matchId={matchId}
           inningsId={state?.inningsId}
+          oversText={state?.oversText}
+          extras={state?.extras?.total}
+        />
+        <CompletionSheet
+          open={flow === "START_NEXT_INNINGS"}
+          mode={"INNINGS_COMPLETED"}
+          onClose={() => {}}
+          onContinue={() => {
+            router.push(`/start-match/start-innings`);
+          }}
+          onContinueThisOver={() => {
+            setFlow("AWAITING_NEXT_OVER");
+          }}
+          lastCompletedOver={state?.lastCompletedOver}
+          players={matchData?.players}
+          totalRuns={state?.totalRuns}
+          wickets={state?.wickets}
+          matchId={matchId}
+          inningsId={state?.inningsId}
+          oversText={state?.oversText}
+          extras={state?.extras?.total}
         />
 
         <NextBowlerSheet
@@ -535,12 +573,6 @@ export default function ScoringPage() {
           players={matchData?.players}
           state={state}
         />
-        {/* <SelectStrikerSheet
-          open={flow === "SELECT_STRIKER"}
-          onClose={resetFlow}
-          players={matchData?.players}
-          state={state}
-        /> */}
       </div>
 
       {/* 4. BOTTOM ACTION SHEET TRIGGER */}
