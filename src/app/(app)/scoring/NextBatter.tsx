@@ -113,8 +113,11 @@ const NextBatterSheet = ({
   const [changeStrikeManually, { isLoading }] =
     useChangeStrikeManuallyMutation();
 
-  const battingPlayers = players?.filter(
-    (player) => player.teamId === state?.battingTeamId,
+  const availableBatterIds = new Set(state?.availableBatters ?? []);
+  console.log(availableBatterIds);
+
+  const availableBattingPlayers = players?.filter((player) =>
+    availableBatterIds.has(player.playerId),
   );
 
   const dismissedPlayerId = state?.lastBall?.wicket?.dismissedPlayerId;
@@ -184,7 +187,7 @@ const NextBatterSheet = ({
           <div>
             <PlayerPickerSheet
               open={open}
-              players={battingPlayers}
+              players={availableBattingPlayers}
               title="Select Next Batter"
               subTitle="Choose who's walking in to bat"
               disabledIds={

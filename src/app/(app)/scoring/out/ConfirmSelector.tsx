@@ -94,8 +94,6 @@ export default function Confirm({
   const fielders =
     players?.filter((p) => form.fielderIds.includes(p.playerId)) ?? [];
 
-  // const [canBatAgain, setCanBatAgain] = useState(false);
-
   const runsDisplay = (() => {
     if (!form.extraType) {
       return form.selectedRuns !== undefined
@@ -261,22 +259,43 @@ export default function Confirm({
             )}
           </div>
         )}
-        {/* {config?.confirmOption === "CAN_BAT_AGAIN" && (
-          <div>
-            <label>Can bat again</label>
-            <input
-              checked={canBatAgain}
-              type="radio"
-              onChange={(checked) =>
-                setForm((prev) => ({
-                  ...prev,
-                  extraType: checked ? "NO_BALL" : undefined,
-                  additionalRuns: checked ? 0 : undefined,
-                }))
-              }
-            />
+        {config?.confirmOption === "CAN_BAT_AGAIN" && (
+          <div className="rounded-xl border  p-4 border-(--color-brand)/30 bg-(--color-bg-tint)">
+            <p className="text-section-label mb-3">Can bat again?</p>
+
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="canBatAgain"
+                  checked={form.canBatAgain === true}
+                  onChange={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      canBatAgain: true,
+                    }))
+                  }
+                />
+                <span>Yes</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="canBatAgain"
+                  checked={form.canBatAgain === false}
+                  onChange={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      canBatAgain: false,
+                    }))
+                  }
+                />
+                <span>No</span>
+              </label>
+            </div>
           </div>
-        )} */}
+        )}
       </div>
 
       {/* ── Sticky CTA ── */}
@@ -288,7 +307,7 @@ export default function Confirm({
           onClick={onSubmit}
           loading={isLoading}
         >
-          {isLoading ? "Recording…" : "Record Wicket"}
+          {isLoading ? "Recording…" : " Record Wicket"}
         </Button>
       </div>
     </div>

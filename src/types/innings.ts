@@ -9,6 +9,17 @@ export interface StartInningsRequest {
   nonStrikerId: string;
   bowlerId: string;
 }
+export interface CompleteInningsRequest {
+  matchId: string;
+  inningsId: string;
+  reason:
+    | "OVERS_COMPLETED"
+    | "ALL_OUT"
+    | "TARGET_CHASED"
+    | "MANUAL"
+    | "ABANDONED";
+  note: string;
+}
 
 export interface Extras {
   total: number;
@@ -203,6 +214,7 @@ export interface ScoringState {
   currentOver: CurrentOver | null;
   lastCompletedOver: LastCompletedOver | null;
   currentBowlerFigures: { display: string } | null;
+  availableBatters: string[];
 }
 
 export interface Innings {

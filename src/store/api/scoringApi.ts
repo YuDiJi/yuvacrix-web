@@ -1,4 +1,5 @@
 import {
+  CompleteInningsRequest,
   ScoringState,
   StartInningsRequest,
   StartInningsResponse,
@@ -16,15 +17,13 @@ import {
 
 export const scoringApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    startFirstInning: builder.mutation<
-      StartInningsResponse,
-      StartInningsRequest
-    >({
+    startInning: builder.mutation<StartInningsResponse, StartInningsRequest>({
       query: ({ matchId, ...body }) => ({
         url: `/match/${matchId}/scoring/innings/start`,
         method: "POST",
         body,
       }),
+      invalidatesTags: ["ScoringState"],
     }),
 
     getScoringState: builder.query<ScoringState, string>({
@@ -32,6 +31,15 @@ export const scoringApi = baseApi.injectEndpoints({
         url: `/match/${matchId}/scoring/state`,
       }),
       providesTags: ["ScoringState"],
+    }),
+
+    completeInnings: builder.mutation<any, CompleteInningsRequest>({
+      query: ({ matchId, inningsId, ...body }) => ({
+        url: `/match/${matchId}/scoring/innings/${inningsId}/complete`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["ScoringState"],
     }),
 
     // getInningsState: builder.query<
@@ -126,7 +134,7 @@ export const scoringApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useStartFirstInningMutation,
+  useStartInningMutation,
   useGetScoringStateQuery,
   useRecordBallMutation,
   useUndoLastBallMutation,
@@ -134,5 +142,6 @@ export const {
   useStartNextOverMutation,
   useContinueCurrentOverMutation,
   useChangeStrikeManuallyMutation,
+  useCompleteInningsMutation,
   // useGetInningsStateQuery,
 } = scoringApi;

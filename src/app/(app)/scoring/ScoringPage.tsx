@@ -45,7 +45,8 @@ type ScoringFlow =
   | "SELECT_NEXT_BOWLER"
   | "SELECT_NEXT_BATTER"
   | "AWAITING_NEXT_OVER"
-  | "START_NEXT_INNINGS";
+  | "START_NEXT_INNINGS"
+  | "MATCH_COMPLETED";
 
 export default function ScoringPage() {
   const router = useRouter();
@@ -53,9 +54,8 @@ export default function ScoringPage() {
   const { data: matchData } = useGetMatchByIdQuery(
     matchId ? { matchId } : skipToken,
   );
-  const { data: state, isLoading } = useGetScoringStateQuery(
-    matchId ?? skipToken,
-  );
+  const { data: state } = useGetScoringStateQuery(matchId ?? skipToken);
+
   const [recordBall, { isLoading: isRecording }] = useRecordBallMutation();
 
   const [openDialog, setOpenDialog] = useState<null | DialogType>(null);
@@ -136,6 +136,10 @@ export default function ScoringPage() {
 
     if (state.requiresBowlerSelection) {
       return setFlow("SELECT_NEXT_BOWLER");
+    }
+
+    if (state.inningsCompleted && state.inningsNumber === 2) {
+      return setFlow("MATCH_COMPLETED");
     }
 
     if (state.inningsCompleted) {
@@ -539,6 +543,25 @@ export default function ScoringPage() {
         <CompletionSheet
           open={flow === "START_NEXT_INNINGS"}
           mode={"INNINGS_COMPLETED"}
+          onClose={() => {}}
+          onContinue={() => {
+            router.push(`/start-match/start-innings`);
+          }}
+          onContinueThisOver={() => {
+            setFlow("AWAITING_NEXT_OVER");
+          }}
+          lastCompletedOver={state?.lastCompletedOver}
+          players={matchData?.players}
+          totalRuns={state?.totalRuns}
+          wickets={state?.wickets}
+          matchId={matchId}
+          inningsId={state?.inningsId}
+          oversText={state?.oversText}
+          extras={state?.extras?.total}
+        />
+        <CompletionSheet
+          open={flow === "MATCH_COMPLETED"}
+          mode={"MATCH_COMPLETED"}
           onClose={() => {}}
           onContinue={() => {
             router.push(`/start-match/start-innings`);
