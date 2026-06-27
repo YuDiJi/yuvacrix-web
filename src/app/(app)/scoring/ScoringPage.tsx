@@ -126,6 +126,14 @@ export default function ScoringPage() {
 
     if (flow !== "IDLE") return;
 
+    if (state.inningsCompleted && state.inningsNumber === 2) {
+      return setFlow("MATCH_COMPLETED");
+    }
+
+    if (state.inningsCompleted) {
+      return setFlow("START_NEXT_INNINGS");
+    }
+
     if (state.requiresNewBatter) {
       return setFlow("SELECT_NEXT_BATTER");
     }
@@ -136,14 +144,6 @@ export default function ScoringPage() {
 
     if (state.requiresBowlerSelection) {
       return setFlow("SELECT_NEXT_BOWLER");
-    }
-
-    if (state.inningsCompleted && state.inningsNumber === 2) {
-      return setFlow("MATCH_COMPLETED");
-    }
-
-    if (state.inningsCompleted) {
-      return setFlow("START_NEXT_INNINGS");
     }
 
     return setFlow("IDLE");
