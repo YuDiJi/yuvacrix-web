@@ -390,6 +390,8 @@ export default function MatchesPage() {
         return `/scoring`;
 
       case "INNINGS_BREAK":
+        return `/start-match/start-innings`;
+
       case "COMPLETED":
         return `/start-match/${match.matchId}/summary`;
 
