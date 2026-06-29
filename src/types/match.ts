@@ -174,7 +174,7 @@ export interface MatchToss {
 }
 
 export interface MatchResult {
-  // add fields when backend finalizes schema
+  summaryText: string;
 }
 
 export interface Match {
@@ -202,6 +202,7 @@ export interface Match {
 
   toss: MatchToss | null;
   result: MatchResult | null;
+  summaryText: string;
 
   createdAt: string;
   updatedAt: string;

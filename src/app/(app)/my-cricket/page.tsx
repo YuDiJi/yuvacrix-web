@@ -12,255 +12,15 @@ import {
 } from "@/store/startMatch/startMatchSlice";
 import { useAppDispatch } from "@/store/hooks";
 import { Team } from "@/types/team";
+import { MatchCard } from "./MatchCard";
+import { DialogBottom } from "@/components/common/DialogBottom";
+import { LiveOptionsSheet } from "./LiveOptionsSheet";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type FilterTab = "Your" | "Played" | "Network" | "All";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Format ISO date → "19-May-26" */
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d
-    .toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "2-digit",
-    })
-    .replace(/ /g, "-");
-}
-
-/** First 1–3 uppercase initials from a team ID (replace with real team name lookup) */
-function teamInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-/** Shorten match type label */
-function matchTypeLabel(type: string): string {
-  const map: Record<string, string> = {
-    LIMITED_OVERS: "Individual Match",
-    BOX_TURF: "Box Cricket",
-    TEST: "Test Match",
-    THE_HUNDRED: "The Hundred",
-    PAIR: "Pair Cricket",
-  };
-  return map[type] ?? type;
-}
-
-/** Resolve display date — prefer scheduledAt, fallback to createdAt */
-function resolveDate(match: Match): string {
-  return formatDate(match.scheduledAt ?? match.createdAt);
-}
-
-// ─── Status Badge ─────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: MatchStatus }) {
-  const config: Record<MatchStatus, { label: string; className: string }> = {
-    DRAFT: {
-      label: "Draft",
-      className:
-        "bg-(--color-bg-base) text-(--color-text-muted) border border-(--color-bg-border)",
-    },
-    SCHEDULED: {
-      label: "Upcoming",
-      className: "bg-(--color-sky)/15 text-(--color-sky)",
-    },
-    READY_FOR_TOSS: {
-      label: "Ready for Toss",
-      className: "bg-(--color-brand)/10 text-(--color-brand)",
-    },
-    TOSS_DONE: {
-      label: "Toss Done",
-      className: "bg-(--color-six)/15 text-(--color-six)",
-    },
-    LIVE: {
-      label: "Live",
-      className: "bg-(--color-live)/12 text-(--color-live)",
-    },
-    INNINGS_BREAK: {
-      label: "Innings Break",
-      className: "bg-(--color-six)/12 text-(--color-six)",
-    },
-    COMPLETED: {
-      label: "Completed",
-      className: "bg-(--color-four)/12 text-(--color-four)",
-    },
-    CANCELLED: {
-      label: "Cancelled",
-      className: "bg-(--color-text-muted)/10 text-(--color-text-muted)",
-    },
-    ABANDONED: {
-      label: "Abandoned",
-      className: "bg-(--color-text-muted)/10 text-(--color-text-muted)",
-    },
-  };
-
-  const { label, className } = config[status] ?? config.DRAFT;
-
-  return (
-    <span
-      className={cn(
-        "rounded-full px-3 py-1 text-[10px] font-(family-name:--font-display) font-bold uppercase tracking-[0.07em]",
-        className,
-      )}
-    >
-      {label}
-    </span>
-  );
-}
-
-// ─── Team Avatar ──────────────────────────────────────────────────────────────
-
-function TeamAvatar({ initials }: { initials: string }) {
-  return (
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(--color-bg-base) border border-(--color-bg-border)">
-      <span className="font-(family-name:--font-display) text-xs font-black text-(--color-text-secondary) uppercase tracking-wide">
-        {initials}
-      </span>
-    </div>
-  );
-}
-
-// ─── Match Card ───────────────────────────────────────────────────────────────
-
-function MatchCard({ match, onClick }: { match: Match; onClick: () => void }) {
-  const router = useRouter();
-
-  const teamAName = match.teamA.name;
-  const teamBName = match.teamB.name;
-  const venue_city = match.venue.city;
-  const venue_groundName = match.venue.groundName;
-  const displayDate = resolveDate(match);
-  const overs = match.oversLimit;
-  const typeLabel = matchTypeLabel(match.matchType);
-
-  const tossWinnerName =
-    match.toss?.wonByTeamId === match.teamA.teamId
-      ? match.teamA.name
-      : match.teamB.name;
-
-  const tossSentence =
-    match.status === "DRAFT"
-      ? "Select Line-up"
-      : match.status === "SCHEDULED" && match.scheduledAt
-        ? `Match scheduled to begin on ${formatDate(
-            match.scheduledAt,
-          )} at ${new Date(match.scheduledAt).toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}`
-        : match.status === "READY_FOR_TOSS"
-          ? "Start Toss"
-          : ["TOSS_DONE", "LIVE", "INNINGS_BREAK"].includes(match.status) &&
-              match.toss
-            ? `${tossWinnerName} won the toss and elected to ${match.toss.decision.toLowerCase()}`
-            : match.status === "COMPLETED"
-              ? "Match completed"
-              : match.status === "CANCELLED"
-                ? "Match cancelled"
-                : match.status === "ABANDONED"
-                  ? "Match abandoned"
-                  : null;
-
-  return (
-    <button
-      onClick={onClick}
-      className="fixture-bar w-full rounded-2xl bg-(--color-bg-card) shadow-(--shadow-card) text-left transition-all duration-150 active:scale-[0.99] hover:shadow-[0_4px_20px_rgba(13,27,62,0.10)]"
-    >
-      {/* Top meta row */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <span className="text-section-label">{typeLabel}</span>
-        <StatusBadge status={match.status} />
-      </div>
-
-      {/* Date + overs + venue */}
-      <div className="px-4 pb-3">
-        <p className="text-xs text-(--color-text-muted) font-medium">
-          {displayDate}
-          {" | "}
-          {overs} Ov.
-          {" | "}
-          {venue_city}, {venue_groundName}
-        </p>
-      </div>
-
-      {/* Divider */}
-      <div className="mx-4 h-px bg-(--color-bg-border)" />
-
-      {/* Teams */}
-      <div className="flex flex-col gap-2.5 px-4 py-3">
-        {/* Team A */}
-        <div className="flex items-center gap-3">
-          <TeamAvatar initials={teamInitials(teamAName)} />
-          <span
-            className={cn(
-              "font-(family-name:--font-display) font-black uppercase leading-tight",
-              teamAName.length > 12 ? "text-base" : "text-lg",
-            )}
-            style={{ letterSpacing: "0.02em", color: "var(--color-navy)" }}
-          >
-            {teamAName}
-          </span>
-        </div>
-
-        {/* Team B */}
-        <div className="flex items-center gap-3">
-          <TeamAvatar initials={teamInitials(teamBName)} />
-          <span
-            className={cn(
-              "font-(family-name:--font-display) font-black uppercase leading-tight",
-              teamBName.length > 12 ? "text-base" : "text-lg",
-            )}
-            style={{ letterSpacing: "0.02em", color: "var(--color-navy)" }}
-          >
-            {teamBName}
-          </span>
-        </div>
-      </div>
-
-      {/* Bottom row — toss/schedule + action links */}
-      {(tossSentence || true) && (
-        <>
-          <div className="mx-4 h-px bg-(--color-bg-border)" />
-          <div className="flex items-center justify-between px-4 py-3 gap-2">
-            <p className="flex-1 min-w-0 text-xs italic text-(--color-text-muted) leading-relaxed truncate">
-              {tossSentence}
-            </p>
-            {/* Action links */}
-            <div
-              className="flex items-center gap-3 shrink-0"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() =>
-                  router.push(`/matches/${match.matchId}/insights`)
-                }
-                className="text-[11px] font-(family-name:--font-display) font-black uppercase tracking-[0.07em] text-(--color-brand) hover:opacity-70 transition-opacity"
-              >
-                Insights
-              </button>
-              <button
-                onClick={() => router.push(`/matches/${match.matchId}/squads`)}
-                className="text-[11px] font-(family-name:--font-display) font-black uppercase tracking-[0.07em] text-(--color-brand) hover:opacity-70 transition-opacity"
-              >
-                Squads
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-    </button>
-  );
-}
-
 // ─── Skeleton card ────────────────────────────────────────────────────────────
-
 function SkeletonCard() {
   return (
     <div className="fixture-bar rounded-r-2xl bg-(--color-bg-card) shadow-(--shadow-card) p-4 space-y-3 animate-pulse">
@@ -347,6 +107,9 @@ export default function MatchesPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterTab>("Your");
+
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [showLiveOptions, setShowLiveOptions] = useState(false);
 
   const {
     data: matches = [],
@@ -459,7 +222,12 @@ export default function MatchesPage() {
       }),
     );
 
-    router.push(getMatchRoute(match));
+    if (match.status === "LIVE") {
+      setSelectedMatch(match);
+      setShowLiveOptions(true);
+    } else {
+      router.push(getMatchRoute(match));
+    }
   };
 
   return (
@@ -574,6 +342,15 @@ export default function MatchesPage() {
           ))
         )}
       </div>
+
+      {selectedMatch && (
+        <LiveOptionsSheet
+          showLiveOptions={showLiveOptions}
+          setShowLiveOptions={setShowLiveOptions}
+          match={selectedMatch}
+          getMatchRoute={getMatchRoute}
+        />
+      )}
     </div>
   );
 }
