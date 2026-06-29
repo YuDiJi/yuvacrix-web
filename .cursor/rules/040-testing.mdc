@@ -1,0 +1,14 @@
+---
+description: Testing conventions (minimal coverage today)
+globs: **/*.{test,spec}.{ts,tsx},e2e/**/*
+alwaysApply: false
+---
+
+# Testing
+
+- **No test runner configured** — zero test files exist today.
+- Before PR: run `npm run lint` and `npm run build`.
+- Optional: `npx tsc --noEmit` (no npm script).
+- If adding tests: mock RTK Query; do not hit real API; confirm framework choice with team first.
+
+Details: `/docs/ai-context/07-TESTING-STRATEGY.md`

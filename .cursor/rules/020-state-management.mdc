@@ -1,0 +1,16 @@
+---
+description: Redux, RTK Query, and Context state ownership
+globs: src/store/**/*,src/providers/**/*,src/hooks/**/*
+alwaysApply: false
+---
+
+# State Management
+
+- **Server/remote data:** RTK Query hooks from `src/store/api/*` — never raw HTTP.
+- **Global client:** Redux slices — `auth`, `startMatch` (persisted), `scoring` (session only).
+- **Header UI:** `HeaderProvider` / `usePageHeader` — not Redux.
+- **Hooks:** `useAppDispatch`, `useAppSelector` from `@/store/hooks`.
+- **Forms:** `react-hook-form` + zod in match details; many flows use `useState` — match neighbors.
+- **Persist whitelist:** only `auth`, `startMatch` — do not persist scoring or API cache.
+
+Details: `/docs/ai-context/04-STATE-MANAGEMENT.md`

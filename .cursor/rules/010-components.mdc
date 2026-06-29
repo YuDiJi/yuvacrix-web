@@ -1,0 +1,18 @@
+---
+description: Component and page conventions for YuvaCrix React/Next files
+globs: src/components/**/*.tsx,src/app/**/*.tsx
+alwaysApply: false
+---
+
+# Components
+
+- Add `"use client"` when using hooks, Redux, events, or browser APIs.
+- Merge classes with `cn()` from `@/lib/cn` — not raw template strings for conflicting Tailwind.
+- Use CSS token classes: `bg-(--color-brand)`, `text-(--color-text-muted)`.
+- Reuse primitives: `Button`, `DialogBox`, `DialogBottom` in `src/components/common/`.
+- Icons: `lucide-react` only.
+- Props: prefer `interface {Name}Props`; match export style of nearest sibling (named in `components/`, default in many `page.tsx`).
+- Section comments: `// ─── Label ───`
+- Mobile shell: authenticated pages render inside `AppShell` (430px frame).
+
+Details: `/docs/ai-context/05-COMPONENT-PATTERNS-AND-CODING-STANDARDS.md`
