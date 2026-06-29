@@ -179,6 +179,7 @@ export interface ScoringState {
   inningsId: string;
   inningsNumber: number;
   version: number;
+  runRateSummary: string;
 
   battingTeamId: string;
   bowlingTeamId: string;
@@ -215,6 +216,22 @@ export interface ScoringState {
   lastCompletedOver: LastCompletedOver | null;
   currentBowlerFigures: { display: string } | null;
   availableBatters: string[];
+  matchResult: {
+    isCompleted: string;
+    losingTeamId: string;
+    marginText: string;
+    resultType: string;
+    summaryText: string;
+    winningTeamId: string;
+    winnerTeamId: string;
+    scoreRows: {
+      teamName: string;
+      overs: string;
+      inningsNumber: number;
+      runs: number;
+      wickets: number;
+    }[];
+  };
 }
 
 export interface Innings {

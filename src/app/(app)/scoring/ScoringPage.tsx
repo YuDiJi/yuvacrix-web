@@ -26,8 +26,7 @@ import { cn } from "@/lib/cn";
 import { BallChip } from "./BallChip";
 import { ScoringState } from "@/types/innings";
 import NextBatterSheet from "./NextBatter";
-import { WICKET_CONFIG } from "./out/constant";
-import SelectStrikerSheet from "./SelectStriker";
+
 import { useRouter } from "next/navigation";
 
 export type DialogType =
@@ -206,8 +205,9 @@ export default function ScoringPage() {
           </div>
 
           <p className="mt-2 text-[10px] font-bold text-white/60 uppercase tracking-widest font-display text-center">
-            {tossWinner?.teamNameSnapshot} won the toss and elected to{" "}
-            {matchData?.match?.toss?.decision}
+            {/* {tossWinner?.teamNameSnapshot} won the toss and elected to{" "}
+            {matchData?.match?.toss?.decision} */}
+            {displayState?.runRateSummary}
           </p>
 
           {/* <div className="mt-2 flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-md">
@@ -531,52 +531,46 @@ export default function ScoringPage() {
           onContinueThisOver={() => {
             setFlow("AWAITING_NEXT_OVER");
           }}
-          lastCompletedOver={state?.lastCompletedOver}
           players={matchData?.players}
-          totalRuns={state?.totalRuns}
-          wickets={state?.wickets}
           matchId={matchId}
           inningsId={state?.inningsId}
-          oversText={state?.oversText}
-          extras={state?.extras?.total}
+          state={state}
         />
         <CompletionSheet
           open={flow === "START_NEXT_INNINGS"}
           mode={"INNINGS_COMPLETED"}
-          onClose={() => {}}
+          onClose={() => {
+            resetFlow();
+          }}
           onContinue={() => {
             router.push(`/start-match/start-innings`);
+            setFlow("IDLE");
           }}
           onContinueThisOver={() => {
             setFlow("AWAITING_NEXT_OVER");
           }}
-          lastCompletedOver={state?.lastCompletedOver}
           players={matchData?.players}
-          totalRuns={state?.totalRuns}
-          wickets={state?.wickets}
           matchId={matchId}
           inningsId={state?.inningsId}
-          oversText={state?.oversText}
-          extras={state?.extras?.total}
+          state={state}
         />
         <CompletionSheet
           open={flow === "MATCH_COMPLETED"}
           mode={"MATCH_COMPLETED"}
-          onClose={() => {}}
+          onClose={() => {
+            resetFlow();
+          }}
           onContinue={() => {
-            // router.push(`/start-match/start-innings`);
+            router.push(`/scorecard`);
           }}
           onContinueThisOver={() => {
             setFlow("AWAITING_NEXT_OVER");
           }}
-          lastCompletedOver={state?.lastCompletedOver}
           players={matchData?.players}
-          totalRuns={state?.totalRuns}
-          wickets={state?.wickets}
+          teams={matchData?.teams}
           matchId={matchId}
           inningsId={state?.inningsId}
-          oversText={state?.oversText}
-          extras={state?.extras?.total}
+          state={state}
         />
 
         <NextBowlerSheet

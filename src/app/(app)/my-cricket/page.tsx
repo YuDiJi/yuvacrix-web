@@ -377,27 +377,30 @@ export default function MatchesPage() {
       case "DRAFT":
         return `/start-match/line-up`;
 
+      case "SCHEDULED":
+        return `/start-match/line-up`;
+
       case "READY_FOR_TOSS":
         return `/start-match/toss`;
-
-      case "SCHEDULED":
-        return `/start-match`;
 
       case "TOSS_DONE":
         return `/start-match/start-innings`;
 
       case "LIVE":
-        return `/scoring`;
+        if (
+          match.primaryAction === "START_SCORING" ||
+          match.primaryAction === "START_SECOND_INNINGS"
+        ) {
+          return `/start-match/start-innings`;
+        } else {
+          return `/scoring`;
+        }
 
       case "INNINGS_BREAK":
         return `/start-match/start-innings`;
 
       case "COMPLETED":
-        return `/start-match/${match.matchId}/summary`;
-
-      case "CANCELLED":
-      case "ABANDONED":
-        return `/start-match/${match.matchId}`;
+        return `/scorecard`; //score card
 
       default:
         return `/start-match/${match.matchId}`;

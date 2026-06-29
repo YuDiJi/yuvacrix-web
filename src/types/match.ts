@@ -20,15 +20,25 @@ export type LineupMode = "FIXED" | "FLEXIBLE";
 export type TossDecision = "BAT" | "BOWL";
 
 export type MatchStatus =
-  | "DRAFT"
-  | "SCHEDULED"
-  | "READY_FOR_TOSS"
-  | "TOSS_DONE"
-  | "LIVE"
-  | "INNINGS_BREAK"
-  | "COMPLETED"
+  | "DRAFT" // /start-match
+  | "SCHEDULED" // /start-match/line-up
+  | "READY_FOR_TOSS" // /start-match/toss
+  | "TOSS_DONE" // /start-match/start-innings
+  | "LIVE" // /scoring
+  | "INNINGS_BREAK" // /start-match/start-innings
+  | "COMPLETED" // /scorecard
   | "CANCELLED"
   | "ABANDONED";
+
+export type PrimaryAction =
+  | "VIEW_RESULT" // /scorecard
+  | "RESUME_CHASE" // scoring
+  | "START_SECOND_INNINGS" // /start-match/start-innings
+  | "RESUME_SCORING" // scoring
+  | "START_SCORING" // /start-match/start-innings
+  | "COMPLETE_SETUP";
+
+// /start-match - draft
 
 export interface Venue {
   city: string;
@@ -93,6 +103,16 @@ export interface SubmitTeamCaptainWKRequest {
   matchId: string;
   teamId: string;
   body: { captainId: string; wicketKeeperId: string };
+}
+
+export interface CompleteMatchRequest {
+  matchId: string;
+  body: {
+    winnerTeamId: string;
+    resultType: string;
+    marginText: string;
+    summaryText: string;
+  };
 }
 
 export interface CreateMatchResponse {
@@ -160,6 +180,7 @@ export interface MatchResult {
 export interface Match {
   matchId: string;
   status: MatchStatus;
+  primaryAction: PrimaryAction;
 
   seriesId: string | null;
 
