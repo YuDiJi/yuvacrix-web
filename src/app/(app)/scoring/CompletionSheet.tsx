@@ -152,6 +152,7 @@ export function CompletionSheet({
           </div>
         </>
       )}
+
       {/* Actions */}
       <div className="flex flex-col gap-2">
         <Button
