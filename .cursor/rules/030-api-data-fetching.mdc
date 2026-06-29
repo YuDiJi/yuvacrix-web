@@ -1,0 +1,16 @@
+---
+description: RTK Query API layer and data-fetching conventions
+globs: src/store/api/**/*,src/types/**/*
+alwaysApply: false
+---
+
+# API & Data Fetching
+
+- Extend `baseApi` via `injectEndpoints` in `src/store/api/{domain}Api.ts`.
+- Types in `src/types/{domain}.ts` — hand-written TS, not Zod for responses.
+- Auth: cookie session (`credentials: "include"`); 401 handled in `baseApi` interceptor.
+- Use generated hooks (`useXQuery`, `useXMutation`); invalidate with tag types.
+- Errors: backend `.data.message` — no toast library; inline UI errors preferred over `alert()`.
+- Env: `NEXT_PUBLIC_API_URL` only — never commit values.
+
+Details: `/docs/ai-context/06-API-AND-DATA-FETCHING.md`

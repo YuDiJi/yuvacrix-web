@@ -1,0 +1,12 @@
+---
+description: Core YuvaCrix project context and highest-risk rule for AI agents
+alwaysApply: true
+---
+
+# YuvaCrix — Core Rule
+
+**YuvaCrix** (`yuvacrix-web`) is a mobile-first cricket scoring app: Next.js 14 App Router, React 18, Redux Toolkit + RTK Query, Tailwind v4, TypeScript strict.
+
+**Highest-value rule:** All server data must go through RTK Query in `src/store/api/` (via `baseApi.injectEndpoints`). Do not add raw `fetch`, `axios`, React Query, or Next.js API routes — the backend is external (`NEXT_PUBLIC_API_URL`).
+
+Full architecture: `/docs/ai-context/00-START-HERE.md`
