@@ -437,7 +437,9 @@ export default function StartInningsPage() {
 
   const { data: matchData, isLoading: isMatchDataLoading } =
     useGetMatchByIdQuery(matchId ? { matchId } : skipToken);
-  const { data: state } = useGetScoringStateQuery(matchId ?? skipToken);
+  const { data: state } = useGetScoringStateQuery(matchId ?? skipToken, {
+    refetchOnMountOrArgChange: true,
+  });
 
   console.log(state);
 

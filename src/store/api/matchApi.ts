@@ -1,5 +1,6 @@
 import { baseApi } from "./baseApi";
 import {
+  CompleteMatchRequest,
   CreateMatchDto,
   CreateMatchResponse,
   GetMatchByIdResponse,
@@ -93,6 +94,15 @@ export const matchApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Matches"],
     }),
+
+    completeMatch: builder.mutation<void, CompleteMatchRequest>({
+      query: ({ matchId, body }) => ({
+        url: `/matches/${matchId}/complete`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Matches", "ScoringState"],
+    }),
   }),
 });
 
@@ -106,4 +116,5 @@ export const {
   useGetMyMatchesQuery,
   useGetMyMatchesOverviewQuery,
   useGetMatchByIdQuery,
+  useCompleteMatchMutation,
 } = matchApi;
