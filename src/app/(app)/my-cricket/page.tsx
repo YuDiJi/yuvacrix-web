@@ -163,7 +163,7 @@ export default function MatchesPage() {
         return `/start-match/start-innings`;
 
       case "COMPLETED":
-        return `/scorecard`; //score card
+        return `/matches/${match.matchId}/scorecard`; //score card
 
       default:
         return `/start-match/${match.matchId}`;

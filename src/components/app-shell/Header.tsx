@@ -26,8 +26,15 @@ function Header({
 
   type RoutePath = keyof typeof routeConfig;
 
-  const config =
+  let config =
     pathname in routeConfig ? routeConfig[pathname as RoutePath] : undefined;
+
+  if (!config && /^\/matches\/[^/]+\/scorecard$/.test(pathname)) {
+    config = {
+      title: "League Matches",
+      showBackButton: true,
+    };
+  }
 
   const pageTitle =
     config?.getTitle?.({ searchParams, teamA, teamB }) ?? config?.title ?? "";
@@ -64,7 +71,7 @@ function Header({
           <LogoMark />
         </div>
       ) : (
-        <h1 className="absolute left-1/6 top-1/3 text-base font-semibold text-white truncate max-w-[200px]">
+        <h1 className="absolute left-1/6 top-1/3 text-base font-semibold text-white truncate max-w-50">
           {pageTitle}
         </h1>
       )}

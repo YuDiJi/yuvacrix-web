@@ -3,7 +3,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useHeader } from "@/providers/HeaderProvider";
+// import { useHeader } from "@/providers/HeaderProvider";
 import { UserPlus, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -24,7 +24,7 @@ import {
 } from "@/store/startMatch/startMatchSlice";
 
 export default function SelectPlayersPage() {
-  const { setHeader } = useHeader();
+  // const { setHeader } = useHeader();
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -42,13 +42,13 @@ export default function SelectPlayersPage() {
   const [keeperId, setKeeperId] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState("");
 
-  useEffect(() => {
-    setHeader({
-      title: "Team Setup",
-      showBackButton: true,
-      showNotifications: false,
-    });
-  }, [setHeader]);
+  // useEffect(() => {
+  //   setHeader({
+  //     title: "Team Setup",
+  //     showBackButton: true,
+  //     showNotifications: false,
+  //   });
+  // }, [setHeader]);
 
   const {
     data: allPlayers,

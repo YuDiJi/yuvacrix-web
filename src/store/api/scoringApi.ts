@@ -23,7 +23,7 @@ export const scoringApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["ScoringState"],
+      invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
     }),
 
     getScoringState: builder.query<ScoringState, string>({
@@ -39,7 +39,7 @@ export const scoringApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["ScoringState"],
+      invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
     }),
 
     // getInningsState: builder.query<
@@ -58,7 +58,7 @@ export const scoringApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["ScoringState"],
+      invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
     }),
 
     undoLastBall: builder.mutation<
@@ -77,7 +77,7 @@ export const scoringApi = baseApi.injectEndpoints({
           reason,
         },
       }),
-      invalidatesTags: ["ScoringState"],
+      invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
     }),
 
     changeBowlerManually: builder.mutation<void, ChangeBowlerRequest>({
@@ -90,7 +90,7 @@ export const scoringApi = baseApi.injectEndpoints({
           reason,
         },
       }),
-      invalidatesTags: ["ScoringState", "Matches"],
+      invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
     }),
 
     changeStrikeManually: builder.mutation<void, ChangeBatterRequest>({
@@ -104,7 +104,7 @@ export const scoringApi = baseApi.injectEndpoints({
           reason,
         },
       }),
-      invalidatesTags: ["ScoringState", "Matches"],
+      invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
     }),
 
     startNextOver: builder.mutation<void, StartNextOverRequest>({
@@ -116,7 +116,7 @@ export const scoringApi = baseApi.injectEndpoints({
           bowlerId,
         },
       }),
-      invalidatesTags: ["ScoringState", "Matches"],
+      invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
     }),
 
     continueCurrentOver: builder.mutation<void, ContinueCurrentOverRequest>({
@@ -128,7 +128,7 @@ export const scoringApi = baseApi.injectEndpoints({
           reason,
         },
       }),
-      invalidatesTags: ["ScoringState", "Matches"],
+      invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
     }),
   }),
 });

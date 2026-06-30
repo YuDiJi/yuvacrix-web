@@ -561,7 +561,7 @@ export default function ScoringPage() {
             resetFlow();
           }}
           onContinue={() => {
-            router.push(`/scorecard`);
+            router.push(`/matches/${matchId}/scorecard`);
           }}
           onContinueThisOver={() => {
             setFlow("AWAITING_NEXT_OVER");

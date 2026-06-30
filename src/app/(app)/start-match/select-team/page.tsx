@@ -1,6 +1,6 @@
 "use client";
 
-import { useHeader } from "@/providers/HeaderProvider";
+// import { useHeader } from "@/providers/HeaderProvider";
 import { Search, SlidersHorizontal, Plus, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGetOwnedTeamQuery } from "@/store/api/teamApi";
@@ -16,7 +16,7 @@ import {
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 
 export default function SelectTeamPage() {
-  const { setHeader } = useHeader();
+  // const { setHeader } = useHeader();
   const dispatch = useAppDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
