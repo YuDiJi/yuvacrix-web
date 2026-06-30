@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useHeader } from "@/providers/HeaderProvider";
+import { useState } from "react";
 import { Users, MapPin } from "lucide-react";
 import { useCreateTeamMutation } from "@/store/api/teamApi";
 import { Button } from "@/components/common/Button";

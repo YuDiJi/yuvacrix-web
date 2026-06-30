@@ -28,7 +28,7 @@ export function LiveOptionsSheet({
     if (selectedAction === "RESUME") {
       router.push(getMatchRoute(match));
     } else {
-      router.push(`/scorecard/${match.matchId}`);
+      router.push(`/matches/${match.matchId}/scorecard`);
     }
     setShowLiveOptions(false);
   };

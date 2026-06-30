@@ -7,7 +7,7 @@ import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAppSelector } from "@/store/hooks";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
-import { useHeader } from "@/providers/HeaderProvider";
+// import { useHeader } from "@/providers/HeaderProvider";
 
 import {
   useSubmitTossMutation,
@@ -480,7 +480,7 @@ function DecisionCard({
 
 export default function TossClient() {
   const router = useRouter();
-  const { setHeader } = useHeader();
+  // const { setHeader } = useHeader();
 
   const teamA = useAppSelector(selectTeamA);
   const teamB = useAppSelector(selectTeamB);
@@ -500,9 +500,9 @@ export default function TossClient() {
   const coinRef = useRef<HTMLDivElement>(null);
   const flipTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    setHeader({ title: "Toss Details", showBackButton: true });
-  }, [setHeader]);
+  // useEffect(() => {
+  //   setHeader({ title: "Toss Details", showBackButton: true });
+  // }, [setHeader]);
 
   // Clean up timeout on unmount
   useEffect(() => {

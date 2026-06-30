@@ -67,4 +67,9 @@ export const routeConfig: Record<string, RouteConfig> = {
     // getTitle: ({ teamA, teamB }) =>
     //   teamA ? teamA.name : teamB ? teamB.name : "Scoring",
   },
+
+  "/matches/[matchId]/scorecard": {
+    title: "League Matches",
+    showBackButton: true,
+  },
 } as const;
