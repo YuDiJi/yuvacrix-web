@@ -1,6 +1,7 @@
 import { baseApi } from "./baseApi";
 import type {
   CommentaryResponse,
+  MvpResponse,
   ScorecardResponse,
   ScorecardSquads,
   ScorecardSummaryResponse,
@@ -82,7 +83,7 @@ export const scorecardApi = baseApi.injectEndpoints({
       providesTags: ["Scorecard"],
     }),
 
-    getScorecardMVP: builder.query<ScorecardSquads, string>({
+    getScorecardMVP: builder.query<MvpResponse, string>({
       query: (matchId) => ({
         url: `/matchescored/${matchId}/scorecard/mvp`,
         method: "GET",

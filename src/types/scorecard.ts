@@ -6,10 +6,17 @@ export type ScorecardResponse = {
 };
 
 export type ScorecardSummaryResponse = {
+  matchId: string;
   teamAScore: TeamScoreSummary;
   teamBScore: TeamScoreSummary;
   resultText: string | null;
   winnerTeamId: string | null;
+
+  playerOfTheMatchCandidate: MvpPlayer | null;
+  bestBatter: MvpPlayer | null;
+  bestBowler: MvpPlayer | null;
+
+  starPerformances: MvpPlayer[];
 };
 
 export type CommentaryResponse = {
@@ -78,17 +85,19 @@ export type ScorecardMatch = {
 export type MatchTeamSnapshot = {
   teamId: string;
   teamNameSnapshot: string;
-  shortNameSnapshot?: string | null;
+  shortNameSnapshot?: string;
   logoUrlSnapshot?: string | null;
 };
 
 export type TeamScoreSummary = {
-  teamId: string;
-  teamNameSnapshot: string;
-  runs: number;
+  logoUrlSnapshot?: string | null;
   wickets: number;
-  overs: string;
+  teamNameSnapshot: string;
+  teamId: string;
+  runs: number;
   runRate: number;
+  overs: string;
+  inningsId: string;
 };
 
 export type InningsScorecard = {

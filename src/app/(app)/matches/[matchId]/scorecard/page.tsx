@@ -3,15 +3,19 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useGetScorecardQuery } from "@/store/api/scorecardApi";
-import ScorecardInningsAccordion from "./Scorecardinningsaccordion";
+import ScorecardInningsAccordion from "./scorecardComp/Scorecardinningsaccordion";
 import CommentaryTab from "./commentary/CommentaryTab";
 import SquadTab from "./squad/Squadtab";
+import MvpTab from "./mvp/MvpTab";
+import SummaryTab from "./summary/SummaryTab";
+import InfoTab from "./Infotab";
 
 const TABS = [
   "Info",
   "Summary",
   "Scorecard",
   "Squad",
+  "MVP",
   "Insights",
   "Comms",
 ] as const;
@@ -64,11 +68,16 @@ export default function ScorecardPage() {
   } = useGetScorecardQuery(
     {
       matchId,
-      includeSquads: true,
-      includeMvp: true,
+      includeSquads: false,
+      includeMvp: false,
     },
     {
-      skip: !matchId || (activeTab !== "Scorecard" && activeTab !== "Squad"),
+      skip:
+        !matchId ||
+        (activeTab !== "Scorecard" &&
+          activeTab !== "Squad" &&
+          activeTab !== "Summary" &&
+          activeTab !== "Info"),
     },
   );
 
@@ -129,6 +138,10 @@ export default function ScorecardPage() {
       </div>
 
       {/* ── Content ─────────────────────────────────────── */}
+      {activeTab === "Info" && (
+        <InfoTab matchId={matchId} initialScorecard={scorecard} />
+      )}
+
       {activeTab === "Scorecard" && (
         <div className="px-3 py-3">
           {isLoading && <ScorecardSkeleton />}
@@ -167,14 +180,23 @@ export default function ScorecardPage() {
         </div>
       )}
 
+      {activeTab === "Summary" && matchId && (
+        <SummaryTab matchId={matchId} initialScorecard={scorecard} />
+      )}
+
       {activeTab === "Squad" && matchId && (
         <SquadTab matchId={matchId} initialSquads={scorecard?.squads} />
       )}
 
+      {activeTab === "MVP" && matchId && <MvpTab matchId={matchId} />}
+
       {activeTab === "Comms" && matchId && <CommentaryTab matchId={matchId} />}
 
       {activeTab !== "Scorecard" &&
+        activeTab !== "Info" &&
+        activeTab !== "Summary" &&
         activeTab !== "Squad" &&
+        activeTab !== "MVP" &&
         activeTab !== "Comms" && (
           <div className="mt-12 flex flex-col items-center gap-2 px-6 text-center">
             <p className="text-body text-(--color-text-secondary)">
