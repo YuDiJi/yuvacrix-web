@@ -39,8 +39,8 @@ function Header({
   const pageTitle =
     config?.getTitle?.({ searchParams, teamA, teamB }) ?? config?.title ?? "";
 
-  const isHome = pathname === "/dashboard";
-  const rootRoutes = ["/dashboard", "/my-cricket"];
+  const isHome = pathname === "/home";
+  const rootRoutes = ["/home", "/my-cricket"];
 
   const showBackButton = config?.showBackButton ?? false;
   // const showNotifications = header.showNotifications;

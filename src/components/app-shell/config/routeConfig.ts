@@ -13,14 +13,34 @@ type RouteConfig = {
 };
 
 export const routeConfig: Record<string, RouteConfig> = {
-  "/dashboard": {
-    title: "Dashboard",
+  "/home": {
+    title: "Home",
     showBackButton: false,
   },
 
   "/my-cricket": {
     title: "My Cricket",
     showBackButton: false,
+  },
+
+  "/contact-us": {
+    title: "Contact Us",
+    showBackButton: false,
+  },
+
+  "/terms-of-service": {
+    title: "Terms of service",
+    showBackButton: false,
+  },
+
+  "/about-us": {
+    title: "About Us",
+    showBackButton: false,
+  },
+
+  "/privacy-policy": {
+    title: "About Us",
+    showBackButton: true,
   },
 
   "/start-match": {

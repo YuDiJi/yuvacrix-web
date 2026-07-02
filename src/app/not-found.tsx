@@ -14,7 +14,7 @@ export default function NotFound() {
       </p>
 
       <Link
-        href="/dashboard"
+        href="/home"
         className="mt-6 rounded-xl bg-(--color-brand) px-6 py-3 font-semibold text-white"
       >
         Go Home

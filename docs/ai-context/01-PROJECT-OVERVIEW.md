@@ -6,27 +6,27 @@
 
 YuvaCrix is a **mobile-first cricket scoring and tournament platform**. Users authenticate via mobile OTP, manage teams and players, create matches, run toss/lineup flows, and score ball-by-ball in real time.
 
-Source: `src/app/layout.tsx` metadata — *"Modern Cricket Scoring & Tournament Platform"*.
+Source: `src/app/layout.tsx` metadata — _"Modern Cricket Scoring & Tournament Platform"_.
 
 ## Core Features (from existing routes)
 
-| Route | Status | Purpose |
-|-------|--------|---------|
-| `/` (marketing) | Implemented | Landing page with feature marketing |
-| `/login` | Implemented | Mobile OTP login |
-| `/on-boarding`, `/on-boarding/profile-picture` | Implemented | Post-login profile setup |
-| `/dashboard` | **Stub** | Placeholder `<div>page</div>` |
-| `/my-cricket` | Implemented | Match list, filters, resume/start flows |
-| `/start-match` | Implemented | Team selection → match details wizard |
-| `/start-match/select-team` | Implemented | Pick teams A/B |
-| `/start-match/select-players` | Implemented | Squad selection |
-| `/start-match/create-player` | Implemented | Add player to team |
-| `/start-match/create-team` | Implemented | Create new team |
-| `/start-match/line-up` | Implemented | Drag-and-drop lineup |
-| `/start-match/toss` | Implemented | Toss decision |
-| `/start-match/start-innings` | Implemented | Open innings (striker/bowler/style) |
-| `/scoring` | Implemented | Live ball-by-ball scoring UI |
-| `/add-tournaments-series` | **Stub** | Placeholder content |
+| Route                                          | Status      | Purpose                                 |
+| ---------------------------------------------- | ----------- | --------------------------------------- |
+| `/` (marketing)                                | Implemented | Landing page with feature marketing     |
+| `/login`                                       | Implemented | Mobile OTP login                        |
+| `/on-boarding`, `/on-boarding/profile-picture` | Implemented | Post-login profile setup                |
+| `/home`                                        | **Stub**    | Placeholder `<div>page</div>`           |
+| `/my-cricket`                                  | Implemented | Match list, filters, resume/start flows |
+| `/start-match`                                 | Implemented | Team selection → match details wizard   |
+| `/start-match/select-team`                     | Implemented | Pick teams A/B                          |
+| `/start-match/select-players`                  | Implemented | Squad selection                         |
+| `/start-match/create-player`                   | Implemented | Add player to team                      |
+| `/start-match/create-team`                     | Implemented | Create new team                         |
+| `/start-match/line-up`                         | Implemented | Drag-and-drop lineup                    |
+| `/start-match/toss`                            | Implemented | Toss decision                           |
+| `/start-match/start-innings`                   | Implemented | Open innings (striker/bowler/style)     |
+| `/scoring`                                     | Implemented | Live ball-by-ball scoring UI            |
+| `/add-tournaments-series`                      | **Stub**    | Placeholder content                     |
 
 Navigation is defined in `src/components/app-shell/constant.ts` and `src/components/app-shell/config/routeConfig.ts`.
 
@@ -49,13 +49,13 @@ src/
 
 ### Domain mapping
 
-| Domain | Primary locations |
-|--------|-------------------|
-| Auth / user | `src/store/auth/`, `src/store/api/authApi.ts`, `src/types/auth.ts`, `src/types/user.ts`, `src/app/(login)/` |
+| Domain          | Primary locations                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Auth / user     | `src/store/auth/`, `src/store/api/authApi.ts`, `src/types/auth.ts`, `src/types/user.ts`, `src/app/(login)/`                     |
 | Teams / players | `src/store/api/teamApi.ts`, `src/store/api/playerApi.ts`, `src/types/team.ts`, `src/types/player.ts`, `src/components/Players/` |
-| Match creation | `src/store/startMatch/`, `src/store/api/matchApi.ts`, `src/types/match.ts`, `src/app/(app)/start-match/` |
-| Live scoring | `src/store/scoring/`, `src/store/api/scoringApi.ts`, `src/types/scoring.ts`, `src/types/innings.ts`, `src/app/(app)/scoring/` |
-| App chrome | `src/components/app-shell/`, `src/providers/HeaderProvider.tsx` |
+| Match creation  | `src/store/startMatch/`, `src/store/api/matchApi.ts`, `src/types/match.ts`, `src/app/(app)/start-match/`                        |
+| Live scoring    | `src/store/scoring/`, `src/store/api/scoringApi.ts`, `src/types/scoring.ts`, `src/types/innings.ts`, `src/app/(app)/scoring/`   |
+| App chrome      | `src/components/app-shell/`, `src/providers/HeaderProvider.tsx`                                                                 |
 
 ## Backend Relationship
 
