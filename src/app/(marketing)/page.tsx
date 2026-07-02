@@ -385,7 +385,7 @@ export default function LandingPage() {
               {/* CTAs */}
               <div className="hero-ctas flex flex-wrap gap-4 mb-14">
                 <Link
-                  href="/dashboard"
+                  href="/home"
                   className={cn(
                     "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
                     "group bg-[var(--color-brand)] text-white px-7 py-4 rounded-xl text-base",
@@ -732,7 +732,7 @@ export default function LandingPage() {
 
             <Reveal className="mt-14 text-center">
               <Link
-                href="/dashboard"
+                href="/home"
                 className={cn(
                   "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
                   "inline-flex items-center gap-2.5 group",
@@ -923,7 +923,7 @@ export default function LandingPage() {
 
               <div className="flex flex-wrap justify-center gap-4">
                 <Link
-                  href="/dashboard"
+                  href="/home"
                   className={cn(
                     "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
                     "group inline-flex items-center gap-2.5",

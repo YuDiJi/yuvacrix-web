@@ -104,7 +104,7 @@ export default function MarketingLayout({
               Sign in
             </Link>
             <Link
-              href="/dashboard"
+              href="/home"
               className={cn(
                 "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
                 "bg-[var(--color-brand)] text-white px-5 py-2.5 rounded-xl text-sm",
@@ -195,7 +195,7 @@ export default function MarketingLayout({
             Sign In
           </Link>
           <Link
-            href="/dashboard"
+            href="/home"
             onClick={() => setMobileOpen(false)}
             className={cn(
               "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",

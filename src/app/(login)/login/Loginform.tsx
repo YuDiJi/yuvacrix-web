@@ -112,7 +112,7 @@ export function LoginForm() {
       dispatch(setCredentials(response));
 
       if (response.user.isProfileCompleted) {
-        router.push("/dashboard");
+        router.push("/home");
       } else {
         router.push("/on-boarding");
       }

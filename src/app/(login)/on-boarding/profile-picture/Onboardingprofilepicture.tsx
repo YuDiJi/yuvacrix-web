@@ -55,7 +55,7 @@ export function OnboardingProfilePicture() {
           profileImageUrl: file.name,
         }).unwrap();
       }
-      router.push("/dashboard");
+      router.push("/home");
     } catch {
       setError("Failed to upload photo. You can skip for now.");
     }

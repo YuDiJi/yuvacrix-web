@@ -275,7 +275,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
   }
 
   // ── SCHEDULE MATCH flow ───────────────────────────────────────────────────
-  // Validates form → opens date-time picker → createMatch with scheduledAt → /dashboard
+  // Validates form → opens date-time picker → createMatch with scheduledAt → /home
 
   const onSchedule = handleSubmit(async (values) => {
     if (!scheduledAt) return;
@@ -283,7 +283,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
     try {
       await createMatch(buildPayload(values, scheduledAt)).unwrap();
       setScheduleOpen(false);
-      router.push("/dashboard");
+      router.push("/home");
     } catch (err: any) {
       setSubmitError(
         err?.data?.message ?? "Failed to schedule match. Please try again.",

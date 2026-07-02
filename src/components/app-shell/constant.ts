@@ -44,7 +44,7 @@ type DrawerSection = {
 // ─── Nav Config ───────────────────────────────────────────────────────────────
 
 export const bottomNav = [
-  { label: "Home", icon: Home, href: "/dashboard" },
+  { label: "Home", icon: Home, href: "/home" },
   { label: "My Cricket", icon: Trophy, href: "/my-cricket", hasLive: true },
   { label: "More", icon: MoreHorizontal, href: null },
 ] as const;
@@ -53,7 +53,7 @@ export const drawerSections: DrawerSection[] = [
   {
     title: "Main",
     items: [
-      { label: "Home", icon: Home, href: "/dashboard" },
+      { label: "Home", icon: Home, href: "/home" },
       {
         label: "Go Pro at ₹199",
         icon: Crown,
@@ -110,14 +110,18 @@ export const drawerSections: DrawerSection[] = [
     items: [
       { label: "FAQ", icon: HelpCircle, href: "/faq" },
       { label: "Share App", icon: Share2, href: "/shareapp" },
-      { label: "About Us", icon: Info, href: "/about" },
-      { label: "Contact Us", icon: Contact, href: "/contact" },
+      { label: "About Us", icon: Info, href: "/about-us" },
+      { label: "Contact Us", icon: Contact, href: "/contact-us" },
       {
         label: "Paid Service Terms",
         icon: FileText,
         href: "/paidServiceTerms",
       },
-      { label: "Terms of Service", icon: ScrollText, href: "/termsOfService" },
+      {
+        label: "Terms of Service",
+        icon: ScrollText,
+        href: "/terms-of-service",
+      },
       // { label: "LogOut", icon: LogOut, danger: true },
       {
         label: "LogOut",
