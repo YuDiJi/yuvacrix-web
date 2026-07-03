@@ -62,6 +62,7 @@ export const baseApi = createApi({
     "Matches",
     "ScoringState",
     "Scorecard",
+    "Home",
   ],
 
   endpoints: () => ({}),
