@@ -326,7 +326,10 @@ export default function MatchesPage() {
                 : "No matches found"}
             </p>
             <button
-              onClick={() => router.push("/start-match")}
+              onClick={() => {
+                dispatch(resetMatch());
+                router.push("/start-match");
+              }}
               className="mt-1 rounded-xl bg-(--color-brand) px-5 py-2.5 font-(family-name:--font-display) font-black uppercase text-sm tracking-[0.06em] text-white shadow-(--shadow-button) transition-all active:scale-95"
             >
               Start a Match

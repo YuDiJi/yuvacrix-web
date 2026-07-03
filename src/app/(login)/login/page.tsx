@@ -13,7 +13,7 @@ export default function LoginPage() {
   return (
     // Same phone-frame shell as the app layout
     <div className="flex min-h-dvh items-start justify-center bg-(--color-bg-base) md:bg-[#c9d1df]">
-      <div className="relative flex h-dvh w-full flex-col overflow-hidden md:max-w-[430px] md:shadow-[0_0_80px_rgba(13,27,62,0.28)]">
+      <div className="relative flex h-dvh w-full flex-col overflow-hidden md:max-w-107.5 md:shadow-[0_0_80px_rgba(13,27,62,0.28)]">
         {/* ── Dark hero upper section (static — server rendered) ─────────── */}
         <div className="relative flex-none" style={{ height: "52%" }}>
           <CricketBackdrop />
