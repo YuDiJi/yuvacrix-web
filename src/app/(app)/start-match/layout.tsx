@@ -5,5 +5,5 @@ export default function StartMatchLayout({
 }: {
   children: ReactNode;
 }) {
-  return <div className="flex h-full flex-col">{children}</div>;
+  return <div className="flex h-full flex-col ">{children}</div>;
 }
