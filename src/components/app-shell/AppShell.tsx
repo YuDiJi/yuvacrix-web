@@ -29,14 +29,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh items-start justify-center bg-(--color-bg-base) md:bg-[#c9d1df]">
       <div
         className={cn(
-          "relative flex h-dvh w-full flex-col overflow-hidden bg-(--color-bg-base)",
+          "relative flex  w-full flex-col  bg-(--color-bg-base)",
           "md:max-w-107.5 md:shadow-[0_0_80px_rgba(13,27,62,0.28)]",
         )}
       >
         <Header pathname={pathname} onMenuClick={() => setDrawerOpen(true)} />
 
         <main
-          className={`flex-1 overflow-y-auto overflow-x-hidden ${showBottomNav && "pb-[calc(3.75rem+env(safe-area-inset-bottom,12px))]"}`}
+          className={`flex-1 overflow-y-auto overflow-x-hidden ${showBottomNav && "pb-[calc(5rem+env(safe-area-inset-bottom,12px))]"}`}
         >
           {children}
         </main>
