@@ -14,6 +14,7 @@ import {
   setTeamA,
   setTeamB,
 } from "@/store/startMatch/startMatchSlice";
+import { useUploadFileMutation } from "@/store/api/uploadApi";
 
 export default function CreateTeamPage() {
   const router = useRouter();
@@ -24,6 +25,8 @@ export default function CreateTeamPage() {
 
   const [createTeam, { isLoading, isError, isSuccess }] =
     useCreateTeamMutation();
+
+  const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
 
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
@@ -41,10 +44,20 @@ export default function CreateTeamPage() {
 
     setError("");
     try {
+      let logoKey: string | undefined;
+
+      if (logoFile) {
+        const uploadResponse = await uploadFile({
+          purpose: "PLAYER_AVATAR",
+          file: logoFile,
+        }).unwrap();
+        logoKey = uploadResponse.file.key;
+      }
+
       const response = await createTeam({
         name: name.trim(),
         city: city.trim(),
-        ...(logoFile && { logoUrl: logoFile.name }),
+        ...(logoKey && { logoUrl: logoKey }),
         sportType: "CRICKET",
       }).unwrap();
 

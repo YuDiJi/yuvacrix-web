@@ -14,6 +14,8 @@ import { selectUser } from "@/store/auth/authSelectors";
 import Image from "next/image";
 import { useGetPlayerQuery } from "@/store/api/playerApi";
 import { resetMatch } from "@/store/startMatch/startMatchSlice";
+import { useGetSignedUrlQuery } from "@/store/api/uploadApi";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 export default function SideDrawer({
   open,
@@ -32,6 +34,10 @@ export default function SideDrawer({
   const user = useAppSelector(selectUser);
 
   const { data, isLoading } = useGetPlayerQuery();
+
+  const imageKey = data?.player?.profileImageUrl;
+
+  const { data: imageUrl } = useGetSignedUrlQuery(imageKey ?? skipToken);
 
   async function handleLogout() {
     try {
@@ -81,7 +87,7 @@ export default function SideDrawer({
       {/* Drawer panel — shadow only when open, clipped when closed */}
       <div
         className={cn(
-          "absolute inset-y-0 left-0 z-50 flex w-[82%] max-w-[300px] flex-col",
+          "absolute inset-y-0 left-0 z-50 flex w-[82%] max-w-75 flex-col",
           "bg-(--color-navy)",
           "transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
           open
@@ -105,16 +111,15 @@ export default function SideDrawer({
         {/* User card */}
         <div className="px-4 pt-4">
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 px-4 py-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-(--color-sky) font-(family-name:--font-display) text-sm font-black text-white shadow-[0_2px_8px_rgba(75,139,255,0.35)]">
-              {data?.player?.profileImageUrl ? (
-                // <Image
-                //   src={data?.player?.profileImageUrl}
-                //   alt={data?.player?.fullName ?? "User Profile Pic"}
-                //   fill
-                //   className="object-cover"
-                //   sizes="40px"
-                // />
-                <p>{data?.player?.fullName?.charAt(0)?.toUpperCase()}</p>
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--color-sky) font-(family-name:--font-display) text-sm font-black text-white shadow-[0_2px_8px_rgba(75,139,255,0.35)]">
+              {data?.player?.profileImageUrl && imageUrl ? (
+                <Image
+                  src={imageUrl.signedUrl}
+                  alt={data?.player?.fullName ?? "User Profile Pic"}
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
               ) : (
                 (data?.player?.fullName?.charAt(0)?.toUpperCase() ?? "Y")
               )}

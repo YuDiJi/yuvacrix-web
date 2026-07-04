@@ -34,7 +34,7 @@ export type SignedUrlResponse = {
   expiresInSeconds: number;
 };
 
-export const imageUploadApi = baseApi.injectEndpoints({
+export const uploadApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     uploadFile: builder.mutation<
       UploadResponse,
@@ -63,4 +63,4 @@ export const imageUploadApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useUploadFileMutation, useGetSignedUrlQuery } = imageUploadApi;
+export const { useUploadFileMutation, useGetSignedUrlQuery } = uploadApi;

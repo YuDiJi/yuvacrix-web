@@ -441,8 +441,6 @@ export default function StartInningsPage() {
     refetchOnMountOrArgChange: true,
   });
 
-  console.log(state);
-
   // ── Derived teams & players ──────────────────────────────────────────────
 
   const toss = matchData?.match.toss;
