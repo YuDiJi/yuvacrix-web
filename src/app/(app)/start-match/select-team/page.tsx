@@ -59,6 +59,7 @@ export default function SelectTeamPage() {
         >
           <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-(--color-navy) shadow-[0_8px_32px_rgba(13,27,62,0.18)]">
             <svg
+              xmlns="http://www.w3.org/2000/svg"
               width="44"
               height="44"
               viewBox="0 0 24 24"
@@ -69,10 +70,22 @@ export default function SelectTeamPage() {
               strokeLinejoin="round"
               aria-hidden="true"
             >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              {/* <title xmlns="">add-team-02</title> */}
+              <g
+                width="44"
+                height="44"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(255,255,255,0.85)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 20v-2.03c0-1.242.56-2.46 1.69-2.975C6.068 14.366 7.722 14 9.5 14c1.245 0 2.429.18 3.5.503" />
+                <circle cx="9.5" cy="7.5" r="3.5" />
+                <path d="M14.5 4.145a3.502 3.502 0 0 1 0 6.71M18 14v6m-3-3h6" />
+              </g>
             </svg>
           </div>
           {/* Decorative ring */}
