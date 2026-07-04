@@ -374,7 +374,6 @@ const TeamSelection = ({ teamA, teamB }: Props) => {
         </div>
       </div>
 
-      {/* Continue CTA — pinned to bottom */}
       <div className="safe-bottom border-t border-(--color-bg-border) bg-(--color-bg-base) p-4">
         <button
           disabled
