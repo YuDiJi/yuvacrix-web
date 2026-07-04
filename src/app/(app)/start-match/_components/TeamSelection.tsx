@@ -359,7 +359,6 @@ const TeamSelection = ({ teamA, teamB }: Props) => {
             </button>
           </div>
 
-          {/* Match details hint */}
           <div className="flex items-center gap-3 rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-base)">
               <Tv size={20} className="text-(--color-text-muted)" />
