@@ -1,9 +1,9 @@
 "use client";
 
-import { Innings } from "@/types/scorecard";
+import { Innings } from "@/types/innings";
 
 type Props = {
-  innings: Innings;
+  innings: any;
 };
 
 export default function SummaryInningsCard({ innings }: Props) {
@@ -19,7 +19,7 @@ export default function SummaryInningsCard({ innings }: Props) {
         <p className="text-meta">Innings {innings.inningsNumber}</p>
       </div>
 
-      <div className="flex flex-shrink-0 items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         {runRate != null && (
           <span className="text-meta">RR {Number(runRate).toFixed(2)}</span>
         )}
