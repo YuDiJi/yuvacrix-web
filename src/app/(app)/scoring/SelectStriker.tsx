@@ -1,11 +1,11 @@
 import { Button } from "@/components/common/Button";
 import { DialogBottom } from "@/components/common/DialogBottom";
+import { S3Image } from "@/components/common/S3Image";
 import { PlayerPickerSheet } from "@/components/Players/PlayerPickerSheet";
 import { cn } from "@/lib/cn";
 import { ScoringState } from "@/types/innings";
 import { MatchDetailsPlayer } from "@/types/match";
 import { ArrowLeft, Check, User } from "lucide-react";
-import Image from "next/image";
 import React, { useState } from "react";
 
 type SelectStrikerSheetProps = {
@@ -53,12 +53,17 @@ function StrikeCard({
       {/* Image */}
       <div className="relative mx-auto mb-3 h-20 w-20 overflow-hidden rounded-2xl border border-(--color-bg-border) shadow-sm">
         {player?.profileImageUrl ? (
-          <Image
-            src={player.profileImageUrl}
+          <S3Image
+            imageKey={player.profileImageUrl}
             alt={player.playerNameSnapshot}
             width={80}
             height={80}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover rounded-full"
+            fallback={
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                {player.playerNameSnapshot.charAt(0)}
+              </div>
+            }
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">

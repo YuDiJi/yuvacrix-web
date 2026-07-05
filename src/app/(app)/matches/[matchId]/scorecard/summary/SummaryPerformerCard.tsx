@@ -1,5 +1,6 @@
 "use client";
 
+import { S3Image } from "@/components/common/S3Image";
 import { MvpPlayer } from "@/types/scorecard";
 
 type Props = {
@@ -75,11 +76,19 @@ export default function SummaryPerformerCard({
       {/* Large player photo area */}
       <div className="relative h-56 w-full bg-(--color-navy)">
         {performer.profileImageSnapshot ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={performer.profileImageSnapshot}
+          <S3Image
+            imageKey={performer.profileImageSnapshot}
             alt={performer.playerNameSnapshot}
-            className="h-full w-full object-cover object-top"
+            // width={80}
+            // height={80}
+            className="h-full w-full object-cover"
+            fallback={
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
+                <span className="font-bold text-white">
+                  {getInitials(performer.playerNameSnapshot)}
+                </span>
+              </div>
+            }
           />
         ) : (
           /* Initials fallback fills the whole hero area */

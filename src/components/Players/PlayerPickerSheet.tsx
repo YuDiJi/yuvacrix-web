@@ -1,9 +1,9 @@
 import { cn } from "@/lib/cn";
 import { Check, ChevronRight, Search, Users, X } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "../common/Button";
 import { MatchDetailsPlayer } from "@/types/match";
+import { S3Image } from "../common/S3Image";
 
 type PlayerPickerSheetProps = {
   open: boolean;
@@ -43,12 +43,17 @@ function PlayerAvatar({ player, size = 48 }: { player: any; size?: number }) {
       style={{ width: size, height: size }}
     >
       {player?.profileImageUrl ? (
-        <Image
-          src={player.profileImageUrl}
+        <S3Image
+          imageKey={player.profileImageUrl}
           alt={player.playerNameSnapshot}
           width={size}
           height={size}
           className="h-full w-full object-cover"
+          fallback={
+            <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+              {player.playerNameSnapshot.charAt(0)}
+            </div>
+          }
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">
@@ -123,7 +128,7 @@ export function PlayerPickerSheet({
         </div>
       </div>
       {/* List */}
-      <div className="flex-1 overflow-y-auto pb-2  [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex-1 overflow-y-auto pb-2  [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden">
         {filtered?.length === 0 ? (
           <p className="py-8 text-center text-sm italic text-(--color-text-muted)">
             No players found

@@ -1,10 +1,10 @@
 import { Button } from "@/components/common/Button";
+import { S3Image } from "@/components/common/S3Image";
 import { PlayerPickerSheet } from "@/components/Players/PlayerPickerSheet";
 import { cn } from "@/lib/cn";
 import { ScoringState } from "@/types/innings";
 import { MatchDetailsPlayer } from "@/types/match";
 import { Check, User } from "lucide-react";
-import Image from "next/image";
 import React, { useMemo, useState } from "react";
 
 const FielderSelector = ({
@@ -133,12 +133,17 @@ const FielderSelector = ({
                 <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-(--color-bg-border)">
                   {fielder ? (
                     fielder.profileImageUrl ? (
-                      <Image
-                        src={fielder.profileImageUrl}
+                      <S3Image
+                        imageKey={fielder.profileImageUrl}
                         alt={fielder.playerNameSnapshot}
                         width={44}
                         height={44}
                         className="h-full w-full object-cover"
+                        fallback={
+                          <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                            {fielder.playerNameSnapshot.charAt(0)}
+                          </div>
+                        }
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">

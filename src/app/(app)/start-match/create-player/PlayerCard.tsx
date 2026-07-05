@@ -1,5 +1,8 @@
+import { S3Image } from "@/components/common/S3Image";
 import { cn } from "@/lib/cn";
+import { useGetSignedUrlQuery } from "@/store/api/uploadApi";
 import { Player } from "@/types/player";
+import { skipToken } from "@reduxjs/toolkit/query";
 import React from "react";
 
 const PlayerCard = ({ player }: { player: Player }) => {
@@ -12,26 +15,31 @@ const PlayerCard = ({ player }: { player: Player }) => {
         <div
           className={cn(
             "h-12 w-12 shrink-0 overflow-hidden rounded-full",
-            !player?.profileImageUrl &&
+            !player.profileImageUrl &&
               "flex items-center justify-center bg-(--color-navy)",
           )}
         >
-          {/* {player.profileImageUrl ? (
-                  <Image
-                    src={player.profileImageUrl}
-                    alt={player.fullName}
-                    width={48}
-                    height={48}
-                    className="h-full w-full object-cover"
-                  />
-                ) : ( */}
-          <span
-            className="font-(family-name:--font-display) text-base font-black text-white"
-            style={{ letterSpacing: "0.04em" }}
-          >
-            {player?.fullName.charAt(0).toUpperCase()}
-          </span>
-          {/* // )} */}
+          {player.profileImageUrl ? (
+            <S3Image
+              imageKey={player.profileImageUrl}
+              alt={player.fullName}
+              width={48}
+              height={48}
+              className="h-full w-full object-cover"
+              fallback={
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                  {player.fullName.charAt(0)}
+                </div>
+              }
+            />
+          ) : (
+            <span
+              className="font-(family-name:--font-display) text-base font-black text-white"
+              style={{ letterSpacing: "0.04em" }}
+            >
+              {player?.fullName.charAt(0).toUpperCase()}
+            </span>
+          )}
         </div>
         <div>
           <h4 className="font-bold text-slate-900 text-sm">

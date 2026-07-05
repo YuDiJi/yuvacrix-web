@@ -11,11 +11,11 @@ import { ChevronRight, X } from "lucide-react";
 import { drawerSections } from "./constant";
 import Link from "next/link";
 import { selectUser } from "@/store/auth/authSelectors";
-import Image from "next/image";
 import { useGetPlayerQuery } from "@/store/api/playerApi";
 import { resetMatch } from "@/store/startMatch/startMatchSlice";
 import { useGetSignedUrlQuery } from "@/store/api/uploadApi";
 import { skipToken } from "@reduxjs/toolkit/query";
+import { S3Image } from "../common/S3Image";
 
 export default function SideDrawer({
   open,
@@ -34,10 +34,6 @@ export default function SideDrawer({
   const user = useAppSelector(selectUser);
 
   const { data, isLoading } = useGetPlayerQuery();
-
-  const imageKey = data?.player?.profileImageUrl;
-
-  const { data: imageUrl } = useGetSignedUrlQuery(imageKey ?? skipToken);
 
   async function handleLogout() {
     try {
@@ -112,13 +108,28 @@ export default function SideDrawer({
         <div className="px-4 pt-4">
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 px-4 py-3">
             <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--color-sky) font-(family-name:--font-display) text-sm font-black text-white shadow-[0_2px_8px_rgba(75,139,255,0.35)]">
-              {data?.player?.profileImageUrl && imageUrl ? (
-                <Image
-                  src={imageUrl.signedUrl}
-                  alt={data?.player?.fullName ?? "User Profile Pic"}
-                  fill
-                  className="object-cover"
-                  sizes="40px"
+              {data?.player?.profileImageUrl ? (
+                // <Image
+                //   src={imageUrl.signedUrl}
+                //   alt={data?.player?.fullName ?? "User Profile Pic"}
+                //   fill
+                //   className="object-cover"
+                //   sizes="40px"
+                // />
+                <S3Image
+                  imageKey={data.player.profileImageUrl}
+                  alt={data.player.fullName}
+                  width={40}
+                  height={40}
+                  className="rounded-full object-cover"
+                  fallback={
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
+                      <span className="font-bold text-white">
+                        (data?.player?.fullName?.charAt(0)?.toUpperCase() ??
+                        "Y")
+                      </span>
+                    </div>
+                  }
                 />
               ) : (
                 (data?.player?.fullName?.charAt(0)?.toUpperCase() ?? "Y")
