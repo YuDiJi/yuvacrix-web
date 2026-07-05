@@ -138,11 +138,7 @@ export function PlayerList({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
-        // onDragStart={() => console.log("drag start")}
-        // onDragMove={() => console.log("drag move")}
-        // onDragOver={(e) => console.log("drag over", e.over?.id)}
         onDragEnd={handleDragEnd}
-        // onDragCancel={() => console.log("drag cancel")}
       >
         <SortableContext
           items={orderedPlayers.map((p) => p.playerId)}

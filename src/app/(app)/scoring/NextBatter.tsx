@@ -119,7 +119,6 @@ const NextBatterSheet = ({
     useChangeStrikeManuallyMutation();
 
   const availableBatterIds = new Set(state?.availableBatters ?? []);
-  console.log(availableBatterIds);
 
   const availableBattingPlayers = players?.filter((player) =>
     availableBatterIds.has(player.playerId),
