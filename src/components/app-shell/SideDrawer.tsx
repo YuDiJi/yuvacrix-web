@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@/lib/cn";
 import { useLogoutMutation } from "@/store/api/authApi";
 import { logout } from "@/store/auth/authSlice";
@@ -126,7 +124,7 @@ export default function SideDrawer({
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
                       <span className="font-bold text-white">
                         (data?.player?.fullName?.charAt(0)?.toUpperCase() ??
-                        "Y")
+                        `Y`)
                       </span>
                     </div>
                   }
@@ -225,7 +223,7 @@ export default function SideDrawer({
                           item.badgeColor === "violet" &&
                             "bg-(--color-violet)/20 text-(--color-violet)",
                           !item.badgeColor &&
-                            "min-w-[18px] bg-(--color-brand) text-center text-white",
+                            "min-w-4.5 bg-(--color-brand) text-center text-white",
                         )}
                       >
                         {item.badgeColor === "live" && (
