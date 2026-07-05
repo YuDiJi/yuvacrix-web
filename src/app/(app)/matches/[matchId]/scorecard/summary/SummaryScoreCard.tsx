@@ -1,5 +1,6 @@
 "use client";
 
+import { S3Image } from "@/components/common/S3Image";
 import { TeamScoreSummary } from "@/types/scorecard";
 
 type Props = {
@@ -30,11 +31,19 @@ export default function SummaryScoreCard({ team, isWinner }: Props) {
         {/* Logo / initials */}
         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-(--color-bg-border) bg-(--color-navy)">
           {team.logoUrlSnapshot ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={team.logoUrlSnapshot}
+            <S3Image
+              imageKey={team.logoUrlSnapshot}
               alt={team.teamNameSnapshot}
+              width={48}
+              height={48}
               className="h-full w-full object-cover"
+              fallback={
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
+                  <span className="font-bold text-white">
+                    {getInitials(team.teamNameSnapshot)}
+                  </span>
+                </div>
+              }
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">

@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import type { HomeTournament, HomeTournamentTeam } from "@/types/home";
+import { S3Image } from "@/components/common/S3Image";
 
 type Props = { tournaments: HomeTournament[] };
 
@@ -34,12 +34,19 @@ function TeamRow({ team }: { team: HomeTournamentTeam }) {
           {team.rank}
         </span>
         {team.logoUrl ? (
-          <Image
-            src={team.logoUrl}
+          <S3Image
+            imageKey={team.logoUrl}
             alt={team.name}
-            width={16}
-            height={16}
-            className="h-4 w-4 rounded-full object-cover"
+            width={48}
+            height={48}
+            className="rounded-full object-cover"
+            fallback={
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
+                <span className="font-bold text-white">
+                  {getInitials(team.name)}
+                </span>
+              </div>
+            }
           />
         ) : (
           <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#1B3FA0]">

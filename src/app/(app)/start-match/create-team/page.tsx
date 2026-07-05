@@ -5,7 +5,6 @@ import { Users, MapPin } from "lucide-react";
 import { useCreateTeamMutation } from "@/store/api/teamApi";
 import { Button } from "@/components/common/Button";
 import { cn } from "@/lib/cn";
-import Image from "next/image";
 import { ImageUploader } from "@/components/common/ImageUploader";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";

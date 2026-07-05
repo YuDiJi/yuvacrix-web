@@ -1,10 +1,10 @@
 import { Button } from "@/components/common/Button";
+import { S3Image } from "@/components/common/S3Image";
 import { cn } from "@/lib/cn";
 import { ScoringState } from "@/types/innings";
 import { MatchDetailsPlayer } from "@/types/match";
 import { DismissalEnd } from "@/types/scoring";
 import { Check } from "lucide-react";
-import Image from "next/image";
 import React, { useState } from "react";
 
 type DismissedBatterSelectorProps = {
@@ -68,12 +68,17 @@ const DismissedBatterSelector = ({
         {/* Avatar */}
         <div className="relative mx-auto mb-3 h-28 w-28 overflow-hidden rounded-2xl border border-(--color-bg-border) shadow-sm">
           {player?.profileImageUrl ? (
-            <Image
-              src={player.profileImageUrl}
+            <S3Image
+              imageKey={player.profileImageUrl}
               alt={player.playerNameSnapshot}
               width={112}
               height={112}
               className="h-full w-full object-cover"
+              fallback={
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                  {player.playerNameSnapshot.charAt(0)}
+                </div>
+              }
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">

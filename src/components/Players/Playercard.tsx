@@ -3,10 +3,10 @@
 // Mode controls which actions render. Parent owns all state.
 
 import { useState } from "react";
-import Image from "next/image";
 import { Trash2, GripVertical } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { PlayerCardProps } from "./Types";
+import { S3Image } from "../common/S3Image";
 
 // ─── Inline delete confirmation (same as original) ───────────────────────────
 
@@ -137,12 +137,24 @@ export function PlayerCard({
           )}
         >
           {player.profileImageUrl ? (
-            <Image
-              src={player.profileImageUrl}
+            // <Image
+            //   src={player.profileImageUrl}
+            //   alt={player.fullName}
+            //   width={48}
+            //   height={48}
+            //   className="h-full w-full object-cover"
+            // />
+            <S3Image
+              imageKey={player.profileImageUrl}
               alt={player.fullName}
               width={48}
               height={48}
               className="h-full w-full object-cover"
+              fallback={
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                  {player.fullName.charAt(0)}
+                </div>
+              }
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">

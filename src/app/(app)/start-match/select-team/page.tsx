@@ -4,7 +4,6 @@
 import { Search, SlidersHorizontal, Plus, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGetOwnedTeamQuery } from "@/store/api/teamApi";
-import Image from "next/image";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -14,6 +13,7 @@ import {
   setTeamB,
 } from "@/store/startMatch/startMatchSlice";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
+import { S3Image } from "@/components/common/S3Image";
 
 export default function SelectTeamPage() {
   // const { setHeader } = useHeader();
@@ -99,7 +99,7 @@ export default function SelectTeamPage() {
         >
           No Teams Yet
         </h3>
-        <p className="mt-2 text-sm text-(--color-text-secondary) leading-relaxed max-w-[220px]">
+        <p className="mt-2 text-sm text-(--color-text-secondary) leading-relaxed max-w-55">
           Create your first team and start scoring matches with your squad.
         </p>
       </div>
@@ -182,12 +182,19 @@ export default function SelectTeamPage() {
                 )}
               >
                 {team.logoUrl ? (
-                  <Image
-                    src={team.logoUrl || "/default-team-logo.png"}
+                  <S3Image
+                    imageKey={team.logoUrl}
                     alt={team.name}
-                    width={56}
-                    height={56}
-                    className="h-full w-full object-cover"
+                    width={48}
+                    height={48}
+                    className="rounded-full object-cover"
+                    fallback={
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
+                        <span className="font-bold text-white">
+                          {team.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    }
                   />
                 ) : (
                   <span

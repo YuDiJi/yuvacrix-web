@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAppSelector } from "@/store/hooks";
@@ -14,6 +13,7 @@ import {
   useStartMatchMutation,
 } from "@/store/api/matchApi";
 import { Button } from "@/components/common/Button";
+import { S3Image } from "@/components/common/S3Image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -290,12 +290,24 @@ function TeamAvatar({
   if (logoUrl) {
     return (
       <div className={cn("rounded-full overflow-hidden shrink-0", dim)}>
-        <Image
-          src={logoUrl}
+        <S3Image
+          imageKey={logoUrl}
           alt={name}
           width={size === "lg" ? 64 : 40}
           height={size === "lg" ? 64 : 40}
           className="object-cover w-full h-full"
+          fallback={
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
+              <span className="font-bold text-white">
+                {name
+                  .split(" ")
+                  .map((w) => w[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </span>
+            </div>
+          }
         />
       </div>
     );
@@ -696,7 +708,7 @@ export default function TossClient() {
           </div>
 
           {/* ── Result sentence ─────────────────────────────────── */}
-          <p className="text-center text-sm text-(--color-text-secondary) leading-relaxed min-h-[1.5rem]">
+          <p className="text-center text-sm text-(--color-text-secondary) leading-relaxed min-h-6">
             {winnerTeam && decisionLabel ? (
               <span className="fade-slide-up inline-block">
                 <span className="font-semibold text-(--color-navy)">

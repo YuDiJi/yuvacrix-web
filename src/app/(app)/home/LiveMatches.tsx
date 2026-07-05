@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { MapPin, Eye, ChevronRight } from "lucide-react";
+import { S3Image } from "@/components/common/S3Image";
 
 export type LiveMatchItem = {
   matchId: string;
@@ -51,12 +51,17 @@ function TeamAvatar({
   return (
     <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-[#E8ECF2] bg-[#F0F3FF]">
       {logoUrl ? (
-        <Image
-          src={logoUrl}
+        <S3Image
+          imageKey={logoUrl}
           alt={name}
           width={48}
           height={48}
           className="h-full w-full object-cover"
+          fallback={
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
+              <span className="font-bold text-white">{getInitials(name)}</span>
+            </div>
+          }
         />
       ) : (
         <span className="font-display text-[13px] font-black text-[#1B3FA0]">

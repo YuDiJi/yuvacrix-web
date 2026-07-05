@@ -1,5 +1,6 @@
 "use client";
 
+import { S3Image } from "@/components/common/S3Image";
 import { MvpPlayer } from "@/types/scorecard";
 
 type Props = {
@@ -33,13 +34,19 @@ export default function MvpCandidateCard({ player }: Props) {
 
         <div className="mt-3 flex flex-col items-center">
           {/* Avatar */}
-          <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border-2 border-(--color-text-inverse)/30 bg-white shadow-(--shadow-hero)">
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-(--color-text-inverse)/30 bg-white shadow-(--shadow-hero)">
             {player.profileImageSnapshot ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={player.profileImageSnapshot}
+              <S3Image
+                imageKey={player.profileImageSnapshot}
                 alt={player.playerNameSnapshot}
+                // width={80}
+                // height={80}
                 className="h-full w-full object-cover"
+                fallback={
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                    {player.playerNameSnapshot.charAt(0)}
+                  </div>
+                }
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">

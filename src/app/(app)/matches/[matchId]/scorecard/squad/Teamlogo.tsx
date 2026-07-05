@@ -1,5 +1,7 @@
 "use client";
 
+import { S3Image } from "@/components/common/S3Image";
+
 type Props = {
   logoUrl?: string | null;
   name: string;
@@ -25,12 +27,22 @@ export default function TeamLogo({
 }: Props) {
   return (
     <div
-      className={`relative flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-(--color-bg-border) ${bg}`}
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-(--color-bg-border) ${bg}`}
       style={{ width: size, height: size }}
     >
       {logoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={logoUrl} alt={name} className="h-full w-full object-cover" />
+        <S3Image
+          imageKey={logoUrl}
+          alt={name}
+          // width={48}
+          // height={48}
+          className="h-full w-full object-cover"
+          fallback={
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
+              <span className="font-bold text-white">{getInitials(name)}</span>
+            </div>
+          }
+        />
       ) : (
         <span
           className="font-display font-black text-(--color-text-inverse)"

@@ -13,7 +13,6 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import Image from "next/image";
 import { useAppSelector } from "@/store/hooks";
 import { selectMatchId } from "@/store/startMatch/selectors";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -23,6 +22,7 @@ import {
   useGetScoringStateQuery,
   useStartInningMutation,
 } from "@/store/api/scoringApi";
+import { S3Image } from "@/components/common/S3Image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -77,12 +77,17 @@ function PlayerAvatar({
       style={{ width: size, height: size }}
     >
       {player?.profileImageUrl ? (
-        <Image
-          src={player.profileImageUrl}
+        <S3Image
+          imageKey={player.profileImageUrl}
           alt={player.fullName}
           width={size}
           height={size}
           className="h-full w-full object-cover"
+          fallback={
+            <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+              {player.fullName.charAt(0)}
+            </div>
+          }
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">
