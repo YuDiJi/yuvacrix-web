@@ -148,9 +148,9 @@ function TeamColumn({
             <S3Image
               imageKey={detail.logoUrl}
               alt={detail.name ?? ""}
-              width={40}
-              height={40}
-              className="rounded-full object-cover"
+              width={64}
+              height={64}
+              className="w-full h-full rounded-full object-cover"
               fallback={
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
                   <span className="font-bold text-white">

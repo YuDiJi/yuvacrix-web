@@ -30,9 +30,9 @@ export default function SummaryScoreCard({ team, isWinner }: Props) {
       <div className="flex items-center gap-3">
         {/* Logo / initials */}
         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-(--color-bg-border) bg-(--color-navy)">
-          {team.logoUrlSnapshot ? (
+          {team.logoUrl ? (
             <S3Image
-              imageKey={team.logoUrlSnapshot}
+              imageKey={team.logoUrl}
               alt={team.teamNameSnapshot}
               width={48}
               height={48}

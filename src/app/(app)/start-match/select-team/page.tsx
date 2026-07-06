@@ -185,9 +185,9 @@ export default function SelectTeamPage() {
                   <S3Image
                     imageKey={team.logoUrl}
                     alt={team.name}
-                    width={48}
-                    height={48}
-                    className="rounded-full object-cover"
+                    width={56}
+                    height={56}
+                    className="object-cover w-full h-full"
                     fallback={
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
                         <span className="font-bold text-white">

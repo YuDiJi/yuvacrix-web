@@ -484,6 +484,11 @@ export default function StartInningsPage() {
       ? (teamA?.teamNameSnapshot ?? "Batting Team")
       : (teamB?.teamNameSnapshot ?? "Batting Team");
 
+  const battingTeamLogoUrl =
+    battingTeamId === teamA?.teamId
+      ? (teamA?.teamLogoSnapshot ?? null)
+      : (teamB?.teamLogoSnapshot ?? null);
+
   const allPlayers = matchData?.players ?? [];
 
   const batters = useMemo(
@@ -606,6 +611,7 @@ export default function StartInningsPage() {
         <div className="flex flex-col gap-5 p-4">
           {/* Hero card */}
           <div className="relative overflow-hidden rounded-3xl bg-(--color-brand) px-5 py-6 shadow-[0_8px_32px_rgba(27,63,160,0.30)]">
+            {/* Radial highlight */}
             <div
               className="pointer-events-none absolute inset-0 opacity-[0.10]"
               style={{
@@ -613,12 +619,37 @@ export default function StartInningsPage() {
                   "radial-gradient(ellipse 80% 60% at 50% 30%, white 0%, transparent 70%)",
               }}
             />
-            <div className="relative mb-3 flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/15 ring-4 ring-white/10">
-                <Users size={32} className="text-white/80" />
+
+            {/* Team logo background — ghosted behind everything */}
+            {battingTeamLogoUrl && (
+              <span className="pointer-events-none absolute inset-0 z-0">
+                <S3Image
+                  imageKey={battingTeamLogoUrl}
+                  alt={battingTeamName}
+                  width={600}
+                  height={400}
+                  className="h-full w-full object-cover opacity-[0.08]"
+                  fallback={null}
+                />
+              </span>
+            )}
+
+            {/* Team logo avatar circle */}
+            <div className="relative z-10 mb-3 flex justify-center">
+              <div className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white/15 ring-4 ring-white/10">
+                <S3Image
+                  imageKey={battingTeamLogoUrl}
+                  alt={battingTeamName}
+                  width={64}
+                  height={64}
+                  className="h-full w-full object-cover"
+                  fallback={<Users size={32} className="text-white/80" />}
+                />
               </div>
             </div>
-            <div className="text-center">
+
+            {/* Team name */}
+            <div className="relative z-10 text-center">
               <p className="font-(family-name:--font-display) text-[10px] font-bold uppercase tracking-[0.16em] text-(--color-sky)">
                 Now Batting
               </p>
@@ -633,8 +664,10 @@ export default function StartInningsPage() {
                 )}
               </h1>
             </div>
+
+            {/* Toss info */}
             {tossWinnerName && !isMatchDataLoading && (
-              <div className="mt-4 flex items-start gap-3 rounded-2xl bg-white/10 px-4 py-3">
+              <div className="relative z-10 mt-4 flex items-start gap-3 rounded-2xl bg-white/10 px-4 py-3">
                 <Info size={16} className="mt-0.5 shrink-0 text-white/70" />
                 <p className="text-sm font-medium leading-snug text-white/80">
                   <span className="font-bold text-white">{tossWinnerName}</span>{" "}

@@ -79,8 +79,8 @@ export default function SummaryPerformerCard({
           <S3Image
             imageKey={performer.profileImageSnapshot}
             alt={performer.playerNameSnapshot}
-            // width={80}
-            // height={80}
+            width={300}
+            height={224}
             className="h-full w-full object-cover"
             fallback={
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
