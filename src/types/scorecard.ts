@@ -90,7 +90,7 @@ export type MatchTeamSnapshot = {
 };
 
 export type TeamScoreSummary = {
-  logoUrlSnapshot?: string | null;
+  logoUrl?: string | null;
   wickets: number;
   teamNameSnapshot: string;
   teamId: string;

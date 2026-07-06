@@ -92,4 +92,14 @@ export const routeConfig: Record<string, RouteConfig> = {
     title: "League Matches",
     showBackButton: true,
   },
+
+  "/add-tournaments-series": {
+    title: "Add Tournament / Series",
+    showBackButton: false,
+  },
+
+  "/add-tournaments-series/create-tournament": {
+    title: "Add a Tournament",
+    showBackButton: true,
+  },
 } as const;

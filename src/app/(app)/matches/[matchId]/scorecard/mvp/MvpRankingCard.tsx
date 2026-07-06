@@ -49,8 +49,8 @@ export default function MvpRankingCard({ player, rank, highlighted }: Props) {
           <S3Image
             imageKey={player.profileImageSnapshot}
             alt={player.playerNameSnapshot}
-            // width={80}
-            // height={80}
+            width={36}
+            height={36}
             className="h-full w-full object-cover"
             fallback={
               <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">

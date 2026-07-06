@@ -23,7 +23,7 @@ function teamScoreFromInnings(
         teamId: string;
         teamNameSnapshot: string;
         shortNameSnapshot?: string | null;
-        logoUrlSnapshot?: string | null;
+        logoUrl?: string | null;
       }
     | undefined,
   innings: ScorecardResponse["innings"][number] | undefined,
@@ -32,7 +32,7 @@ function teamScoreFromInnings(
   return {
     teamId: team.teamId,
     teamNameSnapshot: team.teamNameSnapshot,
-    logoUrlSnapshot: team.logoUrlSnapshot ?? undefined,
+    logoUrl: team.logoUrl ?? undefined,
     runs: innings.totalRuns,
     wickets: innings.wickets,
     overs: String(innings.overs),
@@ -241,7 +241,7 @@ function MatchFacts({
 function FactRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="text-meta flex-shrink-0">{label}</span>
+      <span className="text-meta shrink-0">{label}</span>
       <span className="text-[12px] font-medium text-(--color-text-body) text-right">
         {value}
       </span>

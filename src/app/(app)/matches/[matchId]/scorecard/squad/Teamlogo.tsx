@@ -34,8 +34,8 @@ export default function TeamLogo({
         <S3Image
           imageKey={logoUrl}
           alt={name}
-          // width={48}
-          // height={48}
+          width={size}
+          height={size}
           className="h-full w-full object-cover"
           fallback={
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">

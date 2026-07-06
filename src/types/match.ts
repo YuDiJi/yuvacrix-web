@@ -221,6 +221,7 @@ export interface MatchDetailsTeam {
 
   teamNameSnapshot: string;
   teamShortNameSnapshot: string;
+  teamLogoSnapshot: string;
 
   captainId: string | null;
   viceCaptainId: string | null;
