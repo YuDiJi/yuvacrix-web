@@ -13,10 +13,9 @@ import {
   setTeamB,
 } from "@/store/startMatch/startMatchSlice";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
-import { S3Image } from "@/components/common/S3Image";
+import { TeamCard } from "@/components/team/TeamCard";
 
 export default function SelectTeamPage() {
-  // const { setHeader } = useHeader();
   const dispatch = useAppDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -142,7 +141,7 @@ export default function SelectTeamPage() {
       <p className="text-section-label mb-3 px-1">All Teams</p>
 
       {/* Team List */}
-      <div className="flex flex-col gap-3">
+      {/* <div className="flex flex-col gap-3">
         {filteredTeams.map((team) => (
           <div
             key={team.id}
@@ -173,7 +172,6 @@ export default function SelectTeamPage() {
             )}
           >
             <div className="flex items-center gap-3.5">
-              {/* Team logo / avatar */}
               <div
                 className={cn(
                   "h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-(--color-bg-border)",
@@ -206,7 +204,6 @@ export default function SelectTeamPage() {
                 )}
               </div>
 
-              {/* Info */}
               <div>
                 <h4
                   className="font-(family-name:--font-display) text-base font-black uppercase text-(--color-text-primary)"
@@ -223,6 +220,29 @@ export default function SelectTeamPage() {
               className="shrink-0 text-(--color-text-muted)"
             />
           </div>
+        ))}
+      </div> */}
+      <div className="flex flex-col gap-3">
+        {filteredTeams.map((team) => (
+          <TeamCard
+            key={team.id}
+            team={team}
+            disabled={
+              (teamType === "A" && team.id === teamB?.id) ||
+              (teamType === "B" && team.id === teamA?.id)
+            }
+            onClick={(team) => {
+              if (teamType === "A") {
+                dispatch(setTeamA(team));
+                dispatch(setActiveTeam("A"));
+              } else {
+                dispatch(setTeamB(team));
+                dispatch(setActiveTeam("B"));
+              }
+
+              router.push("/start-match/select-players");
+            }}
+          />
         ))}
       </div>
 

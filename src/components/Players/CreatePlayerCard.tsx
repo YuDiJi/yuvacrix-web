@@ -5,7 +5,7 @@ import { Player } from "@/types/player";
 import { skipToken } from "@reduxjs/toolkit/query";
 import React from "react";
 
-const PlayerCard = ({ player }: { player: Player }) => {
+const CreatePlayerCard = ({ player }: { player: Player }) => {
   return (
     <label
       key={player?.id}
@@ -55,4 +55,4 @@ const PlayerCard = ({ player }: { player: Player }) => {
   );
 };
 
-export default PlayerCard;
+export default CreatePlayerCard;
