@@ -5,10 +5,10 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useGetSignedUrlQuery } from "@/store/api/uploadApi";
 
 type Props = {
-  imageKey?: string | null;
+  imageKey: string | null;
   alt: string;
-  width?: number;
-  height?: number;
+  width: number;
+  height: number;
   className?: string;
   fallback: React.ReactNode;
 };

@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function NotFound() {
+  const router = useRouter();
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
       <h1 className="font-(family-name:--font-display) text-7xl font-black text-(--color-brand)">
@@ -13,12 +17,18 @@ export default function NotFound() {
         The page you&apos;re looking for doesn&apos;t exist.
       </p>
 
-      <Link
+      {/* <Link
         href="/home"
         className="mt-6 rounded-xl bg-(--color-brand) px-6 py-3 font-semibold text-white"
       >
         Go Home
-      </Link>
+      </Link> */}
+      <button
+        onClick={() => router.back()}
+        className="mt-6 rounded-xl bg-(--color-brand) px-6 py-3 font-semibold text-white"
+      >
+        Go Back
+      </button>
     </div>
   );
 }

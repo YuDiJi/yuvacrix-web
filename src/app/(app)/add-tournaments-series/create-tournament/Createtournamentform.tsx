@@ -10,6 +10,8 @@ import { ArrowLeft, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { ImageUploader } from "@/components/common/ImageUploaderV1";
 import { useCreateTournamentMutation } from "@/store/api/tournamentApi";
+import { Button } from "@/components/common/Button";
+import { useUploadFileMutation } from "@/store/api/uploadApi";
 
 const schema = z.object({
   name: z.string().min(2, "Enter tournament name"),
@@ -210,7 +212,9 @@ function CheckboxField({
 export default function CreateTournamentForm() {
   const router = useRouter();
 
-  const [createTournament, { isLoading }] = useCreateTournamentMutation();
+  const [createTournament, { isLoading: isCreating }] =
+    useCreateTournamentMutation();
+  const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
 
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -267,25 +271,42 @@ export default function CreateTournamentForm() {
     setSubmitError("");
 
     try {
+      const uploadLogoResponse = logoFile
+        ? await uploadFile({
+            purpose: "TEAM_LOGO",
+            file: logoFile,
+          }).unwrap()
+        : null;
+
+      const uploadBannerResponse = bannerFile
+        ? await uploadFile({
+            purpose: "TOURNAMENT_BANNER",
+            file: bannerFile,
+          }).unwrap()
+        : null;
+
       const createdTournament = await createTournament({
         name: values.name.trim(),
-        shortName: values.shortName?.trim(),
-        description: values.description?.trim(),
+        shortName: values.shortName?.trim() || undefined,
+        description: values.description?.trim() || undefined,
+
+        logoUrl: uploadLogoResponse?.file.key,
+        coverImageUrl: uploadBannerResponse?.file.key,
+
         visibility: values.visibility,
         format: values.format,
-        startDate: values.startDate,
-        endDate: values.endDate,
+        category: values.category,
+        ballType: values.ballType,
+
+        startDate: values.startDate || undefined,
+        endDate: values.endDate || undefined,
+
         location: {
           city: values.city.trim(),
-          groundName: values.groundName?.trim(),
-          locationLabel: values.locationLabel?.trim(),
+          groundName: values.groundName?.trim() || undefined,
+          locationLabel: values.locationLabel?.trim() || undefined,
         },
       }).unwrap();
-
-      console.log("UI-only image files:", {
-        bannerFile,
-        logoFile,
-      });
 
       router.push(`/tournaments/${createdTournament.id}`);
     } catch (error) {
@@ -296,16 +317,6 @@ export default function CreateTournamentForm() {
 
   return (
     <div className="relative flex min-h-full flex-col bg-(--color-bg-base)">
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 bg-(--color-brand) px-4 text-white">
-        <button type="button" onClick={() => router.back()}>
-          <ArrowLeft size={22} />
-        </button>
-
-        <h1 className="font-(family-name:--font-display) text-xl font-black">
-          Add a tournament / series
-        </h1>
-      </header>
-
       <form onSubmit={onSubmit} className="flex flex-1 flex-col">
         <div className="flex-1 overflow-y-auto pb-24">
           <section className="bg-(--color-bg-card)">
@@ -317,8 +328,8 @@ export default function CreateTournamentForm() {
               </div>
             </div>
 
-            <div className="h-14 px-4 pt-12">
-              <p className="text-xs font-medium text-(--color-text-secondary)">
+            <div className="ml-6 h-14 px-4 pt-12">
+              <p className="text-xs font-semibold text-(--color-text-secondary)">
                 Add logo
               </p>
             </div>
@@ -377,7 +388,7 @@ export default function CreateTournamentForm() {
                   )}
                 />
 
-                <Controller
+                {/* <Controller
                   name="organiserName"
                   control={control}
                   render={({ field }) => (
@@ -388,14 +399,14 @@ export default function CreateTournamentForm() {
                     >
                       <input
                         {...field}
-                        placeholder="Dimpal Pariyar"
+                        placeholder="Organiser name"
                         className={inputClassName()}
                       />
                     </FormInput>
                   )}
-                />
+                /> */}
 
-                <Controller
+                {/* <Controller
                   name="organiserNumber"
                   control={control}
                   render={({ field }) => (
@@ -406,14 +417,14 @@ export default function CreateTournamentForm() {
                     >
                       <input
                         {...field}
-                        placeholder="9920890042"
+                        placeholder="9999999999"
                         className={inputClassName()}
                       />
                     </FormInput>
                   )}
-                />
+                /> */}
 
-                <Controller
+                {/* <Controller
                   name="organiserEmail"
                   control={control}
                   render={({ field }) => (
@@ -428,7 +439,7 @@ export default function CreateTournamentForm() {
                       />
                     </FormInput>
                   )}
-                />
+                /> */}
               </div>
             </section>
 
@@ -636,7 +647,7 @@ export default function CreateTournamentForm() {
               />
             </section>
 
-            <section className="rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+            {/* <section className="rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
               <p className="mb-1 text-base font-bold text-(--color-text-primary)">
                 Team details
               </p>
@@ -835,7 +846,7 @@ export default function CreateTournamentForm() {
                   )}
                 />
               </div>
-            </section>
+            </section> */}
 
             {submitError && (
               <div className="flex items-start gap-2.5 rounded-2xl border border-(--color-live)/20 bg-(--color-live)/8 px-4 py-3">
@@ -849,28 +860,20 @@ export default function CreateTournamentForm() {
           </div>
         </div>
 
-        <div className="safe-bottom sticky bottom-0 z-40 flex border-t border-(--color-bg-border) bg-(--color-bg-card)">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="flex flex-1 items-center justify-center py-4 font-(family-name:--font-display) text-xs font-black uppercase tracking-[0.06em] text-(--color-text-secondary)"
-          >
-            Skip
-          </button>
-
-          <button
+        <div className="safe-bottom sticky bottom-0 z-40 flex border-t border-(--color-bg-border) bg-(--color-bg-card) p-2">
+          <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isCreating || isUploading}
             className="flex flex-1 items-center justify-center gap-1.5 bg-(--color-brand) py-4 font-(family-name:--font-display) text-xs font-black uppercase tracking-[0.06em] text-white disabled:opacity-60"
           >
-            {isLoading ? (
+            {isCreating || isUploading ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
               <>
                 Continue <ChevronRight size={14} />
               </>
             )}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

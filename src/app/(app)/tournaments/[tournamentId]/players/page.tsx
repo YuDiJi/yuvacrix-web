@@ -2,11 +2,11 @@
 // ─── Usage: team-management mode ─────────────────────────────────────────────
 "use client";
 
-import { useEffect, useState } from "react";
-// import { useHeader } from "@/providers/HeaderProvider";
+import { useState } from "react";
 import { UserPlus, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
+  useGetTeamDetailQuery,
   useGetTeamMembersQuery,
   useRemoveTeamMemberMutation,
   // useSetTeamMemberRoleMutation,
@@ -24,32 +24,22 @@ import {
 } from "@/store/startMatch/startMatchSlice";
 import { S3Image } from "@/components/common/S3Image";
 
-export default function SelectPlayersPage() {
-  // const { setHeader } = useHeader();
+export default function PlayersPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const currentTeamId = searchParams.get("team");
+  const tournamentId = params.tournamentId as string;
 
   const [removeTeamMember, { isLoading: isRemoving }] =
     useRemoveTeamMemberMutation();
   // const [setTeamMemberRole, { isLoading: isSavingRoles }] =
   //   useSetTeamMemberRoleMutation();
 
-  const activeTeam = useAppSelector((state) => state.startMatch.activeTeam);
-  const teamA = useAppSelector(selectTeamA);
-  const teamB = useAppSelector(selectTeamB);
-  const currentTeam = activeTeam === "A" ? teamA : teamB;
-
   const [captainId, setCaptainId] = useState<string | null>(null);
   const [keeperId, setKeeperId] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState("");
-
-  // useEffect(() => {
-  //   setHeader({
-  //     title: "Team Setup",
-  //     showBackButton: true,
-  //     showNotifications: false,
-  //   });
-  // }, [setHeader]);
 
   const {
     data: allPlayers,
@@ -57,7 +47,10 @@ export default function SelectPlayersPage() {
     isError,
     refetch,
   } = useGetTeamMembersQuery(
-    currentTeam ? { teamId: currentTeam.id } : skipToken,
+    currentTeamId ? { teamId: currentTeamId } : skipToken,
+  );
+  const { data: teamDetail, isLoading: isLoadingTeam } = useGetTeamDetailQuery(
+    currentTeamId ? { teamId: currentTeamId } : skipToken,
   );
 
   const players = allPlayers ?? [];
@@ -66,38 +59,14 @@ export default function SelectPlayersPage() {
   // ── Delete player via API ─────────────────────────────────────────────────
 
   async function handleDelete(playerId: string) {
-    if (!currentTeam) return;
-    await removeTeamMember({ teamId: currentTeam.id, playerId }).unwrap();
+    if (!currentTeamId) return;
+    await removeTeamMember({ teamId: currentTeamId, playerId }).unwrap();
     if (captainId === playerId) setCaptainId(null);
     if (keeperId === playerId) setKeeperId(null);
   }
 
-  // ── Confirm: set roles via API then navigate ──────────────────────────────
-
-  // async function handleConfirm() {
-  //   if (!currentTeam || !captainId || !keeperId) return;
-  //   setConfirmError("");
-  //   try {
-  //     await Promise.all([
-  //       setTeamMemberRole({
-  //         teamId: currentTeam.id,
-  //         playerId: captainId,
-  //         body: { role: "CAPTAIN" },
-  //       }).unwrap(),
-  //       setTeamMemberRole({
-  //         teamId: currentTeam.id,
-  //         playerId: keeperId,
-  //         body: { role: "WICKET_KEEPER" },
-  //       }).unwrap(),
-  //     ]);
-  //     router.push("/start-match");
-  //   } catch {
-  //     setConfirmError("Failed to assign roles. Please try again.");
-  //   }
-  // }
-
   async function handleConfirm() {
-    if (!currentTeam || !captainId || !keeperId) return;
+    if (!captainId || !keeperId) return;
 
     const captain = allPlayers?.find((p) => p.playerId === captainId);
 
@@ -105,35 +74,7 @@ export default function SelectPlayersPage() {
 
     if (!captain || !keeper) return;
 
-    if (activeTeam === "A") {
-      dispatch(
-        setTeamARoles({
-          captain: {
-            id: captain.playerId,
-            name: captain.fullName,
-          },
-          keeper: {
-            id: keeper.playerId,
-            name: keeper.fullName,
-          },
-        }),
-      );
-    } else {
-      dispatch(
-        setTeamBRoles({
-          captain: {
-            id: captain.playerId,
-            name: captain.fullName,
-          },
-          keeper: {
-            id: keeper.playerId,
-            name: keeper.fullName,
-          },
-        }),
-      );
-    }
-
-    router.push("/start-match");
+    // router.push("/start-match");
   }
 
   if (isLoading) return <PlayerListSkeleton rows={5} />;
@@ -183,7 +124,7 @@ export default function SelectPlayersPage() {
         >
           No Players Yet
         </h3>
-        <p className="mt-2 max-w-55 text-sm leading-relaxed text-(--color-text-secondary)">
+        <p className="mt-2 max-w-[220px] text-sm leading-relaxed text-(--color-text-secondary)">
           Add players to your squad and start scoring matches.
         </p>
         <button
@@ -196,17 +137,15 @@ export default function SelectPlayersPage() {
     );
   }
 
-  console.log(currentTeam);
-
   return (
     <div className="flex min-h-full flex-col bg-(--color-bg-base)">
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-28">
         {/* Team banner */}
         <div className="mb-4 flex items-center gap-4 rounded-2xl bg-(--color-navy) px-5 py-4 shadow-[0_4px_20px_rgba(13,27,62,0.20)]">
-          {currentTeam?.logoUrl ? (
+          {teamDetail?.logoUrl ? (
             <S3Image
-              imageKey={currentTeam.logoUrl}
-              alt={currentTeam?.name}
+              imageKey={teamDetail.logoUrl}
+              alt={teamDetail?.name}
               width={48}
               height={48}
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10"
@@ -250,7 +189,7 @@ export default function SelectPlayersPage() {
               className="font-(family-name:--font-display) text-xl font-black uppercase text-white truncate"
               style={{ letterSpacing: "0.04em" }}
             >
-              {currentTeam?.name}
+              {teamDetail?.name}
             </p>
             <p className="mt-0.5 text-[11px] font-medium text-white/55">
               {players.length} Player{players.length !== 1 ? "s" : ""} in Squad
@@ -317,7 +256,11 @@ export default function SelectPlayersPage() {
             Confirm & Start Match
           </Button>
           <button
-            onClick={() => router.push("/start-match/create-player")}
+            onClick={() =>
+              router.push(
+                `/tournaments/${tournamentId}/create-player?team=${currentTeamId}`,
+              )
+            }
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-2 border-(--color-bg-border) bg-(--color-bg-base) text-(--color-text-secondary) transition-all active:scale-90 hover:border-(--color-sky)/40 hover:bg-(--color-bg-tint) hover:text-(--color-brand)"
             aria-label="Add player"
           >

@@ -20,35 +20,125 @@ export type TournamentStatus =
   | "ARCHIVED"
   | "CANCELLED";
 
+export type TournamentBallType = "TENNIS" | "LEATHER" | "OTHER";
+
 export type TournamentLocation = {
   city: string;
   groundName?: string;
   locationLabel?: string;
 };
 
+export type TournamentCounters = {
+  teamCount: number;
+  roundCount: number;
+  groupCount: number;
+  fixtureCount: number;
+  matchCount: number;
+  completedMatchCount: number;
+  liveMatchCount: number;
+  upcomingMatchCount: number;
+};
+
 export type Tournament = {
   id: string;
+  ownerUserId: string;
   name: string;
+  nameLower?: string;
   shortName?: string | null;
   description?: string | null;
   visibility: TournamentVisibility;
   format: TournamentFormat;
   status: TournamentStatus;
+  logoUrl: string | null;
+  coverImageUrl: string | null;
+  viewsCount: number;
+
   startDate?: string | null;
   endDate?: string | null;
-  location?: TournamentLocation | null;
-  teamCount?: number;
-  fixtureCount?: number;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  archivedAt?: string | null;
+  cancelledAt?: string | null;
+
+  location?: {
+    city?: string | null;
+    groundName?: string | null;
+    locationLabel?: string | null;
+  } | null;
+
+  pointsConfig?: {
+    winPoints: number;
+    lossPoints: number;
+    tiePoints: number;
+    noResultPoints: number;
+    bonusPointsEnabled: boolean;
+  };
+
+  counters?: TournamentCounters;
+
+  winnerTeamId?: string | null;
+  runnerUpTeamId?: string | null;
+  resultSummary?: string | null;
+  completionReason?: string | null;
+
+  createdBy?: {
+    actorType: "USER" | "ADMIN" | string;
+    actorId: string;
+  };
+
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type TournamentDashboard = {
+  tournament: {
+    tournamentId: string;
+    name: string;
+    visibility: TournamentVisibility;
+    format: TournamentFormat;
+    status: TournamentStatus;
+    startDate?: string | null;
+    endDate?: string | null;
+    winnerTeamId?: string | null;
+    resultSummary?: string | null;
+  };
+
+  teamCount: number;
+  roundCount: number;
+  groupCount: number;
+  fixtureCount: number;
+  matchCount: number;
+  liveMatchCount: number;
+  upcomingMatchCount: number;
+  pastMatchCount: number;
+
+  pointsTablePreview: unknown[];
+  leaderboardPreview: unknown[];
+  statsPreview: unknown[];
+
+  actions: {
+    canEdit: boolean;
+    canAddTeams: boolean;
+    canCreateRounds: boolean;
+    canCreateGroups: boolean;
+    canScheduleFixtures: boolean;
+    canStartMatch: boolean;
+    canCompleteTournament: boolean;
+    canArchiveTournament: boolean;
+    canCancelTournament: boolean;
+  };
 };
 
 export type CreateTournamentRequest = {
   name: string;
   shortName?: string;
   description?: string;
-  visibility: TournamentVisibility;
-  format: TournamentFormat;
+  logoUrl?: string;
+  coverImageUrl?: string;
+  visibility?: TournamentVisibility;
+  format?: TournamentFormat;
+  category?: TournamentCategory;
+  ballType?: TournamentBallType;
   startDate?: string;
   endDate?: string;
   location?: TournamentLocation;
@@ -78,6 +168,57 @@ export type CompleteTournamentRequest = {
 
 export type CancelTournamentRequest = {
   cancellationReason: string;
+};
+
+export type TournamentCategory =
+  | "OPEN"
+  | "CORPORATE"
+  | "COMMUNITY"
+  | "SCHOOL"
+  | "COLLEGE"
+  | "UNIVERSITY"
+  | "SERIES"
+  | "OTHER";
+
+export type TournamentAboutBallType = "TENNIS" | "LEATHER" | "OTHER";
+
+export type TournamentAboutResponse = {
+  tournament: {
+    id: string;
+    name: string;
+    visibility: TournamentVisibility;
+    format: TournamentFormat;
+    category: TournamentCategory;
+    status: TournamentStatus;
+    viewsCount: number;
+    startDate?: string | null;
+    endDate?: string | null;
+    location?: TournamentLocation | null;
+    ballType?: TournamentAboutBallType | null;
+    shareUrl?: string | null;
+    qrPayload?: string | null;
+  };
+
+  organiser: {
+    userId: string;
+    name: string;
+    city?: string | null;
+    avatarUrl?: string | null;
+    tournamentsOrganised: number;
+  } | null;
+
+  setupGuide: {
+    helpVideosEnabled: boolean;
+    helplineEnabled: boolean;
+    whatsappEnabled: boolean;
+  };
+
+  actions: {
+    canEdit: boolean;
+    canGoLive: boolean;
+    canShare: boolean;
+    canViewQr: boolean;
+  };
 };
 
 export const tournamentApi = baseApi.injectEndpoints({
@@ -211,6 +352,26 @@ export const tournamentApi = baseApi.injectEndpoints({
         { type: "Tournament", id: tournamentId },
       ],
     }),
+
+    getTournamentDashboard: builder.query<TournamentDashboard, string>({
+      query: (tournamentId) => ({
+        url: `/tournaments/${tournamentId}/dashboard`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, tournamentId) => [
+        { type: "Tournament", id: tournamentId },
+      ],
+    }),
+
+    getAbout: builder.query<TournamentAboutResponse, string>({
+      query: (tournamentId) => ({
+        url: `/tournaments/${tournamentId}/about`,
+        method: "GET",
+      }),
+      providesTags: (_result, _error, tournamentId) => [
+        { type: "Tournament", id: tournamentId },
+      ],
+    }),
   }),
 });
 
@@ -225,4 +386,6 @@ export const {
   useCompleteTournamentMutation,
   useCancelTournamentMutation,
   useArchiveTournamentMutation,
+  useGetTournamentDashboardQuery,
+  useGetAboutQuery,
 } = tournamentApi;

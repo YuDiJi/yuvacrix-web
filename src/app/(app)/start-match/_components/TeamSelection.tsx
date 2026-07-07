@@ -213,7 +213,7 @@ const TeamSelection = ({ teamA, teamB }: Props) => {
               )}
             >
               <S3Image
-                imageKey={teamA?.logoUrl}
+                imageKey={teamA?.logoUrl ?? null}
                 alt={teamA?.name ?? "Team A"}
                 width={48}
                 height={48}
@@ -311,7 +311,7 @@ const TeamSelection = ({ teamA, teamB }: Props) => {
               )}
             >
               <S3Image
-                imageKey={teamB?.logoUrl}
+                imageKey={teamB?.logoUrl ?? null}
                 alt={teamB?.name ?? "Team B"}
                 width={48}
                 height={48}
