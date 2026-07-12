@@ -9,12 +9,13 @@ import {
   setTournamentMatchContext,
 } from "@/store/startMatch/startMatchSlice";
 import { Plus } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 
 const StartMatchPage = () => {
   const router = useRouter();
   const params = useParams();
+
   const dispatch = useAppDispatch();
 
   const tournamentId = params.tournamentId as string;
@@ -136,6 +137,7 @@ const StartMatchPage = () => {
                 roundId: selectedRoundId,
               }),
             );
+
             router.push(
               `/tournaments/${tournamentId}/start-match/playing-teams`,
             );

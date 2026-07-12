@@ -23,3 +23,6 @@ export const selectRoundId = (state: RootState) => state.startMatch.roundId;
 
 export const selectLineUpMode = (state: RootState) =>
   state.startMatch.lineUpMode;
+
+export const selectCreationMode = (state: RootState) =>
+  state.startMatch.creationMode;
