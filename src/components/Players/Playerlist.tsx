@@ -55,8 +55,10 @@ function SortablePlayerRow({
 export function PlayerList({
   players,
   mode,
+  adminId,
   captainId,
   keeperId,
+  onAdminChange,
   onCaptainChange,
   onKeeperChange,
   selectedPlayerIds,
@@ -161,6 +163,8 @@ export function PlayerList({
                     <PlayerCard
                       player={player}
                       mode={mode}
+                      adminId={adminId}
+                      onAdminChange={onAdminChange}
                       isCaptain={captainId === player.playerId}
                       isKeeper={keeperId === player.playerId}
                       isSelected={isSelected}

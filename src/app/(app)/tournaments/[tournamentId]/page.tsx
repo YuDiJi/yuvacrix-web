@@ -35,6 +35,7 @@ import {
 import About from "./About";
 import Teams from "./Teams";
 import { S3Image } from "@/components/common/S3Image";
+import Matches from "./Matches";
 
 const TABS = ["About", "Teams", "Matches", "Points Table", "Sponsors"];
 
@@ -213,7 +214,7 @@ export default function TournamentDetailsPage() {
 
       {activeTab === "About" && <About />}
       {activeTab === "Teams" && <Teams />}
-      {activeTab === "Matches" && <div>Matches</div>}
+      {activeTab === "Matches" && <Matches />}
       {activeTab === "Points Table" && <div>Points Table</div>}
       {activeTab === "Sponsors" && <div>Sponsors</div>}
     </div>

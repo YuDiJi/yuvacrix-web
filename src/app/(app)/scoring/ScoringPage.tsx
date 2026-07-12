@@ -543,8 +543,8 @@ export default function ScoringPage() {
             resetFlow();
           }}
           onContinue={() => {
-            router.push(`/start-match/start-innings`);
             setFlow("IDLE");
+            router.push(`/start-match/start-innings`);
           }}
           onContinueThisOver={() => {
             setFlow("AWAITING_NEXT_OVER");

@@ -158,6 +158,8 @@ export interface MatchTeam {
   shortName: string;
   logoUrl: string | null;
 
+  score: { runs: number; wickets: number; oversText: string };
+
   captainId: string | null;
   viceCaptainId: string | null;
   wicketKeeperId: string | null;

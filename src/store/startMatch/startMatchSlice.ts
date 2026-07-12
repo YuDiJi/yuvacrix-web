@@ -7,6 +7,12 @@ type MatchPlayerRole = {
 };
 
 type StartMatchState = {
+  matchSource: "NORMAL" | "TOURNAMENT";
+
+  tournamentId: string | null;
+  roundId: string | null;
+  fixtureId: string | null;
+
   teamA: Team | null;
   teamB: Team | null;
 
@@ -23,6 +29,12 @@ type StartMatchState = {
 };
 
 const initialState: StartMatchState = {
+  matchSource: "NORMAL",
+
+  tournamentId: null,
+  roundId: null,
+  fixtureId: null,
+
   teamA: null,
   teamB: null,
 
@@ -83,10 +95,12 @@ const startMatchSlice = createSlice({
       action: PayloadAction<{
         matchId: string;
         lineUpMode: "FIXED" | "FLEXIBLE";
+        fixtureId?: string;
       }>,
     ) => {
       state.matchId = action.payload.matchId;
       state.lineUpMode = action.payload.lineUpMode;
+      state.fixtureId = action.payload.fixtureId ?? null;
     },
 
     setMatchContext: (
@@ -118,7 +132,23 @@ const startMatchSlice = createSlice({
       state.teamBKeeper = action.payload.teamBKeeper;
     },
 
+    setTournamentMatchContext: (
+      state,
+      action: PayloadAction<{
+        tournamentId: string;
+        roundId: string;
+      }>,
+    ) => {
+      state.matchSource = "TOURNAMENT";
+      state.tournamentId = action.payload.tournamentId;
+      state.roundId = action.payload.roundId;
+    },
+
     resetMatch: (state) => {
+      state.matchSource = "NORMAL";
+      state.tournamentId = null;
+      state.roundId = null;
+      state.fixtureId = null;
       state.teamA = null;
       state.teamB = null;
       state.teamACaptain = null;
@@ -139,6 +169,7 @@ export const {
   setActiveTeam,
   setMatchIdMode,
   setMatchContext,
+  setTournamentMatchContext,
   resetMatch,
 } = startMatchSlice.actions;
 

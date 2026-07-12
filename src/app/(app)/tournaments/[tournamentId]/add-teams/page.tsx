@@ -9,28 +9,41 @@ import { useState } from "react";
 
 import { TeamCard } from "@/components/team/TeamCard";
 import { Button } from "@/components/common/Button";
-import { useAddTeamToTournamentMutation } from "@/store/api/tournamentTeamApi";
+import {
+  useAddTeamToTournamentMutation,
+  useGetTournamentTeamsQuery,
+} from "@/store/api/tournamentTeamApi";
 
-export default function SelectTeamPage() {
+export default function AddTeamPage() {
   const router = useRouter();
   const params = useParams();
   const tournamentId = params.tournamentId as string;
   const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState("");
 
   const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
 
   const [addTeamToTournament, { isLoading: isAdding }] =
     useAddTeamToTournamentMutation();
   const { data: teams, isSuccess, isError } = useGetOwnedTeamQuery();
+  const { data: tournamentTeams } = useGetTournamentTeamsQuery({
+    tournamentId,
+    status: "ACTIVE",
+  });
+
+  const tournamentTeamIds = new Set(
+    tournamentTeams?.map((t) => t.teamId) ?? [],
+  );
 
   const filteredTeams =
     teams?.filter((team) => {
-      // Search filter
       const matchesSearch = team.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
-      return matchesSearch;
+      const notAlreadyAdded = !tournamentTeamIds.has(team.id);
+
+      return matchesSearch && notAlreadyAdded;
     }) ?? [];
 
   function toggleTeam(teamId: string) {
@@ -44,21 +57,57 @@ export default function SelectTeamPage() {
   async function handleDone() {
     if (selectedTeamIds.length === 0) return;
 
-    try {
-      await Promise.all(
-        selectedTeamIds.map((teamId, index) =>
-          addTeamToTournament({
-            tournamentId,
-            teamId,
-            seedNumber: index + 1,
-          }).unwrap(),
-        ),
-      );
+    setError("");
 
+    const results = await Promise.allSettled(
+      selectedTeamIds.map((teamId, index) =>
+        addTeamToTournament({
+          tournamentId,
+          teamId,
+          seedNumber: index + 1,
+        }).unwrap(),
+      ),
+    );
+
+    const successTeamIds = selectedTeamIds.filter(
+      (_teamId, index) => results[index].status === "fulfilled",
+    );
+
+    const failedResults = results.filter(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+
+    if (failedResults.length === 0) {
       router.push(`/tournaments/${tournamentId}`);
-    } catch (err) {
-      console.error(err);
+      return;
     }
+
+    setSelectedTeamIds((prev) =>
+      prev.filter((teamId) => !successTeamIds.includes(teamId)),
+    );
+
+    const errorMessages = failedResults.map((result) => {
+      const reason = result.reason as {
+        data?: {
+          message?: string;
+        };
+        error?: string;
+      };
+
+      return reason.data?.message ?? reason.error ?? "Failed to add team.";
+    });
+
+    setError(
+      [
+        successTeamIds.length > 0
+          ? `${successTeamIds.length} team(s) added successfully.`
+          : null,
+        `${failedResults.length} team(s) failed.`,
+        ...errorMessages,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    );
   }
 
   if (teams?.length === 0) {
@@ -119,90 +168,107 @@ export default function SelectTeamPage() {
   }
 
   return (
-    <div className="relative min-h-full bg-(--color-bg-base) p-4 pb-24">
-      {/* Search Bar */}
-      <div className="flex gap-2">
-        <div
-          className={cn(
-            "mb-5 flex items-center gap-3 rounded-2xl border-2 border-(--color-bg-border) flex-1",
-            "bg-(--color-bg-card) px-4 py-3 shadow-(--shadow-card)",
-            "focus-within:border-(--color-sky) focus-within:shadow-[0_0_0_3px_rgba(75,139,255,0.10)]",
-            "transition-all duration-150",
-          )}
-        >
-          <Search size={18} className="shrink-0 text-(--color-text-muted)" />
-
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search teams..."
+    <div>
+      <div className="relative min-h-full bg-(--color-bg-base) p-4 pb-24">
+        {/* Search Bar */}
+        <div className="flex gap-2">
+          <div
             className={cn(
-              "flex-1 bg-transparent outline-none",
-              "font-(family-name:--font-display) text-sm font-bold uppercase tracking-[0.06em]",
-              "text-(--color-text-primary)",
-              "placeholder:font-medium placeholder:normal-case placeholder:tracking-normal placeholder:text-(--color-text-muted)",
+              "mb-5 flex items-center gap-3 rounded-2xl border-2 border-(--color-bg-border) flex-1",
+              "bg-(--color-bg-card) px-4 py-3 shadow-(--shadow-card)",
+              "focus-within:border-(--color-sky) focus-within:shadow-[0_0_0_3px_rgba(75,139,255,0.10)]",
+              "transition-all duration-150",
             )}
-          />
-          <button
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-(--color-bg-base) text-(--color-text-secondary) transition-all hover:bg-(--color-bg-tint) hover:text-(--color-brand) active:scale-90"
-            aria-label="Filter"
           >
-            <SlidersHorizontal size={15} />
+            <Search size={18} className="shrink-0 text-(--color-text-muted)" />
+
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search teams..."
+              className={cn(
+                "flex-1 bg-transparent outline-none",
+                "font-(family-name:--font-display) text-sm font-bold uppercase tracking-[0.06em]",
+                "text-(--color-text-primary)",
+                "placeholder:font-medium placeholder:normal-case placeholder:tracking-normal placeholder:text-(--color-text-muted)",
+              )}
+            />
+            <button
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-(--color-bg-base) text-(--color-text-secondary) transition-all hover:bg-(--color-bg-tint) hover:text-(--color-brand) active:scale-90"
+              aria-label="Filter"
+            >
+              <SlidersHorizontal size={15} />
+            </button>
+          </div>
+          <button
+            onClick={() =>
+              router.push(`/tournaments/${tournamentId}/create-team`)
+            }
+            className={cn(
+              "",
+              "flex h-14 w-14 items-center justify-center rounded-2xl",
+              "bg-(--color-brand) text-white",
+              "shadow-[0_8px_24px_rgba(27,63,160,0.40)]",
+              "transition-all duration-200 active:scale-90 hover:bg-[#2449b8]",
+            )}
+            aria-label="Create new team"
+          >
+            <Plus size={26} strokeWidth={2.5} />
           </button>
         </div>
-        <button
-          onClick={() =>
-            router.push(`/tournaments/${tournamentId}/create-team`)
-          }
-          className={cn(
-            "",
-            "flex h-14 w-14 items-center justify-center rounded-2xl",
-            "bg-(--color-brand) text-white",
-            "shadow-[0_8px_24px_rgba(27,63,160,0.40)]",
-            "transition-all duration-200 active:scale-90 hover:bg-[#2449b8]",
-          )}
-          aria-label="Create new team"
-        >
-          <Plus size={26} strokeWidth={2.5} />
-        </button>
-      </div>
 
-      {/* Section label */}
-      <p className="text-section-label mb-3 px-1">All Teams</p>
+        {/* Section label */}
+        <p className="text-section-label mb-3 px-1">All Teams</p>
 
-      {/* Team List */}
+        {/* Team List */}
 
-      <div className="flex flex-col gap-3">
-        {filteredTeams.map((team) => (
-          <TeamCard
-            key={team.id}
-            team={team}
-            variant="select"
-            selected={selectedTeamIds.includes(team.id)}
-            onClick={() => toggleTeam(team.id)}
-          />
-        ))}
-      </div>
-
-      {filteredTeams.length === 0 && (
-        <div className="py-10 text-center text-(--color-text-muted)">
-          No teams found
+        <div className="flex flex-col gap-3">
+          {filteredTeams.map((team) => (
+            <TeamCard
+              key={team.id}
+              team={team}
+              variant="select"
+              selected={selectedTeamIds.includes(team.id)}
+              onClick={() => toggleTeam(team.id)}
+            />
+          ))}
         </div>
-      )}
 
-      {selectedTeamIds.length > 0 && (
+        {filteredTeams.length === 0 && (
+          <div className="py-10 text-center text-(--color-text-muted)">
+            No teams found
+          </div>
+        )}
+        {error && (
+          <div className="my-4 rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 p-3">
+            <p className="whitespace-pre-line text-sm font-medium text-(--color-live)">
+              {error}
+            </p>
+          </div>
+        )}
+      </div>
+      <div className="flex gap-2 sticky bottom-0 mt-6 bg-white p-2">
         <Button
+          variant="secondary"
           fullWidth
-          className="sticky bottom-0 mt-6"
-          loading={isAdding}
-          disabled={selectedTeamIds.length === 0}
-          onClick={handleDone}
+          onClick={() => router.push(`/tournaments/${tournamentId}`)}
         >
-          Add {selectedTeamIds.length || ""} Team
-          {selectedTeamIds.length !== 1 ? "s" : ""}
+          cancel
         </Button>
-      )}
+        {selectedTeamIds.length > 0 && (
+          <Button
+            fullWidth
+            // className="sticky bottom-0 mt-6"
+            loading={isAdding}
+            disabled={selectedTeamIds.length === 0}
+            onClick={handleDone}
+          >
+            Add {selectedTeamIds.length || ""} Team
+            {selectedTeamIds.length !== 1 ? "s" : ""}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
