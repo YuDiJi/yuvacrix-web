@@ -16,6 +16,7 @@ export function tournamentMatchToMatchCard(
     // Backend does not currently return lineupMode in the list response.
     // Keep this fallback until it is added.
     lineupMode: "FLEXIBLE",
+    matchType: match.matchType,
 
     teamA: {
       teamId: match.teamA.teamId,

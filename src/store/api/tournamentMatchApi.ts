@@ -1,3 +1,4 @@
+import { MatchType } from "@/types/match";
 import { baseApi } from "./baseApi";
 
 export type TournamentMatchFilter = "ALL" | "LIVE" | "UPCOMING" | "PAST";
@@ -78,6 +79,8 @@ export type TournamentMatchListItem = {
   status: TournamentMatchStatus;
   scoringStatus: TournamentMatchScoringStatus;
   primaryAction: TournamentMatchPrimaryAction;
+
+  matchType: MatchType;
 
   summaryText?: string | null;
 

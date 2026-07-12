@@ -93,7 +93,7 @@ function teamInitials(name: string): string {
 /** Shorten match type label */
 function matchTypeLabel(type: string): string {
   const map: Record<string, string> = {
-    LIMITED_OVERS: "Individual Match",
+    LIMITED_OVERS: "Limited Over",
     BOX_TURF: "Box Cricket",
     TEST: "Test Match",
     THE_HUNDRED: "The Hundred",

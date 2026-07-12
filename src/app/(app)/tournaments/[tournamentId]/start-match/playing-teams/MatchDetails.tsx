@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
@@ -11,7 +11,7 @@ import {
   AlertCircle,
   Calendar,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { Team } from "@/types/team";
 import {
@@ -21,6 +21,7 @@ import {
   selectTeamBKeeper,
   selectTournamentId,
   selectRoundId,
+  selectCreationMode,
 } from "@/store/startMatch/selectors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useGetTeamDetailQuery } from "@/store/api/teamApi";
@@ -221,6 +222,9 @@ const TournamentMatchDetails = ({
 }) => {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const cityRef = useRef<HTMLDivElement>(null);
+  const groundRef = useRef<HTMLDivElement>(null);
+
   // const [createMatch, { isLoading: isCreating }] = useCreateMatchMutation();
   // const [submitTeamLineup, { isLoading: isSubmittingLineup }] =
   //   useSubmitTeamLineupMutation();
@@ -230,6 +234,7 @@ const TournamentMatchDetails = ({
 
   const tournamentId = useAppSelector(selectTournamentId);
   const roundId = useAppSelector(selectRoundId);
+  const creationMode = useAppSelector(selectCreationMode);
 
   const { data: teamADetail } = useGetTeamDetailQuery({ teamId: teamA.id });
   const { data: teamBDetail } = useGetTeamDetailQuery({ teamId: teamB.id });
@@ -254,6 +259,8 @@ const TournamentMatchDetails = ({
   } | null>(null);
 
   const {
+    trigger,
+    setFocus,
     control,
     handleSubmit,
     getValues,
@@ -432,6 +439,47 @@ const TournamentMatchDetails = ({
     }
   }
 
+  async function handleScheduleClick() {
+    const valid = await trigger();
+
+    if (!valid) {
+      if (errors.city) {
+        setFocus("city");
+        scrollTo(cityRef);
+        return;
+      }
+
+      if (errors.groundName) {
+        setFocus("groundName");
+        scrollTo(groundRef);
+        return;
+      }
+      return;
+    }
+
+    // if (!valid) {
+    //   if (errors.city) {
+    //     setFocus("city");
+    //     return;
+    //   }
+
+    //   if (errors.groundName) {
+    //     setFocus("groundName");
+    //     return;
+    //   }
+
+    //   return;
+    // }
+
+    setScheduleOpen(true);
+  }
+
+  function scrollTo(ref: React.RefObject<HTMLDivElement>) {
+    ref.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -563,7 +611,7 @@ const TournamentMatchDetails = ({
 
           {/* Location */}
           <div className="fixture-bar flex flex-col gap-4 rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
-            <div>
+            <div ref={cityRef}>
               <p className="text-section-label mb-1.5">
                 City / Town <span className="text-(--color-live)">*</span>
               </p>
@@ -581,7 +629,7 @@ const TournamentMatchDetails = ({
               />
               <FieldError message={errors.city?.message} />
             </div>
-            <div>
+            <div ref={groundRef}>
               <p className="text-section-label mb-1.5">
                 Ground <span className="text-(--color-live)">*</span>
               </p>
@@ -744,10 +792,7 @@ const TournamentMatchDetails = ({
       <div className="safe-bottom sticky bottom-0 flex shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card)">
         <button
           type="button"
-          onClick={() => {
-            setSubmitError("");
-            setScheduleOpen(true);
-          }}
+          onClick={() => handleScheduleClick()}
           disabled={isCreating}
           className="flex flex-1 items-center justify-center gap-1.5 py-4 font-(family-name:--font-display) text-xs font-black uppercase tracking-[0.06em] text-(--color-text-secondary) transition-colors hover:text-(--color-text-primary) disabled:opacity-50"
         >
@@ -761,20 +806,22 @@ const TournamentMatchDetails = ({
 
         <div className="h-8 w-px self-center bg-(--color-bg-border)" />
 
-        <button
-          type="button"
-          onClick={onToss}
-          disabled={isCreating}
-          className="flex flex-1 items-center justify-center gap-1.5 bg-(--color-brand) py-4 font-(family-name:--font-display) text-xs font-black uppercase tracking-[0.06em] text-white shadow-[0_-2px_12px_rgba(27,63,160,0.20)] transition-all active:scale-[0.97] disabled:opacity-60"
-        >
-          {isCreating ? (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-          ) : (
-            <>
-              Next (Toss) <ChevronRight size={14} />
-            </>
-          )}
-        </button>
+        {creationMode === "PLAY_NOW" && (
+          <button
+            type="button"
+            onClick={onToss}
+            disabled={isCreating}
+            className="flex flex-1 items-center justify-center gap-1.5 bg-(--color-brand) py-4 font-(family-name:--font-display) text-xs font-black uppercase tracking-[0.06em] text-white shadow-[0_-2px_12px_rgba(27,63,160,0.20)] transition-all active:scale-[0.97] disabled:opacity-60"
+          >
+            {isCreating ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : (
+              <>
+                Next (Toss) <ChevronRight size={14} />
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Schedule bottom sheet */}
