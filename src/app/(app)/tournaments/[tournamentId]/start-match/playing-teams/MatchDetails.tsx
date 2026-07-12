@@ -19,17 +19,22 @@ import {
   selectTeamAKeeper,
   selectTeamBCaptain,
   selectTeamBKeeper,
+  selectTournamentId,
+  selectRoundId,
 } from "@/store/startMatch/selectors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useGetTeamDetailQuery } from "@/store/api/teamApi";
-import {
-  useCreateMatchMutation,
-  useSubmitTeamLineupMutation,
-} from "@/store/api/matchApi";
+import { useCreateManualFixtureMutation } from "@/store/api/tournamentFixtureApi";
+
+// import {
+//   useCreateMatchMutation,
+//   useSubmitTeamLineupMutation,
+// } from "@/store/api/matchApi";
 import type { MatchType, BallType, PitchType } from "@/types/match";
-import { LineupModeSheet } from "@/components/match/LineupModeSheet";
+// import { LineupModeSheet } from "./LineupModeSheet";
 import { setMatchIdMode } from "@/store/startMatch/startMatchSlice";
 import { S3Image } from "@/components/common/S3Image";
+import { LineupModeSheet } from "@/components/match/LineupModeSheet";
 import ScheduleModal from "@/components/match/ScheduleModal";
 
 // ─── Zod schema ───────────────────────────────────────────────────────────────
@@ -207,12 +212,24 @@ function FieldError({ message }: { message?: string }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
+const TournamentMatchDetails = ({
+  teamA,
+  teamB,
+}: {
+  teamA: Team;
+  teamB: Team;
+}) => {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const [createMatch, { isLoading: isCreating }] = useCreateMatchMutation();
-  const [submitTeamLineup, { isLoading: isSubmittingLineup }] =
-    useSubmitTeamLineupMutation();
+  // const [createMatch, { isLoading: isCreating }] = useCreateMatchMutation();
+  // const [submitTeamLineup, { isLoading: isSubmittingLineup }] =
+  //   useSubmitTeamLineupMutation();
+
+  const [createManualFixture, { isLoading: isCreating }] =
+    useCreateManualFixtureMutation();
+
+  const tournamentId = useAppSelector(selectTournamentId);
+  const roundId = useAppSelector(selectRoundId);
 
   const { data: teamADetail } = useGetTeamDetailQuery({ teamId: teamA.id });
   const { data: teamBDetail } = useGetTeamDetailQuery({ teamId: teamB.id });
@@ -258,25 +275,47 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
 
   // ── Build payload ─────────────────────────────────────────────────────────
 
-  function buildPayload(values: FormValues, withSchedule?: string) {
+  function buildFixturePayload(
+    values: FormValues,
+    lineupMode: LineupMode,
+    scheduledDateTime?: string,
+  ) {
+    if (!roundId) {
+      throw new Error("Tournament round is not selected.");
+    }
+
     return {
+      roundId,
       teamAId: teamA.id,
       teamBId: teamB.id,
-      matchType: values.matchType,
-      oversLimit: values.oversLimit,
-      oversPerBowler: values.oversPerBowler,
-      ballType: values.ballType,
+
+      ...(scheduledDateTime && {
+        scheduledAt: new Date(scheduledDateTime).toISOString(),
+      }),
+
+      timezone: "Asia/Kolkata",
+
       venue: {
         city: values.city.trim(),
         groundName: values.groundName.trim(),
         pitchType: values.pitchType,
       },
-      ...(withSchedule && {
-        scheduledAt: new Date(withSchedule).toISOString(),
-      }),
-      scoringSettings: {
+
+      rules: {
+        matchType: values.matchType,
+        oversLimit: values.oversLimit,
+        oversPerBowler: values.oversPerBowler,
+        lineupMode,
+        ballType: values.ballType,
         wagonWheelEnabled: values.wagonWheel,
-        wagonWheelForRuns: values.wagonWheel ? [1, 2, 3] : [],
+        shotSelectionEnabled: false,
+      },
+
+      officials: {
+        scorerUserIds: [],
+        umpireNames: [],
+        liveStreamerUserIds: [],
+        otherNames: [],
       },
     };
   }
@@ -285,16 +324,44 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
   // Validates form → opens date-time picker → createMatch with scheduledAt → /home
 
   const onSchedule = handleSubmit(async (values) => {
-    if (!scheduledAt) return;
+    if (!tournamentId) {
+      setSubmitError("Tournament ID is missing.");
+      return;
+    }
+
+    if (!roundId) {
+      setSubmitError("Please select a tournament round first.");
+      return;
+    }
+
+    if (!scheduledAt) {
+      setSubmitError("Please select a match date and time.");
+      return;
+    }
+
     setSubmitError("");
+
     try {
-      await createMatch(buildPayload(values, scheduledAt)).unwrap();
+      await createManualFixture({
+        tournamentId,
+        body: buildFixturePayload(values, "FLEXIBLE", scheduledAt),
+      }).unwrap();
+
       setScheduleOpen(false);
-      router.push("/home");
-    } catch (err: any) {
-      setSubmitError(
-        err?.data?.message ?? "Failed to schedule match. Please try again.",
-      );
+
+      router.push(`/tournaments/${tournamentId}`);
+    } catch (err) {
+      const message =
+        err &&
+        typeof err === "object" &&
+        "data" in err &&
+        err.data &&
+        typeof err.data === "object" &&
+        "message" in err.data
+          ? String(err.data.message)
+          : "Failed to schedule tournament match. Please try again.";
+
+      setSubmitError(message);
     }
   });
 
@@ -305,40 +372,63 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
   const onToss = handleSubmit(async () => {
     setSubmitError("");
     setLineupError("");
-
-    // Just open the lineup mode sheet
     setLineupSheetOpen(true);
   });
 
   // ── NEXT (TOSS) flow — Step 2: lineup mode chosen ────────────────────────
 
   async function handleLineupContinue(mode: LineupMode) {
+    if (!tournamentId) {
+      setLineupError("Tournament ID is missing.");
+      return;
+    }
+
+    if (!roundId) {
+      setLineupError("Tournament round is not selected.");
+      return;
+    }
+
     setLineupError("");
 
     try {
       const values = getValues();
 
-      const match = await createMatch({
-        ...buildPayload(values),
-        lineupMode: mode,
+      const fixture = await createManualFixture({
+        tournamentId,
+        body: buildFixturePayload(values, mode),
       }).unwrap();
 
-      const matchId = match.match.id;
+      if (!fixture.matchId) {
+        throw new Error(
+          "Match ID was not returned after creating the fixture.",
+        );
+      }
 
       setLineupSheetOpen(false);
 
       dispatch(
         setMatchIdMode({
-          matchId: matchId,
+          matchId: fixture.matchId,
+          fixtureId: fixture.id,
           lineUpMode: mode,
         }),
       );
 
-      router.push(`/start-match/line-up`);
-    } catch (err: any) {
-      setLineupError(
-        err?.data?.message ?? "Failed to create match. Please try again.",
-      );
+      router.push("/start-match/line-up");
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : err &&
+              typeof err === "object" &&
+              "data" in err &&
+              err.data &&
+              typeof err.data === "object" &&
+              "message" in err.data
+            ? String(err.data.message)
+            : "Failed to create tournament match. Please try again.";
+
+      setLineupError(message);
     }
   }
 
@@ -360,7 +450,11 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
             detail={teamADetail}
             captainName={teamACaptain?.name}
             keeperName={teamAKeeper?.name}
-            onClick={() => router.push("/start-match/select-team?team=A")}
+            onClick={() =>
+              router.push(
+                `/tournaments/${tournamentId}/start-match/select-team?team=A`,
+              )
+            }
           />
           <div
             className="mt-4 flex h-9 w-9 shrink-0 items-center justify-center bg-white shadow-[0_2px_12px_rgba(255,255,255,0.25)]"
@@ -377,7 +471,11 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
             detail={teamBDetail}
             captainName={teamBCaptain?.name}
             keeperName={teamBKeeper?.name}
-            onClick={() => router.push("/start-match/select-team?team=B")}
+            onClick={() =>
+              router.push(
+                `/tournaments/${tournamentId}/start-match/select-team?team=B`,
+              )
+            }
           />
         </div>
       </div>
@@ -698,11 +796,11 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
           setLineupError("");
         }}
         onContinue={handleLineupContinue}
-        loading={isSubmittingLineup}
+        loading={isCreating}
         error={lineupError}
       />
     </div>
   );
 };
 
-export default MatchDetails;
+export default TournamentMatchDetails;

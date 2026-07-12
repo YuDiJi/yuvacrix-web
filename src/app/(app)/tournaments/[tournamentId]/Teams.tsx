@@ -129,7 +129,6 @@ const Teams = () => {
     );
   }
 
-  console.log(teams);
   return (
     <div className="relative min-h-full bg-(--color-bg-base) p-4 pb-24">
       <div className="flex gap-2">
@@ -184,7 +183,7 @@ const Teams = () => {
             variant="navigate"
             onClick={() => {
               router.push(
-                `/tournaments/${tournamentId}/players?team=${team.id}`,
+                `/tournaments/${tournamentId}/players?team=${team.id}&from=tournament-team-setup`,
               );
             }}
           />

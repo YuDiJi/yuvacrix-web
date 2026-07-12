@@ -36,7 +36,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <Header pathname={pathname} onMenuClick={() => setDrawerOpen(true)} />
 
         <main
-          className={`flex-1 overflow-y-auto overflow-x-hidden ${showBottomNav && "pb-[calc(3.75rem+env(safe-area-inset-bottom,12px))]"}`}
+          className={`flex flex-1 flex-col overflow-y-auto overflow-x-hidden ${showBottomNav && "pb-[calc(3.75rem+env(safe-area-inset-bottom,12px))]"}`}
         >
           {children}
         </main>

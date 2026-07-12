@@ -2,7 +2,7 @@
 // ─── Usage: team-management mode ─────────────────────────────────────────────
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserPlus, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -23,6 +23,10 @@ import {
   setTeamBRoles,
 } from "@/store/startMatch/startMatchSlice";
 import { S3Image } from "@/components/common/S3Image";
+import {
+  useAssignTournamentPlayerRolesMutation,
+  useGetTeamsRoleSummaryQuery,
+} from "@/store/api/tournamentTeamApi";
 
 export default function PlayersPage() {
   const router = useRouter();
@@ -30,16 +34,13 @@ export default function PlayersPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const currentTeamId = searchParams.get("team");
+  const from = searchParams.get("from");
   const tournamentId = params.tournamentId as string;
 
   const [removeTeamMember, { isLoading: isRemoving }] =
     useRemoveTeamMemberMutation();
   // const [setTeamMemberRole, { isLoading: isSavingRoles }] =
   //   useSetTeamMemberRoleMutation();
-
-  const [captainId, setCaptainId] = useState<string | null>(null);
-  const [keeperId, setKeeperId] = useState<string | null>(null);
-  const [confirmError, setConfirmError] = useState("");
 
   const {
     data: allPlayers,
@@ -52,9 +53,29 @@ export default function PlayersPage() {
   const { data: teamDetail, isLoading: isLoadingTeam } = useGetTeamDetailQuery(
     currentTeamId ? { teamId: currentTeamId } : skipToken,
   );
+  const { data: teamRole, isLoading: isLoadingTeamRole } =
+    useGetTeamsRoleSummaryQuery(
+      currentTeamId ? { tournamentId, teamId: currentTeamId } : skipToken,
+    );
+
+  const [assignTournamentPlayerRoles, { isLoading: isAssigningRoles }] =
+    useAssignTournamentPlayerRolesMutation();
+
+  const [adminId, setAdminId] = useState<string | null>(null);
+  const [captainId, setCaptainId] = useState<string | null>(null);
+  const [keeperId, setKeeperId] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState("");
 
   const players = allPlayers ?? [];
   const canConfirm = captainId !== null && keeperId !== null;
+
+  useEffect(() => {
+    if (!teamRole) return;
+
+    setCaptainId(teamRole.captain?.playerId ?? null);
+    setKeeperId(teamRole.wicketKeeper?.playerId ?? null);
+    setAdminId(teamRole.admins[0]?.playerId ?? null);
+  }, [teamRole]);
 
   // ── Delete player via API ─────────────────────────────────────────────────
 
@@ -66,15 +87,71 @@ export default function PlayersPage() {
   }
 
   async function handleConfirm() {
-    if (!captainId || !keeperId) return;
+    if (!currentTeamId || !tournamentId || !captainId || !keeperId) return;
 
-    const captain = allPlayers?.find((p) => p.playerId === captainId);
+    setConfirmError("");
 
-    const keeper = allPlayers?.find((p) => p.playerId === keeperId);
+    try {
+      const roleRequests = [
+        assignTournamentPlayerRoles({
+          tournamentId,
+          teamId: currentTeamId,
+          playerId: captainId,
+          body: {
+            isCaptain: true,
+          },
+        }).unwrap(),
 
-    if (!captain || !keeper) return;
+        assignTournamentPlayerRoles({
+          tournamentId,
+          teamId: currentTeamId,
+          playerId: keeperId,
+          body: {
+            isWicketKeeper: true,
+          },
+        }).unwrap(),
+      ];
 
-    // router.push("/start-match");
+      if (adminId) {
+        roleRequests.push(
+          assignTournamentPlayerRoles({
+            tournamentId,
+            teamId: currentTeamId,
+            playerId: adminId,
+            body: {
+              isAdmin: true,
+            },
+          }).unwrap(),
+        );
+      }
+
+      await Promise.all(roleRequests);
+
+      switch (from) {
+        case "tournament-start-match":
+          router.push(`/tournaments/${tournamentId}/start-match/playing-teams`);
+          break;
+
+        case "tournament-team-setup":
+          router.push(`/tournaments/${tournamentId}`);
+          break;
+
+        default:
+          router.push(`/tournaments/${tournamentId}`);
+      }
+    } catch (err) {
+      const message =
+        err &&
+        typeof err === "object" &&
+        "data" in err &&
+        err.data &&
+        typeof err.data === "object" &&
+        "message" in err.data
+          ? String(err.data.message)
+          : "Failed to assign roles. Please try again.";
+
+      setConfirmError(message);
+    }
   }
 
   if (isLoading) return <PlayerListSkeleton rows={5} />;
@@ -206,7 +283,8 @@ export default function PlayersPage() {
             Roles Assignment
           </h2>
           <p className="mt-0.5 text-sm text-(--color-text-secondary)">
-            Identify the Captain (C) and Wicketkeeper (WK) for this match.
+            Select the Captain (C) and Wicketkeeper (WK). <br />
+            Assign an Admin (A) if required.
           </p>
           {!canConfirm && (
             <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-(--color-six)/30 bg-(--color-six)/8 px-3 py-2">
@@ -225,9 +303,11 @@ export default function PlayersPage() {
         {/* ── PlayerList in team-management mode ── */}
         <PlayerList
           players={players}
-          mode="team-management"
+          mode="team-management-tournament"
+          adminId={adminId}
           captainId={captainId}
           keeperId={keeperId}
+          onAdminChange={setAdminId}
           onCaptainChange={setCaptainId}
           onKeeperChange={setKeeperId}
           onDelete={handleDelete}
@@ -244,18 +324,23 @@ export default function PlayersPage() {
             </p>
           </div>
         )}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 py-1">
           <Button
             fullWidth
-            disabled={!canConfirm}
-            // loading={isSavingRoles}
+            disabled={!canConfirm || isAssigningRoles}
+            loading={isAssigningRoles}
             onClick={handleConfirm}
             rightIcon={<ChevronRight size={18} />}
-            className={cn(!canConfirm && "opacity-50 cursor-not-allowed")}
+            className={cn(
+              (!canConfirm || isAssigningRoles) &&
+                "opacity-50 cursor-not-allowed mb-1",
+            )}
           >
-            Confirm & Start Match
+            Confirm
           </Button>
+
           <button
+            // fullWidth
             onClick={() =>
               router.push(
                 `/tournaments/${tournamentId}/create-player?team=${currentTeamId}`,

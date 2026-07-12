@@ -45,6 +45,76 @@ export type RemoveTeamFromTournamentRequest = {
   removalReason?: string;
 };
 
+export type AssignTournamentPlayerRolesRequest = {
+  tournamentId: string;
+  teamId: string;
+  playerId: string;
+  body: {
+    isAdmin?: boolean;
+    isWicketKeeper?: boolean;
+    isCaptain?: boolean;
+  };
+};
+
+export type TournamentTeamPlayerStatus = "ACTIVE" | "REMOVED";
+
+export type TournamentActorType = "USER" | "SYSTEM" | "ADMIN" | string;
+
+export type TournamentAuditActor = {
+  actorType: TournamentActorType;
+  actorId: string;
+};
+
+export type TournamentTeamPlayerRoles = {
+  isAdmin: boolean;
+  isScorer: boolean;
+  isCaptain: boolean;
+  isViceCaptain: boolean;
+  isWicketKeeper: boolean;
+};
+
+export type TournamentTeamRolePlayer = {
+  id: string;
+  tournamentId: string;
+  teamId: string;
+  playerId: string;
+  userId?: string | null;
+
+  playerNameSnapshot: string;
+  playerProfileImageSnapshot?: string | null;
+  jerseyNumber?: string | number | null;
+
+  roles: TournamentTeamPlayerRoles;
+  status: TournamentTeamPlayerStatus;
+
+  addedAt: string;
+  removedAt?: string | null;
+  removalReason?: string | null;
+
+  createdBy: TournamentAuditActor;
+  updatedBy?: TournamentAuditActor | null;
+
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TournamentTeamRoleSummary = {
+  tournamentId: string;
+  teamId: string;
+
+  captain: TournamentTeamRolePlayer | null;
+  viceCaptain: TournamentTeamRolePlayer | null;
+  wicketKeeper: TournamentTeamRolePlayer | null;
+
+  admins: TournamentTeamRolePlayer[];
+  scorers: TournamentTeamRolePlayer[];
+};
+
+export type GetTournamentTeamRoleSummaryRequest = {
+  tournamentId: string;
+  teamId: string;
+};
+
 export const tournamentTeamApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     addTeamToTournament: builder.mutation<
@@ -99,6 +169,35 @@ export const tournamentTeamApi = baseApi.injectEndpoints({
         { type: "TournamentTeam", id: tournamentId },
       ],
     }),
+
+    assignTournamentPlayerRoles: builder.mutation<
+      { success?: boolean; message?: string },
+      AssignTournamentPlayerRolesRequest
+    >({
+      query: ({ tournamentId, teamId, playerId, body }) => ({
+        url: `/tournaments/${tournamentId}/teams/${teamId}/players/${playerId}/roles`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { tournamentId }) => [
+        { type: "TournamentTeam", id: tournamentId },
+      ],
+    }),
+
+    getTeamsRoleSummary: builder.query<
+      TournamentTeamRoleSummary,
+      GetTournamentTeamRoleSummaryRequest
+    >({
+      query: ({ tournamentId, teamId }) => ({
+        url: `/tournaments/${tournamentId}/teams/${teamId}/roles`,
+        method: "GET",
+        params: status ? { status } : undefined,
+      }),
+      providesTags: (_result, _error, { tournamentId, teamId }) => [
+        { type: "TournamentTeam", id: tournamentId },
+        { type: "TournamentTeam", id: teamId },
+      ],
+    }),
   }),
 });
 
@@ -106,4 +205,6 @@ export const {
   useAddTeamToTournamentMutation,
   useGetTournamentTeamsQuery,
   useRemoveTeamFromTournamentMutation,
+  useAssignTournamentPlayerRolesMutation,
+  useGetTeamsRoleSummaryQuery,
 } = tournamentTeamApi;

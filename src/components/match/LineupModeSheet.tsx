@@ -10,7 +10,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { Button } from "../../../../components/common/Button"; // Adjust import path if needed
+import { Button } from "@/components/common/Button";
 
 type LineupMode = "FLEXIBLE" | "FIXED";
 

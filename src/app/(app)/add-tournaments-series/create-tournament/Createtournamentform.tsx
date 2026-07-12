@@ -22,13 +22,13 @@ const schema = z.object({
   groundName: z.string().optional(),
   locationLabel: z.string().optional(),
 
-  organiserName: z.string().min(2, "Enter organiser name"),
-  organiserNumber: z.string().min(10, "Enter organiser number"),
-  organiserEmail: z
-    .string()
-    .email("Enter valid email")
-    .optional()
-    .or(z.literal("")),
+  // organiserName: z.string().min(2, "Enter organiser name"),
+  // organiserNumber: z.string().min(10, "Enter organiser number"),
+  // organiserEmail: z
+  //   .string()
+  //   .email("Enter valid email")
+  //   .optional()
+  //   .or(z.literal("")),
 
   startDate: z.string().min(1, "Select start date"),
   endDate: z.string().min(1, "Select end date"),
@@ -235,9 +235,9 @@ export default function CreateTournamentForm() {
       groundName: "",
       locationLabel: "",
 
-      organiserName: "",
-      organiserNumber: "",
-      organiserEmail: "",
+      // organiserName: "",
+      // organiserNumber: "",
+      // organiserEmail: "",
 
       startDate: "",
       endDate: "",

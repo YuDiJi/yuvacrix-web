@@ -9,6 +9,7 @@
  * fixed-lineup     → C + WK + Playing toggle  (no delete, batting order handled separately)
  */
 export type PlayerListMode =
+  | "team-management-tournament"
   | "team-management"
   | "flexible-lineup"
   | "fixed-lineup";
@@ -27,8 +28,10 @@ export interface PlayerListProps {
   mode: PlayerListMode;
 
   // ── Roles (all modes) ───────────────────────────────────────────────────
+  adminId?: string | null;
   captainId: string | null;
   keeperId: string | null;
+  onAdminChange?: (playerId: string | null) => void;
   onCaptainChange: (playerId: string | null) => void;
   onKeeperChange: (playerId: string | null) => void;
 
@@ -54,10 +57,12 @@ export interface PlayerCardProps {
     listeners: any;
   };
 
+  adminId?: string | null;
   isCaptain: boolean;
   isKeeper: boolean;
   isSelected: boolean; // always true in team-management
 
+  onAdminChange?: (playerId: string | null) => void;
   onCaptainToggle: () => void;
   onKeeperToggle: () => void;
   onSelectionToggle?: () => void;
