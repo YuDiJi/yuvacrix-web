@@ -2,7 +2,7 @@
 
 import { Team } from "@/types/team";
 
-type RouteConfig = {
+export type RouteConfig = {
   showBackButton: boolean;
   title?: string;
   getTitle?: (ctx: {
@@ -100,6 +100,52 @@ export const routeConfig: Record<string, RouteConfig> = {
 
   "/add-tournaments-series/create-tournament": {
     title: "Add a Tournament",
+    showBackButton: true,
+  },
+
+  // Tournament routes
+  "/tournaments/[tournamentId]": {
+    title: "Tournament",
+    showBackButton: true,
+  },
+
+  "/tournaments/[tournamentId]/edit": {
+    title: "Edit Tournament",
+    showBackButton: true,
+  },
+
+  "/tournaments/[tournamentId]/add-teams": {
+    title: "Add Teams",
+    showBackButton: true,
+  },
+
+  "/tournaments/[tournamentId]/players": {
+    title: "Players",
+    showBackButton: true,
+  },
+
+  "/tournaments/[tournamentId]/create-team": {
+    title: "Create Team",
+    showBackButton: true,
+  },
+
+  "/tournaments/[tournamentId]/create-player": {
+    title: "Add Players",
+    showBackButton: true,
+  },
+
+  "/tournaments/[tournamentId]/start-match": {
+    title: "Select Round",
+    showBackButton: true,
+  },
+
+  "/tournaments/[tournamentId]/start-match/round": {
+    title: "Add Rounds",
+    showBackButton: true,
+  },
+
+  "/tournaments/[tournamentId]/start-match/playing-teams": {
+    title: "Playing Teams",
     showBackButton: true,
   },
 } as const;

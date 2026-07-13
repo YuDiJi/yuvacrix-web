@@ -7,6 +7,7 @@ import { CreateTeamForm } from "@/components/team/CreateTeamForm";
 import { useCreateTeamMutation } from "@/store/api/teamApi";
 import { useUploadFileMutation } from "@/store/api/uploadApi";
 import { useAppDispatch } from "@/store/hooks";
+import { useAddTeamToTournamentMutation } from "@/store/api/tournamentTeamApi";
 
 export default function CreateTournamentTeam() {
   const router = useRouter();
@@ -17,11 +18,14 @@ export default function CreateTournamentTeam() {
   const [createTeam, { isLoading }] = useCreateTeamMutation();
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
 
+  const [addTeamToTournament, { isLoading: isAdding }] =
+    useAddTeamToTournamentMutation();
+
   const [error, setError] = useState("");
 
   return (
     <CreateTeamForm
-      isLoading={isLoading || isUploading}
+      isLoading={isLoading || isUploading || isAdding}
       error={error}
       onSubmit={async ({ name, city, logoFile }) => {
         setError("");
@@ -43,6 +47,12 @@ export default function CreateTournamentTeam() {
             city: city.trim(),
             sportType: "CRICKET",
             ...(logoKey && { logoUrl: logoKey }),
+          }).unwrap();
+
+          addTeamToTournament({
+            tournamentId,
+            teamId: response.id,
+            // seedNumber: index + 1,
           }).unwrap();
 
           router.push(

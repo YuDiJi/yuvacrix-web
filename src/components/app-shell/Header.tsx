@@ -4,9 +4,9 @@ import LogoMark from "./LogoMark";
 import { isBottomNavRoute } from "./routeHelpers";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useHeader } from "@/providers/HeaderProvider";
-import { routeConfig } from "./config/routeConfig";
 import { useAppSelector } from "@/store/hooks";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
+import { getRouteConfig } from "./config/getRouteConfig";
 
 function Header({
   onMenuClick,
@@ -24,10 +24,12 @@ function Header({
   const { header } = useHeader();
   const searchParams = useSearchParams();
 
-  type RoutePath = keyof typeof routeConfig;
+  // type RoutePath = keyof typeof routeConfig;
 
-  let config =
-    pathname in routeConfig ? routeConfig[pathname as RoutePath] : undefined;
+  // let config =
+  //   pathname in routeConfig ? routeConfig[pathname as RoutePath] : undefined;
+
+  let config = getRouteConfig(pathname);
 
   if (!config && /^\/matches\/[^/]+\/scorecard$/.test(pathname)) {
     config = {
@@ -37,7 +39,10 @@ function Header({
   }
 
   const pageTitle =
-    config?.getTitle?.({ searchParams, teamA, teamB }) ?? config?.title ?? "";
+    config?.getTitle?.({ searchParams, teamA, teamB }) ??
+    config?.title ??
+    header.title ??
+    "";
 
   const isHome = pathname === "/home";
   const rootRoutes = ["/home", "/my-cricket"];
