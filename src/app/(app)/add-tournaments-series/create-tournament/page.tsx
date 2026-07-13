@@ -1,5 +1,5 @@
-import CreateTournamentForm from "./Createtournamentform";
+import TournamentForm from "@/components/tournament/TournamentForm";
 
 export default function CreateTournamentPage() {
-  return <CreateTournamentForm />;
+  return <TournamentForm mode="CREATE" />;
 }

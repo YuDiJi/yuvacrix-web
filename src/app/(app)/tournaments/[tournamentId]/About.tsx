@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Phone,
   MessageCircle,
@@ -169,9 +168,19 @@ const About = () => {
           <h3 className="font-(family-name:--font-display) text-base font-black uppercase text-(--color-navy) tracking-wide">
             Tournament Details
           </h3>
-          <button className="text-(--color-brand) hover:opacity-80 active:scale-95 transition-all">
+          {/* <button className="text-(--color-brand) hover:opacity-80 active:scale-95 transition-all">
             <Edit3 size={18} strokeWidth={2.5} />
-          </button>
+          </button> */}
+          {about.actions.canEdit && (
+            <button
+              type="button"
+              onClick={() => router.push(`/tournaments/${tournamentId}/edit`)}
+              className="text-(--color-brand) transition-all hover:opacity-80 active:scale-95"
+              aria-label="Edit tournament"
+            >
+              <Edit3 size={18} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
 
         <div className="p-5 flex flex-col gap-6">
