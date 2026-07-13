@@ -32,10 +32,11 @@ import {
   useGetTournamentDetailsQuery,
   useGetTournamentDashboardQuery,
 } from "@/store/api/tournamentApi";
-import About from "./About";
-import Teams from "./Teams";
+import About from "./_components/About";
+import Teams from "./_components/Teams";
 import { S3Image } from "@/components/common/S3Image";
-import Matches from "./Matches";
+import Matches from "./_components/Matches";
+import PointsTable from "./_components/PointsTable";
 
 const TABS = ["About", "Teams", "Matches", "Points Table", "Sponsors"];
 
@@ -110,50 +111,6 @@ export default function TournamentDetailsPage() {
   return (
     <div className="flex min-h-dvh w-full flex-col bg-(--color-bg-base)">
       <div className="bg-(--color-navy) px-4 pb-4 pt-4 text-white">
-        {/* <div className="flex items-center gap-4">
-          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/20 bg-white p-1 shadow-sm">
-            {logoUrl ? (
-              <Image
-                src={logoUrl}
-                alt={tournament.name}
-                width={80}
-                height={80}
-                className="h-full w-full rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-bg-tint)">
-                <Shield size={34} className="text-(--color-brand)" />
-              </div>
-            )}
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate font-(family-name:--font-display) text-2xl font-black uppercase tracking-wide text-white">
-              {tournament.name}
-            </h2>
-
-            <p className="mt-1 truncate text-sm font-medium text-white/80">
-              {dateRange}
-            </p>
-
-            {tournament.totalViews !== undefined && (
-              <p className="mt-0.5 truncate text-sm font-medium text-white/80">
-                {tournament.totalViews.toLocaleString("en-IN")} Total Views
-              </p>
-            )}
-
-            <div className="mt-2 flex flex-wrap gap-2">
-              <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white">
-                {tournament.status.replaceAll("_", " ")}
-              </span>
-
-              <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white">
-                {tournament.visibility}
-              </span>
-            </div>
-          </div>
-        </div> */}
-
         <div className="bg-(--color-navy) px-4 py-4 text-white shrink-0">
           <div className="flex items-center gap-4">
             <div className="shrink-0 w-20 h-20 rounded-full border-2 border-white/20 bg-white flex items-center justify-center overflow-hidden shadow-sm p-1">
@@ -215,7 +172,7 @@ export default function TournamentDetailsPage() {
       {activeTab === "About" && <About />}
       {activeTab === "Teams" && <Teams />}
       {activeTab === "Matches" && <Matches />}
-      {activeTab === "Points Table" && <div>Points Table</div>}
+      {activeTab === "Points Table" && <PointsTable />}
       {activeTab === "Sponsors" && <div>Sponsors</div>}
     </div>
   );

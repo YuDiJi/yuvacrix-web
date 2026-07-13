@@ -178,7 +178,7 @@ export function CreatePlayerFlow({
   const primaryLoading = isSearching || isCreatingPlayer || isAddingTeam;
 
   return (
-    <div className="flex min-h-full flex-col bg-(--color-bg-base)">
+    <div className="h-full bg-(--color-bg-base)">
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 pt-5">
         {players.length > 0 && (
           <div>
@@ -261,7 +261,7 @@ export function CreatePlayerFlow({
 
       <div
         className={cn(
-          "safe-bottom shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3",
+          "safe-bottom shrink-0 border-t border-(--color-bg-border) px-4 py-3",
           "flex flex-col gap-2",
         )}
       >

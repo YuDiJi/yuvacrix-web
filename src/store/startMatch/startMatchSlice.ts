@@ -12,6 +12,7 @@ type StartMatchState = {
 
   tournamentId: string | null;
   roundId: string | null;
+  groupId: string | null;
   fixtureId: string | null;
   creationMode: MatchCreationMode;
 
@@ -35,6 +36,7 @@ const initialState: StartMatchState = {
 
   tournamentId: null,
   roundId: null,
+  groupId: null,
   fixtureId: null,
   creationMode: "PLAY_NOW",
 
@@ -144,17 +146,20 @@ const startMatchSlice = createSlice({
       action: PayloadAction<{
         tournamentId: string;
         roundId: string;
+        // groupId: string;
       }>,
     ) => {
       state.matchSource = "TOURNAMENT";
       state.tournamentId = action.payload.tournamentId;
       state.roundId = action.payload.roundId;
+      // state.groupId = action.payload.groupId;
     },
 
     resetMatch: (state) => {
       state.matchSource = "NORMAL";
       state.tournamentId = null;
       state.roundId = null;
+      state.groupId = null;
       state.fixtureId = null;
       state.creationMode = "PLAY_NOW";
       state.teamA = null;

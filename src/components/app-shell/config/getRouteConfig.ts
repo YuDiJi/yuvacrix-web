@@ -1,29 +1,32 @@
-// src/config/getRouteConfig.ts
+import { routeConfig, type RouteConfig } from "./routeConfig";
 
-// currently not using this file
+function routePatternToRegex(routePattern: string): RegExp {
+  const escapedPattern = routePattern
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\\\[\.{3}[^/]+\\\]/g, ".+")
+    .replace(/\\\[[^/]+\\\]/g, "[^/]+");
 
-import { routeConfig } from "./routeConfig";
+  return new RegExp(`^${escapedPattern}$`);
+}
 
-export function getRouteConfig(pathname: string) {
-  // Exact routes
-  if (pathname in routeConfig) {
-    return routeConfig[pathname as keyof typeof routeConfig];
+// function routePatternToRegex(routePattern: string): RegExp {
+//   const pattern = routePattern.replace(/\[[^\]]+\]/g, "[^/]+");
+
+//   return new RegExp(`^${pattern}$`);
+// }
+
+export function getRouteConfig(pathname: string): RouteConfig | undefined {
+  // Exact route first
+  const exactConfig = routeConfig[pathname];
+
+  if (exactConfig) {
+    return exactConfig;
   }
 
-  // Dynamic routes
-  if (/^\/matches\/[^/]+\/scorecard$/.test(pathname)) {
-    return {
-      title: "League Matches",
-      showBackButton: true,
-    };
-  }
+  // Dynamic route match
+  const matchedEntry = Object.entries(routeConfig).find(([pattern]) =>
+    routePatternToRegex(pattern).test(pathname),
+  );
 
-  if (/^\/scoring\/[^/]+$/.test(pathname)) {
-    return {
-      title: "Scoring",
-      showBackButton: true,
-    };
-  }
-
-  return undefined;
+  return matchedEntry?.[1];
 }
