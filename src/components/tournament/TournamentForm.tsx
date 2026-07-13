@@ -3,77 +3,138 @@
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
+import { AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { ImageUploader } from "@/components/common/ImageUploaderV1";
-import { useCreateTournamentMutation } from "@/store/api/tournamentApi";
 import { Button } from "@/components/common/Button";
 import { useUploadFileMutation } from "@/store/api/uploadApi";
+import { useEffect, useState } from "react";
 
-const schema = z.object({
-  name: z.string().min(2, "Enter tournament name"),
-  shortName: z.string().optional(),
-  description: z.string().optional(),
+import {
+  useCreateTournamentMutation,
+  useUpdateTournamentMutation,
+  type Tournament,
+} from "@/store/api/tournamentApi";
 
-  city: z.string().min(2, "Enter city"),
-  groundName: z.string().optional(),
-  locationLabel: z.string().optional(),
+const EMPTY_FORM_VALUES: TournamentFormValues = {
+  name: "",
+  shortName: "",
+  description: "",
 
-  // organiserName: z.string().min(2, "Enter organiser name"),
-  // organiserNumber: z.string().min(10, "Enter organiser number"),
-  // organiserEmail: z
-  //   .string()
-  //   .email("Enter valid email")
-  //   .optional()
-  //   .or(z.literal("")),
+  city: "",
+  groundName: "",
+  locationLabel: "",
 
-  startDate: z.string().min(1, "Select start date"),
-  endDate: z.string().min(1, "Select end date"),
+  startDate: "",
+  endDate: "",
 
-  visibility: z.enum(["PUBLIC", "PRIVATE"]),
-  format: z.enum(["LEAGUE", "GROUP_STAGE", "KNOCKOUT", "CUSTOM"]),
+  visibility: "PUBLIC",
+  format: "LEAGUE",
+  category: "OPEN",
+  ballType: "TENNIS",
 
-  category: z.enum([
-    "OPEN",
-    "CORPORATE",
-    "COMMUNITY",
-    "SCHOOL",
-    "OTHER",
-    "SERIES",
-    "COLLEGE",
-    "UNIVERSITY",
-  ]),
+  pitchType: "ASTROTURF",
+  matchType: "BOX_TURF",
 
-  ballType: z.enum(["TENNIS", "LEATHER", "OTHER"]),
-  pitchType: z.enum(["ROUGH", "CEMENT", "TURF", "ASTROTURF", "MATTING"]),
-  matchType: z.enum([
-    "LIMITED_OVERS",
-    "BOX_TURF",
-    "PAIR_CRICKET",
-    "TEST",
-    "THE_HUNDRED",
-  ]),
+  enableLastBatterRule: true,
+  needMoreTeams: true,
+  needOfficials: true,
 
-  enableLastBatterRule: z.boolean(),
-  needMoreTeams: z.boolean(),
-  needOfficials: z.boolean(),
+  entryFee: "",
+  totalTeams: "",
+  requiredTeams: "",
 
-  entryFee: z.string().optional(),
-  totalTeams: z.string().optional(),
-  requiredTeams: z.string().optional(),
+  winningPrize: "CASH",
+  matchesOn: "WEEKENDS",
+  matchTiming: "DAY",
 
-  winningPrize: z.enum(["CASH", "TROPHIES", "BOTH"]),
-  matchesOn: z.enum(["WEEKENDS", "WEEKDAYS", "ALL_DAYS"]),
-  matchTiming: z.enum(["DAY", "NIGHT", "DAY_NIGHT"]),
+  additionalDetails: "",
+  informPreviousPlayers: true,
+};
 
-  additionalDetails: z.string().optional(),
-  informPreviousPlayers: z.boolean(),
-});
+const schema = z
+  .object({
+    name: z.string().min(2, "Enter tournament name"),
+    shortName: z.string().optional(),
+    description: z.string().optional(),
 
-type FormValues = z.infer<typeof schema>;
+    city: z.string().min(2, "Enter city"),
+    groundName: z.string().optional(),
+    locationLabel: z.string().optional(),
+
+    // organiserName: z.string().min(2, "Enter organiser name"),
+    // organiserNumber: z.string().min(10, "Enter organiser number"),
+    // organiserEmail: z
+    //   .string()
+    //   .email("Enter valid email")
+    //   .optional()
+    //   .or(z.literal("")),
+
+    startDate: z.string().min(1, "Select start date"),
+    endDate: z.string().min(1, "Select end date"),
+
+    visibility: z.enum(["PUBLIC", "PRIVATE"]),
+    format: z.enum([
+      "LEAGUE",
+      "GROUP_STAGE",
+      "KNOCKOUT",
+      "CUSTOM",
+      "GROUP_STAGE_PLUS_KNOCKOUT",
+      "SUPER_THREE",
+      "SUPER_FOUR",
+      "DOUBLE_ELIMINATION",
+    ]),
+
+    category: z.enum([
+      "OPEN",
+      "CORPORATE",
+      "COMMUNITY",
+      "SCHOOL",
+      "OTHER",
+      "SERIES",
+      "COLLEGE",
+      "UNIVERSITY",
+    ]),
+
+    ballType: z.enum(["TENNIS", "LEATHER", "OTHER"]),
+    pitchType: z.enum(["ROUGH", "CEMENT", "TURF", "ASTROTURF", "MATTING"]),
+    matchType: z.enum([
+      "LIMITED_OVERS",
+      "BOX_TURF",
+      "PAIR_CRICKET",
+      "TEST",
+      "THE_HUNDRED",
+    ]),
+
+    enableLastBatterRule: z.boolean(),
+    needMoreTeams: z.boolean(),
+    needOfficials: z.boolean(),
+
+    entryFee: z.string().optional(),
+    totalTeams: z.string().optional(),
+    requiredTeams: z.string().optional(),
+
+    winningPrize: z.enum(["CASH", "TROPHIES", "BOTH"]),
+    matchesOn: z.enum(["WEEKENDS", "WEEKDAYS", "ALL_DAYS"]),
+    matchTiming: z.enum(["DAY", "NIGHT", "DAY_NIGHT"]),
+
+    additionalDetails: z.string().optional(),
+    informPreviousPlayers: z.boolean(),
+  })
+  .refine(
+    (values) =>
+      !values.startDate ||
+      !values.endDate ||
+      new Date(values.endDate) >= new Date(values.startDate),
+    {
+      message: "End date cannot be before start date",
+      path: ["endDate"],
+    },
+  );
+
+export type TournamentFormValues = z.infer<typeof schema>;
 
 const CATEGORY_OPTIONS = [
   "OPEN",
@@ -209,12 +270,70 @@ function CheckboxField({
   );
 }
 
-export default function CreateTournamentForm() {
+function toDateInputValue(value?: string | null) {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toISOString().slice(0, 10);
+}
+
+function tournamentToFormValues(tournament?: Tournament): TournamentFormValues {
+  if (!tournament) {
+    return EMPTY_FORM_VALUES;
+  }
+
+  return {
+    ...EMPTY_FORM_VALUES,
+
+    name: tournament.name ?? "",
+    shortName: tournament.shortName ?? "",
+    description: tournament.description ?? "",
+
+    city: tournament.location?.city ?? "",
+    groundName: tournament.location?.groundName ?? "",
+    locationLabel: tournament.location?.locationLabel ?? "",
+
+    startDate: toDateInputValue(tournament.startDate),
+    endDate: toDateInputValue(tournament.endDate),
+
+    visibility: tournament.visibility ?? "PUBLIC",
+    format: tournament.format ?? "LEAGUE",
+    category: tournament.category ?? "OPEN",
+    ballType: tournament.ballType ?? "TENNIS",
+  };
+}
+
+type TournamentFormMode = "CREATE" | "EDIT";
+
+type CreateTournamentFormProps = {
+  mode?: TournamentFormMode;
+  tournamentId?: string;
+  tournament?: Tournament;
+};
+
+export default function TournamentForm({
+  mode = "CREATE",
+  tournamentId,
+  tournament,
+}: CreateTournamentFormProps) {
   const router = useRouter();
+
+  const isEditMode = mode === "EDIT";
 
   const [createTournament, { isLoading: isCreating }] =
     useCreateTournamentMutation();
+
+  const [updateTournament, { isLoading: isUpdating }] =
+    useUpdateTournamentMutation();
+
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
+
+  const isSubmitting = isCreating || isUpdating || isUploading;
 
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -223,75 +342,45 @@ export default function CreateTournamentForm() {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
-  } = useForm<FormValues>({
+  } = useForm<TournamentFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      name: "",
-      shortName: "",
-      description: "",
-
-      city: "",
-      groundName: "",
-      locationLabel: "",
-
-      // organiserName: "",
-      // organiserNumber: "",
-      // organiserEmail: "",
-
-      startDate: "",
-      endDate: "",
-
-      visibility: "PUBLIC",
-      format: "LEAGUE",
-      category: "OPEN",
-
-      ballType: "TENNIS",
-      pitchType: "ASTROTURF",
-      matchType: "BOX_TURF",
-
-      enableLastBatterRule: true,
-      needMoreTeams: true,
-      needOfficials: true,
-
-      entryFee: "",
-      totalTeams: "",
-      requiredTeams: "",
-
-      winningPrize: "CASH",
-      matchesOn: "WEEKENDS",
-      matchTiming: "DAY",
-
-      additionalDetails: "",
-      informPreviousPlayers: true,
-    },
+    defaultValues: tournamentToFormValues(tournament),
   });
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError("");
 
     try {
-      const uploadLogoResponse = logoFile
-        ? await uploadFile({
-            purpose: "TEAM_LOGO",
-            file: logoFile,
-          }).unwrap()
-        : null;
+      let logoUrl = tournament?.logoUrl ?? undefined;
+      let coverImageUrl = tournament?.coverImageUrl ?? undefined;
 
-      const uploadBannerResponse = bannerFile
-        ? await uploadFile({
-            purpose: "TOURNAMENT_BANNER",
-            file: bannerFile,
-          }).unwrap()
-        : null;
+      if (logoFile) {
+        const uploadLogoResponse = await uploadFile({
+          purpose: "TEAM_LOGO",
+          file: logoFile,
+        }).unwrap();
 
-      const createdTournament = await createTournament({
+        logoUrl = uploadLogoResponse.file.key;
+      }
+
+      if (bannerFile) {
+        const uploadBannerResponse = await uploadFile({
+          purpose: "TOURNAMENT_BANNER",
+          file: bannerFile,
+        }).unwrap();
+
+        coverImageUrl = uploadBannerResponse.file.key;
+      }
+
+      const body = {
         name: values.name.trim(),
         shortName: values.shortName?.trim() || undefined,
         description: values.description?.trim() || undefined,
 
-        logoUrl: uploadLogoResponse?.file.key,
-        coverImageUrl: uploadBannerResponse?.file.key,
+        logoUrl,
+        coverImageUrl,
 
         visibility: values.visibility,
         format: values.format,
@@ -306,14 +395,50 @@ export default function CreateTournamentForm() {
           groundName: values.groundName?.trim() || undefined,
           locationLabel: values.locationLabel?.trim() || undefined,
         },
-      }).unwrap();
+      };
+
+      if (isEditMode) {
+        if (!tournamentId) {
+          setSubmitError("Tournament ID is missing.");
+          return;
+        }
+
+        await updateTournament({
+          tournamentId,
+          body,
+        }).unwrap();
+
+        router.push(`/tournaments/${tournamentId}`);
+        return;
+      }
+
+      const createdTournament = await createTournament(body).unwrap();
 
       router.push(`/tournaments/${createdTournament.id}`);
     } catch (error) {
       console.error(error);
-      setSubmitError("Failed to create tournament. Please try again.");
+
+      const message =
+        error &&
+        typeof error === "object" &&
+        "data" in error &&
+        error.data &&
+        typeof error.data === "object" &&
+        "message" in error.data
+          ? String(error.data.message)
+          : isEditMode
+            ? "Failed to update tournament. Please try again."
+            : "Failed to create tournament. Please try again.";
+
+      setSubmitError(message);
     }
   });
+
+  useEffect(() => {
+    if (!isEditMode || !tournament) return;
+
+    reset(tournamentToFormValues(tournament));
+  }, [isEditMode, tournament, reset]);
 
   return (
     <div className="relative flex min-h-full flex-col bg-(--color-bg-base)">
@@ -321,10 +446,26 @@ export default function CreateTournamentForm() {
         <div className="flex-1 overflow-y-auto pb-24">
           <section className="bg-(--color-bg-card)">
             <div className="relative">
-              <ImageUploader layout="banner" onFileSelect={setBannerFile} />
+              {/* <ImageUploader layout="banner" onFileSelect={setBannerFile} /> */}
+              <ImageUploader
+                layout="banner"
+                initialImage={
+                  isEditMode
+                    ? (tournament?.coverImageUrl ?? undefined)
+                    : undefined
+                }
+                onFileSelect={setBannerFile}
+              />
 
               <div className="absolute -bottom-11 left-4 z-20">
-                <ImageUploader layout="logo" onFileSelect={setLogoFile} />
+                {/* <ImageUploader layout="logo" onFileSelect={setLogoFile} /> */}
+                <ImageUploader
+                  layout="logo"
+                  initialImage={
+                    isEditMode ? (tournament?.logoUrl ?? undefined) : undefined
+                  }
+                  onFileSelect={setLogoFile}
+                />
               </div>
             </div>
 
@@ -863,14 +1004,15 @@ export default function CreateTournamentForm() {
         <div className="safe-bottom sticky bottom-0 z-40 flex border-t border-(--color-bg-border) bg-(--color-bg-card) p-2">
           <Button
             type="submit"
-            disabled={isCreating || isUploading}
+            disabled={isSubmitting}
             className="flex flex-1 items-center justify-center gap-1.5 bg-(--color-brand) py-4 font-(family-name:--font-display) text-xs font-black uppercase tracking-[0.06em] text-white disabled:opacity-60"
           >
-            {isCreating || isUploading ? (
+            {isSubmitting ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
               <>
-                Continue <ChevronRight size={14} />
+                {isEditMode ? "Save Changes" : "Continue"}{" "}
+                <ChevronRight size={14} />
               </>
             )}
           </Button>

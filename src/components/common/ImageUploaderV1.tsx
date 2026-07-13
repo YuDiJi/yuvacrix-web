@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { Camera, ImagePlus, X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { S3Image } from "./S3Image";
 
 type ImageUploaderLayout = "avatar" | "logo" | "banner";
 
@@ -26,7 +27,7 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [preview, setPreview] = useState<string | null>(initialImage ?? null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   function openPicker() {
@@ -85,6 +86,33 @@ export function ImageUploader({
               alt="Banner preview"
               fill
               className="object-cover"
+            />
+          ) : initialImage ? (
+            <S3Image
+              imageKey={initialImage}
+              width={1200}
+              height={400}
+              alt="Banner Preview"
+              fallback={
+                <>
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#1B3FA0_0%,#0D1B3E_75%)]" />
+                  <div className="absolute inset-0 opacity-20 bg-[linear-gradient(135deg,transparent_0%,white_50%,transparent_100%)]" />
+
+                  <div className="relative z-10 flex h-full w-full flex-col items-center justify-center text-white">
+                    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/95 text-(--color-brand) shadow-lg">
+                      <ImagePlus size={26} />
+                    </div>
+
+                    <p className="font-(family-name:--font-display) text-base font-black uppercase tracking-[0.08em]">
+                      Add Banner
+                    </p>
+
+                    <p className="mt-1 text-xs font-medium text-white/75">
+                      JPG or PNG, max {maxSizeMB}MB
+                    </p>
+                  </div>
+                </>
+              }
             />
           ) : (
             <>
@@ -161,6 +189,23 @@ export function ImageUploader({
             alt="Image preview"
             fill
             className="object-cover"
+          />
+        ) : initialImage ? (
+          <S3Image
+            imageKey={initialImage}
+            alt="Image Preview"
+            width={144}
+            height={144}
+            fallback={
+              <div
+                className={cn(
+                  "flex items-center justify-center rounded-full bg-(--color-brand) text-white",
+                  isLogo ? "h-14 w-14" : "h-16 w-16",
+                )}
+              >
+                <Camera size={isLogo ? 22 : 26} />
+              </div>
+            }
           />
         ) : (
           <div

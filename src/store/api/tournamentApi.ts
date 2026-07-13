@@ -48,6 +48,8 @@ export type Tournament = {
   description?: string | null;
   visibility: TournamentVisibility;
   format: TournamentFormat;
+  category: TournamentCategory;
+  ballType: TournamentBallType;
   status: TournamentStatus;
   logoUrl: string | null;
   coverImageUrl: string | null;
