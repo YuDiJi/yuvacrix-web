@@ -47,31 +47,63 @@ export type TournamentPointsTableResponse = {
   rows: TournamentPointsTableRow[];
 };
 
-export type GetTournamentPointsTableQuery = {
-  tournamentId: string;
-  roundId?: string;
-  groupId?: string;
-};
-
 export const tournamentPointsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getTournamentPointsTable: builder.query<
       TournamentPointsTableResponse,
-      GetTournamentPointsTableQuery
+      {
+        tournamentId: string;
+      }
     >({
-      query: ({ tournamentId, roundId, groupId }) => ({
+      query: ({ tournamentId }) => ({
         url: `/tournaments/${tournamentId}/points-table`,
         method: "GET",
-        params: {
-          ...(roundId && { roundId }),
-          ...(groupId && { groupId }),
-        },
       }),
 
       providesTags: (_result, _error, { tournamentId }) => [
         {
           type: "TournamentPointsTable",
-          id: tournamentId,
+          id: `TOURNAMENT-${tournamentId}`,
+        },
+      ],
+    }),
+
+    getTournamentRoundPointsTable: builder.query<
+      TournamentPointsTableResponse,
+      {
+        tournamentId: string;
+        roundId: string;
+      }
+    >({
+      query: ({ tournamentId, roundId }) => ({
+        url: `/tournaments/${tournamentId}/rounds/${roundId}/points-table`,
+        method: "GET",
+      }),
+
+      providesTags: (_result, _error, { roundId }) => [
+        {
+          type: "TournamentPointsTable",
+          id: `ROUND-${roundId}`,
+        },
+      ],
+    }),
+
+    getTournamentGroupPointsTable: builder.query<
+      TournamentPointsTableResponse,
+      {
+        tournamentId: string;
+        groupId: string;
+      }
+    >({
+      query: ({ tournamentId, groupId }) => ({
+        url: `/tournaments/${tournamentId}/groups/${groupId}/points-table`,
+        method: "GET",
+      }),
+
+      providesTags: (_result, _error, { groupId }) => [
+        {
+          type: "TournamentPointsTable",
+          id: `GROUP-${groupId}`,
         },
       ],
     }),
@@ -80,5 +112,6 @@ export const tournamentPointsApi = baseApi.injectEndpoints({
 
 export const {
   useGetTournamentPointsTableQuery,
-  useLazyGetTournamentPointsTableQuery,
+  useGetTournamentRoundPointsTableQuery,
+  useGetTournamentGroupPointsTableQuery,
 } = tournamentPointsApi;

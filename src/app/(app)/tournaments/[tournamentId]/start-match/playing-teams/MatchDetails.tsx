@@ -22,6 +22,7 @@ import {
   selectTournamentId,
   selectRoundId,
   selectCreationMode,
+  selectTournamentGroupId,
 } from "@/store/startMatch/selectors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useGetTeamDetailQuery } from "@/store/api/teamApi";
@@ -244,6 +245,8 @@ const TournamentMatchDetails = ({
   const teamBCaptain = useAppSelector(selectTeamBCaptain);
   const teamBKeeper = useAppSelector(selectTeamBKeeper);
 
+  const groupId = useAppSelector(selectTournamentGroupId);
+
   // ── Local UI state ────────────────────────────────────────────────────────
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
@@ -293,6 +296,11 @@ const TournamentMatchDetails = ({
 
     return {
       roundId,
+
+      ...(groupId && {
+        groupId,
+      }),
+
       teamAId: teamA.id,
       teamBId: teamB.id,
 

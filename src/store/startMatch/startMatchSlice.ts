@@ -146,13 +146,17 @@ const startMatchSlice = createSlice({
       action: PayloadAction<{
         tournamentId: string;
         roundId: string;
-        // groupId: string;
+        groupId?: string | null;
       }>,
     ) => {
       state.matchSource = "TOURNAMENT";
       state.tournamentId = action.payload.tournamentId;
       state.roundId = action.payload.roundId;
-      // state.groupId = action.payload.groupId;
+      state.groupId = action.payload.groupId ?? null;
+    },
+
+    setTournamentGroupId: (state, action: PayloadAction<string | null>) => {
+      state.groupId = action.payload;
     },
 
     resetMatch: (state) => {
@@ -184,6 +188,7 @@ export const {
   setMatchContext,
   setTournamentMatchContext,
   setMatchCreationMode,
+  setTournamentGroupId,
   resetMatch,
 } = startMatchSlice.actions;
 
