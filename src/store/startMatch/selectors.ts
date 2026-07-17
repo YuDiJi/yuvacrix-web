@@ -26,3 +26,6 @@ export const selectLineUpMode = (state: RootState) =>
 
 export const selectCreationMode = (state: RootState) =>
   state.startMatch.creationMode;
+
+export const selectTournamentGroupId = (state: RootState) =>
+  state.startMatch.groupId;

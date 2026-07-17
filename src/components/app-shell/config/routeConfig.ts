@@ -148,4 +148,9 @@ export const routeConfig: Record<string, RouteConfig> = {
     title: "Playing Teams",
     showBackButton: true,
   },
+
+  "/tournaments/[tournamentId]/start-match/select-team": {
+    title: "Select Teams",
+    showBackButton: true,
+  },
 } as const;

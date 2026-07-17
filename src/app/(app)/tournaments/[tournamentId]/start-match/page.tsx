@@ -2,12 +2,14 @@
 
 import { Button } from "@/components/common/Button";
 import { cn } from "@/lib/cn";
+import { useGetTournamentGroupsQuery } from "@/store/api/tournamentGroupApi";
 import { useGetTournamentRoundsQuery } from "@/store/api/tournamentRoundApi";
 import { useAppDispatch } from "@/store/hooks";
 import {
   resetMatch,
   setTournamentMatchContext,
 } from "@/store/startMatch/startMatchSlice";
+import { skipToken } from "@reduxjs/toolkit/query";
 import { Plus } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
@@ -28,7 +30,38 @@ const StartMatchPage = () => {
 
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
 
-  const canContinue = selectedRoundId !== null;
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+
+  const {
+    data: groups = [],
+    isLoading: isLoadingGroups,
+    isFetching: isFetchingGroups,
+    isError: isGroupsError,
+  } = useGetTournamentGroupsQuery(
+    selectedRoundId
+      ? {
+          tournamentId,
+          roundId: selectedRoundId,
+        }
+      : skipToken,
+  );
+
+  function handleRoundSelect(roundId: string) {
+    setSelectedRoundId((currentRoundId) => {
+      if (currentRoundId === roundId) {
+        setSelectedGroupId(null);
+        return null;
+      }
+
+      setSelectedGroupId(null);
+      return roundId;
+    });
+  }
+
+  const groupsLoading = isLoadingGroups || isFetchingGroups;
+
+  const canContinue =
+    selectedRoundId !== null && !groupsLoading && !isGroupsError;
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (isLoading) {
@@ -122,6 +155,76 @@ const StartMatchPage = () => {
             </span>
           </button>
         </div>
+
+        {/* ── Group grid ─────────────────────────────────────────────────── */}
+        {selectedRoundId &&
+          !groupsLoading &&
+          !isGroupsError &&
+          groups.length > 0 && (
+            <section className="mt-6 rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+              <div className="mb-3">
+                <h3 className="font-(family-name:--font-display) text-lg font-black uppercase text-(--color-navy)">
+                  Select Group
+                </h3>
+
+                <p className="mt-1 text-xs leading-5 text-(--color-text-secondary)">
+                  Optional. Leave “No Group” selected for a round-level match.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedGroupId(null)}
+                  className={cn(
+                    "rounded-full border px-4 py-2",
+                    "font-(family-name:--font-display) text-xs font-bold uppercase",
+                    selectedGroupId === null
+                      ? "border-(--color-brand) bg-(--color-brand) text-white"
+                      : "border-(--color-bg-border) bg-(--color-bg-base) text-(--color-text-secondary)",
+                  )}
+                >
+                  No Group
+                </button>
+
+                {groups.map((group) => (
+                  <button
+                    key={group.id}
+                    type="button"
+                    onClick={() => setSelectedGroupId(group.id)}
+                    className={cn(
+                      "rounded-full border px-4 py-2",
+                      "font-(family-name:--font-display) text-xs font-bold uppercase",
+                      selectedGroupId === group.id
+                        ? "border-(--color-brand) bg-(--color-brand) text-white"
+                        : "border-(--color-bg-border) bg-(--color-bg-base) text-(--color-text-secondary)",
+                    )}
+                  >
+                    {group.name}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+        {selectedRoundId && groupsLoading && (
+          <div className="mt-6 animate-pulse rounded-2xl bg-(--color-bg-card) p-4">
+            <div className="h-4 w-28 rounded bg-(--color-bg-border)" />
+
+            <div className="mt-3 flex gap-2">
+              <div className="h-9 w-24 rounded-full bg-(--color-bg-border)" />
+              <div className="h-9 w-24 rounded-full bg-(--color-bg-border)" />
+            </div>
+          </div>
+        )}
+
+        {selectedRoundId && isGroupsError && (
+          <div className="mt-6 rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 px-4 py-3">
+            <p className="text-sm font-medium text-(--color-live)">
+              Failed to load groups for this round.
+            </p>
+          </div>
+        )}
       </div>
       {/* ── Sticky CTA ───────────────────────────────────────────────────── */}
       <div className="z-20 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3">
@@ -130,11 +233,12 @@ const StartMatchPage = () => {
           fullWidth
           disabled={!canContinue}
           onClick={() => {
-            if (!canContinue) return;
+            if (!canContinue || !selectedRoundId) return;
             dispatch(
               setTournamentMatchContext({
                 tournamentId: tournamentId,
                 roundId: selectedRoundId,
+                groupId: selectedGroupId,
               }),
             );
 
