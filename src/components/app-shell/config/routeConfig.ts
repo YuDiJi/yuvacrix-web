@@ -88,9 +88,19 @@ export const routeConfig: Record<string, RouteConfig> = {
     //   teamA ? teamA.name : teamB ? teamB.name : "Scoring",
   },
 
+  "/profile": {
+    title: "Profile",
+    showBackButton: false,
+  },
+
+  "/cricket-profile": {
+    title: "My Cricket Profile",
+    showBackButton: false,
+  },
+
   "/matches/[matchId]/scorecard": {
     title: "League Matches",
-    showBackButton: true,
+    showBackButton: false,
   },
 
   "/add-tournaments-series": {

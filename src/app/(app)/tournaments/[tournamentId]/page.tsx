@@ -110,7 +110,19 @@ export default function TournamentDetailsPage() {
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-(--color-bg-base)">
-      <div className="bg-(--color-navy) px-4 pb-4 pt-4 text-white">
+      <div className="relative overflow-hidden bg-(--color-navy) px-4 pb-4 pt-4 text-white">
+        {tournament?.coverImageUrl && (
+          <span className="pointer-events-none absolute inset-0 z-0">
+            <S3Image
+              imageKey={tournament.coverImageUrl}
+              alt={tournament.name}
+              width={800}
+              height={400}
+              className="h-full w-full object-cover opacity-30 blur-sm scale-105"
+              fallback={null}
+            />
+          </span>
+        )}
         <div className="bg-(--color-navy) px-4 py-4 text-white shrink-0">
           <div className="flex items-center gap-4">
             <div className="shrink-0 w-20 h-20 rounded-full border-2 border-white/20 bg-white flex items-center justify-center overflow-hidden shadow-sm p-1">

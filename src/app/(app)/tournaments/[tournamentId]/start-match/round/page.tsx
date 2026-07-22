@@ -377,7 +377,6 @@ const RoundPage = () => {
       console.error(err);
     }
   }
-  console.log(selectedKeys);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden bg-(--color-bg-base)">

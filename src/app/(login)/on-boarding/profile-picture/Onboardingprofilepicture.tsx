@@ -48,7 +48,7 @@ export function OnboardingProfilePicture() {
     try {
       if (!skip && file) {
         const uploadResponse = await uploadFile({
-          purpose: "TEAM_LOGO",
+          purpose: "PLAYER_AVATAR",
           file,
         }).unwrap();
 

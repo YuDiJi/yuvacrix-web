@@ -187,7 +187,11 @@ export default function PlayersPage() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center bg-(--color-bg-base)">
         <div
-          onClick={() => router.push("/start-match/create-player")}
+          onClick={() =>
+            router.push(
+              `/tournaments/${tournamentId}/create-player?team=${currentTeamId}`,
+            )
+          }
           className="relative mb-6 cursor-pointer"
         >
           <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-(--color-navy) shadow-[0_8px_32px_rgba(13,27,62,0.18)]">

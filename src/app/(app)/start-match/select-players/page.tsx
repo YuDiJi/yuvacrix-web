@@ -196,8 +196,6 @@ export default function SelectPlayersPage() {
     );
   }
 
-  console.log(currentTeam);
-
   return (
     <div className="flex min-h-full flex-col bg-(--color-bg-base)">
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-28">
