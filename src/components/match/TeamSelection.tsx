@@ -21,8 +21,6 @@ const TeamSelection = ({
 }: TeamSelectionProps) => {
   const router = useRouter();
 
-  console.log(teamA);
-
   return (
     <div className="flex min-h-full flex-col bg-(--color-bg-base)">
       <div className="flex flex-1 flex-col gap-5 p-4">
