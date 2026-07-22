@@ -168,7 +168,7 @@ export default function AddTeamPage() {
   }
 
   return (
-    <div>
+    <div className="h-full">
       <div className="relative min-h-full bg-(--color-bg-base) p-4 pb-24">
         {/* Search Bar */}
         <div className="flex gap-2">
@@ -248,7 +248,7 @@ export default function AddTeamPage() {
           </div>
         )}
       </div>
-      <div className="flex gap-2 sticky bottom-0 mt-6 bg-white p-2">
+      <div className="flex gap-2 sticky bottom-0 mt-4 bg-white p-2">
         <Button
           variant="secondary"
           fullWidth

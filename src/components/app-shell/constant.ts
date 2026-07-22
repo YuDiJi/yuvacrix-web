@@ -45,7 +45,7 @@ type DrawerSection = {
 
 export const bottomNav = [
   { label: "Home", icon: Home, href: "/home" },
-  { label: "Start Match", icon: PlayCircle, href: "/start-match" },
+  // { label: "Start Match", icon: PlayCircle, href: "/start-match" },
   { label: "My Cricket", icon: Trophy, href: "/my-cricket", hasLive: true },
   { label: "More", icon: MoreHorizontal, href: null },
 ] as const;

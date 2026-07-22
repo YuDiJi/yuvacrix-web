@@ -110,7 +110,7 @@ export default function TournamentDetailsPage() {
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-(--color-bg-base)">
-      <div className="relative overflow-hidden bg-(--color-navy) px-4 pb-4 pt-4 text-white">
+      <div className="relative bg-(--color-navy) px-4 pb-4 pt-4 text-white">
         {tournament?.coverImageUrl && (
           <span className="pointer-events-none absolute inset-0 z-0">
             <S3Image
