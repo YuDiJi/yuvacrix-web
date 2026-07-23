@@ -45,6 +45,7 @@ export interface GetPlayerResponse {
 
 export interface CreatePlayerDto {
   fullName: string;
+  fullNameLower?: string;
   profileImageUrl?: string;
   gender?: string;
   dateOfBirth?: string;

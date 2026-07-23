@@ -16,7 +16,7 @@ export type TournamentGroup = {
   description?: string | null;
 
   teamIds?: string[];
-  teams?: TournamentGroupTeam[];
+  // teams?: TournamentGroupTeam[];
 
   createdAt?: string;
   updatedAt?: string;

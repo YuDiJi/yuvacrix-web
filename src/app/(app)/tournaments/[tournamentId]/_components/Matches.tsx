@@ -3,6 +3,7 @@ import { cn } from "@/lib/cn";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import TournamentMatchList from "./TournamentMatchList";
+import { ScheduleMethodDialog } from "./ScheduleMethodDialog";
 import { useDispatch } from "react-redux";
 import {
   resetMatch,
@@ -17,6 +18,7 @@ const Matches = () => {
   const params = useParams();
   const tournamentId = params.tournamentId as string;
   const [activeTab, setActiveTab] = useState<Tab>("Past");
+  const [scheduleMethodOpen, setScheduleMethodOpen] = useState(false);
   return (
     <div className="flex flex-col h-full ">
       <TournamentMatchList />
@@ -24,11 +26,12 @@ const Matches = () => {
       {/* 3. Bottom Action Buttons (Flush edge-to-edge like the image) */}
       <div className="mt-auto sticky bottom-0 flex w-full border-t border-(--color-bg-border) bg-(--color-bg-card) safe-bottom">
         <button
-          onClick={() => {
-            dispatch(resetMatch());
-            dispatch(setMatchCreationMode("SCHEDULE"));
-            router.push(`/tournaments/${tournamentId}/start-match`);
-          }}
+          // onClick={() => {
+          //   dispatch(resetMatch());
+          //   dispatch(setMatchCreationMode("SCHEDULE"));
+          //   router.push(`/tournaments/${tournamentId}/start-match`);
+          // }}
+          onClick={() => setScheduleMethodOpen(true)}
           className="flex-1 py-4 text-sm font-display font-bold uppercase tracking-wide text-(--color-brand) transition-colors hover:bg-slate-50 active:bg-(--color-bg-base)"
         >
           Schedule matches
@@ -44,6 +47,21 @@ const Matches = () => {
           Start a match
         </button>
       </div>
+
+      <ScheduleMethodDialog
+        open={scheduleMethodOpen}
+        onClose={() => setScheduleMethodOpen(false)}
+        onManualSelect={() => {
+          dispatch(resetMatch());
+          dispatch(setMatchCreationMode("SCHEDULE"));
+          router.push(`/tournaments/${tournamentId}/start-match`);
+          setScheduleMethodOpen(false);
+        }}
+        onAutoSelect={() => {
+          router.push(`/tournaments/${tournamentId}/fixtures/auto-generate`);
+          setScheduleMethodOpen(false);
+        }}
+      />
     </div>
   );
 };

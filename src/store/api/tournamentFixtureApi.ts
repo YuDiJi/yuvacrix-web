@@ -1,5 +1,9 @@
 import { baseApi } from "./baseApi";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared enums / unions
+// ─────────────────────────────────────────────────────────────────────────────
+
 export type TournamentFixtureStatus =
   | "DRAFT"
   | "SCHEDULED"
@@ -12,24 +16,44 @@ export type TournamentFixtureSource = "MANUAL" | "AUTO";
 
 export type TournamentMatchFilter = "ALL" | "LIVE" | "UPCOMING" | "PAST";
 
+export type TournamentPitchType =
+  | "ROUGH"
+  | "CEMENT"
+  | "TURF"
+  | "ASTROTURF"
+  | "MATTING"
+  | "OTHER";
+
+export type TournamentMatchType =
+  | "LIMITED_OVERS"
+  | "BOX_TURF"
+  | "PAIR_CRICKET"
+  | "TEST"
+  | "THE_HUNDRED";
+
+export type TournamentLineupMode = "FLEXIBLE" | "FIXED";
+
+export type TournamentBallType = "TENNIS" | "LEATHER" | "OTHER";
+
+export type TournamentFixtureActorType = "USER" | "SYSTEM";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared fixture structures
+// ─────────────────────────────────────────────────────────────────────────────
+
 export type TournamentFixtureVenue = {
   city: string;
-  groundName?: string;
-  pitchType?: "ROUGH" | "CEMENT" | "TURF" | "ASTROTURF" | "MATTING" | "OTHER";
-  addressText?: string;
+  groundName?: string | null;
+  pitchType?: TournamentPitchType | null;
+  addressText?: string | null;
 };
 
 export type TournamentFixtureRules = {
-  matchType:
-    | "LIMITED_OVERS"
-    | "BOX_TURF"
-    | "PAIR_CRICKET"
-    | "TEST"
-    | "THE_HUNDRED";
-  oversLimit?: number;
-  oversPerBowler?: number;
-  lineupMode?: "FLEXIBLE" | "FIXED";
-  ballType?: "TENNIS" | "LEATHER" | "OTHER";
+  matchType: TournamentMatchType;
+  oversLimit?: number | null;
+  oversPerBowler?: number | null;
+  lineupMode?: TournamentLineupMode | null;
+  ballType?: TournamentBallType | null;
   wagonWheelEnabled?: boolean;
   shotSelectionEnabled?: boolean;
 };
@@ -41,131 +65,245 @@ export type TournamentFixtureOfficials = {
   otherNames?: string[];
 };
 
+export type TournamentFixtureTeamSnapshot = {
+  teamId: string;
+  name: string;
+  shortName?: string | null;
+  logoUrl?: string | null;
+};
+
+export type TournamentFixtureAuditActor = {
+  actorType: TournamentFixtureActorType;
+  actorId?: string | null;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fixture response
+// ─────────────────────────────────────────────────────────────────────────────
+
 export type TournamentFixture = {
   id: string;
   tournamentId: string;
   roundId: string;
-  groupId?: string | null;
+
+  groupId: string | null;
+  matchId: string | null;
 
   teamAId: string;
   teamBId: string;
 
-  matchId?: string | null;
+  teamASnapshot: TournamentFixtureTeamSnapshot;
+  teamBSnapshot: TournamentFixtureTeamSnapshot;
 
-  scheduledAt?: string | null;
-  timezone?: string | null;
+  scheduledAt: string | null;
+  timezone: string | null;
 
-  sequenceNumber?: number | null;
-  roundMatchNumber?: number | null;
-  groupMatchNumber?: number | null;
+  sequenceNumber: number | null;
+  roundMatchNumber: number | null;
+  groupMatchNumber: number | null;
+
+  venueSnapshot: TournamentFixtureVenue | null;
+  matchRulesSnapshot: TournamentFixtureRules | null;
+  officialsSnapshot: TournamentFixtureOfficials | null;
 
   status: TournamentFixtureStatus;
-  createdFrom?: TournamentFixtureSource;
+  createdFrom: TournamentFixtureSource;
 
-  venue?: TournamentFixtureVenue | null;
-  rules?: TournamentFixtureRules | null;
-  officials?: TournamentFixtureOfficials | null;
+  /**
+   * The current API examples contain null for this property.
+   * Replace unknown with an exact type after receiving a completed fixture.
+   */
+  resultMirror: unknown | null;
 
-  cancellationReason?: string | null;
+  cancellationReason: string | null;
+  cancelledAt: string | null;
 
-  createdAt?: string;
-  updatedAt?: string;
+  createdBy: TournamentFixtureAuditActor | null;
+  updatedBy: TournamentFixtureAuditActor | null;
+
+  createdAt: string;
+  updatedAt: string;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Manual fixture
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type CreateManualFixtureBody = {
+  roundId: string;
+  groupId?: string;
+
+  teamAId: string;
+  teamBId: string;
+
+  scheduledAt?: string;
+  timezone?: string;
+
+  sequenceNumber?: number;
+  roundMatchNumber?: number;
+  groupMatchNumber?: number;
+
+  venue: TournamentFixtureVenue;
+  rules: TournamentFixtureRules;
+  officials?: TournamentFixtureOfficials;
 };
 
 export type CreateManualFixtureRequest = {
   tournamentId: string;
-  body: {
-    roundId: string;
-    groupId?: string;
-    teamAId: string;
-    teamBId: string;
-    scheduledAt?: string;
-    timezone?: string;
-    sequenceNumber?: number;
-    roundMatchNumber?: number;
-    groupMatchNumber?: number;
-    venue: TournamentFixtureVenue;
-    rules: TournamentFixtureRules;
-    officials?: TournamentFixtureOfficials;
-  };
+  body: CreateManualFixtureBody;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Auto-generate fixtures
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AutoGenerateFixturesBody = {
+  roundId: string;
+
+  /**
+   * Send groupId only when generating fixtures for one group.
+   */
+  groupId?: string;
+
+  /**
+   * Send teamIds only when generating fixtures for selected teams.
+   * Do not send both groupId and teamIds.
+   */
+  teamIds?: string[];
+
+  repeatCount?: number;
+
+  firstMatchDate: string;
+  firstMatchTime: string;
+  timezone?: string;
+
+  intervalMinutes?: number;
+  dailyMatchesPerGround?: number;
+
+  venue: TournamentFixtureVenue;
+  rules: TournamentFixtureRules;
+  officials?: TournamentFixtureOfficials;
 };
 
 export type AutoGenerateFixturesRequest = {
   tournamentId: string;
-  body: {
-    roundId: string;
-    groupId?: string;
-    teamIds?: string[];
-    repeatCount?: number;
-    firstMatchDate: string;
-    firstMatchTime: string;
-    timezone?: string;
-    intervalMinutes?: number;
-    dailyMatchesPerGround?: number;
-    venue: TournamentFixtureVenue;
-    rules: TournamentFixtureRules;
-    officials?: TournamentFixtureOfficials;
-  };
+  body: AutoGenerateFixturesBody;
+};
+
+export type AutoGeneratedFixture = {
+  fixtureId: string;
+  matchId: string;
+
+  teamAId: string;
+  teamBId: string;
+
+  scheduledAt: string | null;
 };
 
 export type AutoGenerateFixturesResponse = {
   tournamentId: string;
   roundId: string;
-  groupId?: string | null;
+  groupId: string | null;
+
   totalFixturesCreated: number;
   totalMatchesCreated: number;
-  fixtures: {
-    fixtureId: string;
-    matchId: string;
-    teamAId: string;
-    teamBId: string;
-    scheduledAt?: string | null;
-  }[];
+
+  fixtures: AutoGeneratedFixture[];
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Get fixtures
+// ─────────────────────────────────────────────────────────────────────────────
 
 export type GetTournamentFixturesQuery = {
   tournamentId: string;
+
   roundId?: string;
   groupId?: string;
   teamId?: string;
+
   status?: TournamentFixtureStatus;
   createdFrom?: TournamentFixtureSource;
+
   fromDate?: string;
   toDate?: string;
+
   skip?: number;
   limit?: number;
 };
 
+// The current API returns a direct array.
+export type GetTournamentFixturesResponse = TournamentFixture[];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Fixture details
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type GetFixtureDetailsRequest = {
+  tournamentId: string;
+  fixtureId: string;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Update fixture
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type UpdateFixtureBody = Partial<{
+  scheduledAt: string;
+  timezone: string;
+
+  sequenceNumber: number;
+  roundMatchNumber: number;
+  groupMatchNumber: number;
+
+  venue: TournamentFixtureVenue;
+  rules: TournamentFixtureRules;
+  officials: TournamentFixtureOfficials;
+}>;
+
 export type UpdateFixtureRequest = {
   tournamentId: string;
   fixtureId: string;
-  body: Partial<{
-    scheduledAt: string;
-    timezone: string;
-    sequenceNumber: number;
-    roundMatchNumber: number;
-    groupMatchNumber: number;
-    venue: TournamentFixtureVenue;
-    rules: TournamentFixtureRules;
-    officials: TournamentFixtureOfficials;
-  }>;
+  body: UpdateFixtureBody;
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cancel fixture
+// ─────────────────────────────────────────────────────────────────────────────
 
 export type CancelFixtureRequest = {
   tournamentId: string;
   fixtureId: string;
+
   body: {
     cancellationReason: string;
   };
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Delete fixture
+// ─────────────────────────────────────────────────────────────────────────────
 
 export type DeleteFixtureRequest = {
   tournamentId: string;
   fixtureId: string;
 };
 
+export type DeleteFixtureResponse = {
+  success?: boolean;
+  message?: string;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const tournamentFixtureApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    // ─────────────────────────────────────────────────────────────────────────
+    // Create manual fixture
+    // ─────────────────────────────────────────────────────────────────────────
+
     createManualFixture: builder.mutation<
       TournamentFixture,
       CreateManualFixtureRequest
@@ -175,11 +313,22 @@ export const tournamentFixtureApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
+
       invalidatesTags: (_result, _error, { tournamentId }) => [
-        { type: "Tournament", id: tournamentId },
-        { type: "TournamentFixture", id: tournamentId },
+        {
+          type: "Tournament",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: tournamentId,
+        },
       ],
     }),
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Auto-generate fixtures
+    // ─────────────────────────────────────────────────────────────────────────
 
     autoGenerateFixtures: builder.mutation<
       AutoGenerateFixturesResponse,
@@ -190,14 +339,50 @@ export const tournamentFixtureApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
+
       invalidatesTags: (_result, _error, { tournamentId }) => [
-        { type: "Tournament", id: tournamentId },
-        { type: "TournamentFixture", id: tournamentId },
+        {
+          type: "Tournament",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: tournamentId,
+        },
+      ],
+    }),
+    // ─────────────────────────────────────────────────────────────────────────
+    // Preview Auto fixtures
+    // ─────────────────────────────────────────────────────────────────────────
+
+    previewAutoFixtures: builder.mutation<
+      AutoGenerateFixturesResponse,
+      AutoGenerateFixturesRequest
+    >({
+      query: ({ tournamentId, body }) => ({
+        url: `/tournaments/${tournamentId}/fixtures/auto-generate/preview`,
+        method: "POST",
+        body,
+      }),
+
+      invalidatesTags: (_result, _error, { tournamentId }) => [
+        {
+          type: "Tournament",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: tournamentId,
+        },
       ],
     }),
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Get tournament fixtures
+    // ─────────────────────────────────────────────────────────────────────────
+
     getTournamentFixtures: builder.query<
-      TournamentFixture[],
+      GetTournamentFixturesResponse,
       GetTournamentFixturesQuery
     >({
       query: ({ tournamentId, ...params }) => ({
@@ -205,26 +390,55 @@ export const tournamentFixtureApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
-      providesTags: (_result, _error, { tournamentId }) => [
-        { type: "TournamentFixture", id: tournamentId },
-      ],
+
+      providesTags: (result, _error, { tournamentId }) => {
+        if (!result) {
+          return [
+            {
+              type: "TournamentFixture",
+              id: tournamentId,
+            },
+          ];
+        }
+
+        return [
+          {
+            type: "TournamentFixture",
+            id: tournamentId,
+          },
+
+          ...result.map((fixture) => ({
+            type: "TournamentFixture" as const,
+            id: fixture.id,
+          })),
+        ];
+      },
     }),
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Get fixture details
+    // ─────────────────────────────────────────────────────────────────────────
 
     getFixtureDetails: builder.query<
       TournamentFixture,
-      {
-        tournamentId: string;
-        fixtureId: string;
-      }
+      GetFixtureDetailsRequest
     >({
       query: ({ tournamentId, fixtureId }) => ({
         url: `/tournaments/${tournamentId}/fixtures/${fixtureId}`,
         method: "GET",
       }),
+
       providesTags: (_result, _error, { fixtureId }) => [
-        { type: "TournamentFixture", id: fixtureId },
+        {
+          type: "TournamentFixture",
+          id: fixtureId,
+        },
       ],
     }),
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Update fixture
+    // ─────────────────────────────────────────────────────────────────────────
 
     updateFixture: builder.mutation<TournamentFixture, UpdateFixtureRequest>({
       query: ({ tournamentId, fixtureId, body }) => ({
@@ -232,11 +446,22 @@ export const tournamentFixtureApi = baseApi.injectEndpoints({
         method: "PATCH",
         body,
       }),
+
       invalidatesTags: (_result, _error, { tournamentId, fixtureId }) => [
-        { type: "TournamentFixture", id: tournamentId },
-        { type: "TournamentFixture", id: fixtureId },
+        {
+          type: "TournamentFixture",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: fixtureId,
+        },
       ],
     }),
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Cancel fixture
+    // ─────────────────────────────────────────────────────────────────────────
 
     cancelFixture: builder.mutation<TournamentFixture, CancelFixtureRequest>({
       query: ({ tournamentId, fixtureId, body }) => ({
@@ -244,33 +469,58 @@ export const tournamentFixtureApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
+
       invalidatesTags: (_result, _error, { tournamentId, fixtureId }) => [
-        { type: "TournamentFixture", id: tournamentId },
-        { type: "TournamentFixture", id: fixtureId },
+        {
+          type: "TournamentFixture",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: fixtureId,
+        },
       ],
     }),
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Delete fixture
+    // ─────────────────────────────────────────────────────────────────────────
+
     deleteFixture: builder.mutation<
-      { success?: boolean; message?: string },
+      DeleteFixtureResponse,
       DeleteFixtureRequest
     >({
       query: ({ tournamentId, fixtureId }) => ({
         url: `/tournaments/${tournamentId}/fixtures/${fixtureId}`,
         method: "DELETE",
       }),
+
       invalidatesTags: (_result, _error, { tournamentId, fixtureId }) => [
-        { type: "TournamentFixture", id: tournamentId },
-        { type: "TournamentFixture", id: fixtureId },
+        {
+          type: "TournamentFixture",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: fixtureId,
+        },
       ],
     }),
   }),
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Hooks
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const {
   useCreateManualFixtureMutation,
   useAutoGenerateFixturesMutation,
+  usePreviewAutoFixturesMutation,
   useGetTournamentFixturesQuery,
+  useLazyGetTournamentFixturesQuery,
   useGetFixtureDetailsQuery,
+  useLazyGetFixtureDetailsQuery,
   useUpdateFixtureMutation,
   useCancelFixtureMutation,
   useDeleteFixtureMutation,
