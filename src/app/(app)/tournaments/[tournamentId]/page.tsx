@@ -1,25 +1,3 @@
-// return (
-//   <div className="flex flex-col min-h-dvh bg-(--color-bg-base) w-full">
-
-//   <div className="sticky top-0 z-20 bg-white border-b border-(--color-bg-border)">
-//         <div className="flex items-center overflow-x-auto scrollbar-hide px-2">
-//           {TABS.map((tab) => (
-//             <button
-//               key={tab}
-//               onClick={() => setActiveTab(tab)}
-//               className={cn(
-//                 "whitespace-nowrap px-4 py-3.5 text-sm font-bold transition-all border-b-2",
-//                 activeTab === tab
-//                   ? "border-(--color-brand) text-(--color-brand)"
-//                   : "border-transparent text-(--color-text-secondary) opacity-80",
-//               )}
-//             >
-//               {tab}
-//             </button>
-//           ))}
-//         </div>
-//       </div>
-
 "use client";
 
 import React, { useState } from "react";
@@ -37,8 +15,16 @@ import Teams from "./_components/Teams";
 import { S3Image } from "@/components/common/S3Image";
 import Matches from "./_components/Matches";
 import PointsTable from "./_components/PointsTable";
+import RoundsGroups from "./_components/RoundsGroups";
 
-const TABS = ["About", "Teams", "Matches", "Points Table", "Sponsors"];
+const TABS = [
+  "About",
+  "Teams",
+  "Matches",
+  "Rounds & Groups",
+  "Points Table",
+  "Sponsors",
+];
 
 function formatDate(date?: string | null) {
   if (!date) return "TBA";
@@ -185,6 +171,7 @@ export default function TournamentDetailsPage() {
       {activeTab === "Teams" && <Teams />}
       {activeTab === "Matches" && <Matches />}
       {activeTab === "Points Table" && <PointsTable />}
+      {activeTab === "Rounds & Groups" && <RoundsGroups />}
       {activeTab === "Sponsors" && <div>Sponsors</div>}
     </div>
   );

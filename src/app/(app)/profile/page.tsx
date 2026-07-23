@@ -518,6 +518,7 @@ export default function MyProfilePage() {
 
       await updatePlayer({
         fullName,
+        fullNameLower: fullName,
         city: form.city.trim() || undefined,
         gender: form.gender || undefined,
         dateOfBirth: form.dateOfBirth || undefined,
