@@ -24,6 +24,7 @@ import {
 
 import { cn } from "@/lib/cn";
 import {
+  PreviewAutoFixturesResponse,
   usePreviewAutoFixturesMutation,
   type AutoGenerateFixturesRequest,
 } from "@/store/api/tournamentFixtureApi";
@@ -34,6 +35,19 @@ import {
   useGetTournamentTeamsQuery,
   type TournamentTeam,
 } from "@/store/api/tournamentTeamApi";
+
+type AutoGenerateFixturesFormProps = {
+  tournamentId: string;
+
+  initialValues?: AutoGenerateFixturesRequest["body"];
+
+  onPreviewSuccess: (
+    response: PreviewAutoFixturesResponse,
+    request: AutoGenerateFixturesRequest["body"],
+  ) => void;
+
+  onCancel: () => void;
+};
 
 type GenerationScope = "ALL" | "GROUP" | "SELECTED";
 
@@ -244,11 +258,14 @@ function getApiErrorMessage(error: unknown) {
   return "Failed to generate tournament fixtures. Please try again.";
 }
 
-export default function AutoGenerateFixturePage() {
+export default function AutoGenerateFixturesForm({
+  tournamentId,
+  initialValues,
+  onPreviewSuccess,
+  onCancel,
+}: AutoGenerateFixturesFormProps) {
   const router = useRouter();
   const params = useParams();
-
-  const tournamentId = params.tournamentId as string;
 
   const roundRef = useRef<HTMLDivElement>(null);
   const groupRef = useRef<HTMLDivElement>(null);
@@ -468,7 +485,7 @@ export default function AutoGenerateFixturePage() {
         body,
       }).unwrap();
 
-      router.replace(`/tournaments/${tournamentId}/fixtures/review`);
+      onPreviewSuccess(response, body);
     } catch (error) {
       setSubmitError(getApiErrorMessage(error));
     }
