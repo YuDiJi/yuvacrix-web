@@ -126,11 +126,11 @@ export default function EditTournamentGroupPage() {
       return group.teamIds;
     }
 
-    if (Array.isArray(group.teams)) {
-      return group.teams
-        .map((team) => team.teamId)
-        .filter((teamId): teamId is string => Boolean(teamId));
-    }
+    // if (Array.isArray(group.teams)) {
+    //   return group.teams
+    //     .map((team) => team.teamId)
+    //     .filter((teamId): teamId is string => Boolean(teamId));
+    // }
 
     return [];
   }, [group]);

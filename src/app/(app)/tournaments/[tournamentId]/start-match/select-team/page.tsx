@@ -84,9 +84,9 @@ export default function SelectTournamentTeamPage() {
       return selectedGroup.teamIds;
     }
 
-    if (Array.isArray(selectedGroup.teams)) {
-      return selectedGroup.teams.map((team) => team.teamId).filter(Boolean);
-    }
+    // if (Array.isArray(selectedGroup.teams)) {
+    //   return selectedGroup.teams.map((team) => team.teamId).filter(Boolean);
+    // }
 
     return [];
   }, [groupId, selectedGroup]);
