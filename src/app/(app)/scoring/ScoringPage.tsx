@@ -28,6 +28,7 @@ import { ScoringState } from "@/types/innings";
 import NextBatterSheet from "./NextBatter";
 
 import { useRouter } from "next/navigation";
+import { SyncStatus, SyncStatusToast } from "./SyncStatusToast";
 
 export type DialogType =
   | "WIDE"
@@ -53,9 +54,17 @@ export default function ScoringPage() {
   const { data: matchData } = useGetMatchByIdQuery(
     matchId ? { matchId } : skipToken,
   );
-  const { data: state } = useGetScoringStateQuery(matchId ?? skipToken);
+  const {
+    data: state,
+    isLoading: loadingState,
+    isFetching: isFetchingState,
+    refetch: refetchScoringState,
+  } = useGetScoringStateQuery(matchId ?? skipToken);
 
   const [recordBall, { isLoading: isRecording }] = useRecordBallMutation();
+
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const [syncMessage, setSyncMessage] = useState("Synced");
 
   const [openDialog, setOpenDialog] = useState<null | DialogType>(null);
   const [flow, setFlow] = useState<ScoringFlow>("IDLE");
@@ -69,7 +78,9 @@ export default function ScoringPage() {
   }, [matchData?.players]);
 
   async function handleRuns(batRuns: number) {
-    if (!state || !matchId) return;
+    if (!state || !matchId || isRecording) return;
+
+    setSyncStatus("saving");
 
     try {
       const response = await recordBall({
@@ -81,6 +92,22 @@ export default function ScoringPage() {
         },
       }).unwrap();
 
+      setSyncStatus("refreshing");
+
+      // await refetchScoringState().unwrap();
+
+      setSyncMessage(
+        batRuns === 0
+          ? "Dot ball synced"
+          : `${batRuns} ${batRuns === 1 ? "run" : "runs"} synced`,
+      );
+
+      setSyncStatus("synced");
+
+      window.setTimeout(() => {
+        setSyncStatus("idle");
+      }, 1200);
+
       if (response.nextAction?.type === "SELECT_NEXT_BOWLER") {
         setCompletedOverSnapshot(state);
       }
@@ -88,11 +115,14 @@ export default function ScoringPage() {
       setOpenDialog(null);
     } catch (error) {
       console.error(error);
+      setSyncStatus("error");
     }
   }
 
   const handleExtra = async (type: ExtraType, additionalRuns: number) => {
-    if (!matchId || !state) return;
+    if (!matchId || !state || isRecording) return;
+
+    setSyncStatus("saving");
 
     try {
       const response = await recordBall({
@@ -110,6 +140,24 @@ export default function ScoringPage() {
         },
       }).unwrap();
 
+      setSyncStatus("refreshing");
+
+      // await refetchScoringState().unwrap();
+
+      const messageByType: Partial<Record<ExtraType, string>> = {
+        WIDE: "Wide synced",
+        NO_BALL: "No ball synced",
+        BYE: "Bye synced",
+        LEG_BYE: "Leg bye synced",
+      };
+
+      setSyncMessage(messageByType[type] ?? "Delivery synced");
+      setSyncStatus("synced");
+
+      window.setTimeout(() => {
+        setSyncStatus("idle");
+      }, 1200);
+
       if (response.nextAction?.type === "SELECT_NEXT_BOWLER") {
         setCompletedOverSnapshot(state);
       }
@@ -117,6 +165,7 @@ export default function ScoringPage() {
       setOpenDialog(null);
     } catch (error) {
       console.error(error);
+      setSyncStatus("error");
     }
   };
 
@@ -318,7 +367,7 @@ export default function ScoringPage() {
         {/* Row 1 */}
         <div className="flex flex-1 border-b border-(--color-bg-border)">
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={loadingState || isRecording || scoringLocked}
             onClick={() => handleRuns(0)}
             className={cn(
               "flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors",
@@ -329,7 +378,7 @@ export default function ScoringPage() {
             0
           </button>
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={loadingState || isRecording || scoringLocked}
             onClick={() => handleRuns(1)}
             className={cn(
               "flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors",
@@ -340,7 +389,7 @@ export default function ScoringPage() {
             1
           </button>
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={loadingState || isRecording || scoringLocked}
             onClick={() => handleRuns(2)}
             className={cn(
               "flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors",
@@ -367,14 +416,14 @@ export default function ScoringPage() {
           )}
         >
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={loadingState || isRecording || scoringLocked}
             onClick={() => handleRuns(3)}
             className="flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors"
           >
             3
           </button>
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={loadingState || isRecording || scoringLocked}
             onClick={() => handleRuns(4)}
             className="flex-1 flex flex-col items-center justify-center border-r border-(--color-bg-border) active:bg-(--color-four)/5 transition-colors"
           >
@@ -386,7 +435,7 @@ export default function ScoringPage() {
             </span>
           </button>
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={loadingState || isRecording || scoringLocked}
             onClick={() => handleRuns(6)}
             className="flex-1 flex flex-col items-center justify-center border-r border-(--color-bg-border) active:bg-(--color-six)/5 transition-colors"
           >
@@ -592,6 +641,7 @@ export default function ScoringPage() {
         />
       </div>
 
+      <SyncStatusToast status={syncStatus} successMessage={syncMessage} />
       {/* 4. BOTTOM ACTION SHEET TRIGGER */}
       <button className="h-6 shrink-0 bg-(--color-navy) flex items-center justify-center gap-2 w-full active:bg-[#0a1532] transition-colors safe-bottom pt-0">
         <span className="font-display text-xs font-bold text-white uppercase tracking-widest">
