@@ -10,14 +10,11 @@ import {
   setMatchCreationMode,
 } from "@/store/startMatch/startMatchSlice";
 
-const TABS = ["Live", "Upcoming", "Past"] as const;
-type Tab = (typeof TABS)[number];
 const Matches = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const params = useParams();
   const tournamentId = params.tournamentId as string;
-  const [activeTab, setActiveTab] = useState<Tab>("Past");
   const [scheduleMethodOpen, setScheduleMethodOpen] = useState(false);
   return (
     <div className="flex flex-col h-full ">

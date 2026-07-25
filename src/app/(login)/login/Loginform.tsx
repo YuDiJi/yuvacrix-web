@@ -189,7 +189,7 @@ export function LoginForm() {
                   type="tel"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  placeholder="98765 43210"
+                  placeholder="99999 99999"
                   maxLength={10}
                   value={mobile}
                   onChange={(e) => {

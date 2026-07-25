@@ -6,24 +6,27 @@ import { useParams, useRouter } from "next/navigation";
 import { Shield, AlertCircle } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import {
-  useGetTournamentDetailsQuery,
-  useGetTournamentDashboardQuery,
-} from "@/store/api/tournamentApi";
+import { useGetTournamentDetailsQuery } from "@/store/api/tournamentApi";
 import About from "./_components/About";
 import Teams from "./_components/Teams";
 import { S3Image } from "@/components/common/S3Image";
 import Matches from "./_components/Matches";
 import PointsTable from "./_components/PointsTable";
 import RoundsGroups from "./_components/RoundsGroups";
+import LeaderboardPage from "./_components/leaderboard/LeaderboardPage";
+import StatsPage from "./_components/stats/StatsPage";
+import HeroesPage from "./_components/heroes/HeroesPage";
 
 const TABS = [
   "About",
-  "Teams",
   "Matches",
+  "Teams",
   "Rounds & Groups",
   "Points Table",
-  "Sponsors",
+  "Leaderboard",
+  "Heroes",
+  "Stats",
+  // "Sponsors",
 ];
 
 function formatDate(date?: string | null) {
@@ -95,7 +98,7 @@ export default function TournamentDetailsPage() {
   const dateRange = `${startDate} to ${endDate}`;
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-(--color-bg-base)">
+    <div className="flex min-h-dvh w-full flex-col bg-(--color-bg-base) scrollbar-hide">
       <div className="relative bg-(--color-navy) px-4 pb-4 pt-4 text-white">
         {tournament?.coverImageUrl && (
           <span className="pointer-events-none absolute inset-0 z-0">
@@ -168,11 +171,15 @@ export default function TournamentDetailsPage() {
       </div>
 
       {activeTab === "About" && <About />}
-      {activeTab === "Teams" && <Teams />}
       {activeTab === "Matches" && <Matches />}
-      {activeTab === "Points Table" && <PointsTable />}
+      {activeTab === "Teams" && <Teams />}
       {activeTab === "Rounds & Groups" && <RoundsGroups />}
-      {activeTab === "Sponsors" && <div>Sponsors</div>}
+      {activeTab === "Points Table" && <PointsTable />}
+      {activeTab === "Leaderboard" && (
+        <LeaderboardPage tournamentId={tournamentId} />
+      )}
+      {activeTab === "Heroes" && <HeroesPage tournamentId={tournamentId} />}
+      {activeTab === "Stats" && <StatsPage tournamentId={tournamentId} />}
     </div>
   );
 }

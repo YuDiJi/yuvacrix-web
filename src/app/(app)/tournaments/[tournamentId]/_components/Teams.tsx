@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Plus,
   Search,
-  ShieldPlus,
   SlidersHorizontal,
   Users,
 } from "lucide-react";
