@@ -17,11 +17,13 @@ const Matches = () => {
   const tournamentId = params.tournamentId as string;
   const [scheduleMethodOpen, setScheduleMethodOpen] = useState(false);
   return (
-    <div className="flex flex-col h-full ">
-      <TournamentMatchList />
+    <div className="flex flex-col h-full">
+      <div className="pb-20">
+        <TournamentMatchList />
+      </div>
 
       {/* 3. Bottom Action Buttons (Flush edge-to-edge like the image) */}
-      <div className="mt-auto sticky bottom-0 flex w-full border-t border-(--color-bg-border) bg-(--color-bg-card) safe-bottom">
+      <div className="mt-auto mx-auto w-full md:max-w-107.5 fixed bottom-0 left-0 right-0 z-40 flex border-t border-(--color-bg-border) bg-(--color-bg-card) safe-bottom">
         <button
           // onClick={() => {
           //   dispatch(resetMatch());
