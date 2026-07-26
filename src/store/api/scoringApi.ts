@@ -101,7 +101,7 @@ export const scoringApi = baseApi.injectEndpoints({
           inningsId,
           strikerId,
           nonStrikerId,
-          reason,
+          // reason,
         },
       }),
       invalidatesTags: ["ScoringState", "Matches", "Scorecard"],

@@ -38,7 +38,7 @@ export function LiveOptionsSheet({
       open={showLiveOptions}
       onClose={() => setShowLiveOptions(false)}
     >
-      <div className="flex flex-col">
+      <div className="flex flex-col mb-14">
         {/* Header Section */}
         <div className="mb-5 flex flex-col gap-1">
           <h2 className="font-display text-2xl font-black uppercase tracking-[0.04em] text-(--color-navy)">

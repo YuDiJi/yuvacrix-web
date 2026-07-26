@@ -67,9 +67,9 @@ const DismissedBatterSelector = ({
       >
         {/* Avatar */}
         <div className="relative mx-auto mb-3 h-28 w-28 overflow-hidden rounded-2xl border border-(--color-bg-border) shadow-sm">
-          {player?.profileImageUrl ? (
+          {player?.playerProfileImageSnapshot ? (
             <S3Image
-              imageKey={player.profileImageUrl}
+              imageKey={player.playerProfileImageSnapshot}
               alt={player.playerNameSnapshot}
               width={112}
               height={112}

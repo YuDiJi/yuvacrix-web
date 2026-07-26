@@ -132,9 +132,9 @@ const FielderSelector = ({
                 {/* Avatar */}
                 <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-(--color-bg-border)">
                   {fielder ? (
-                    fielder.profileImageUrl ? (
+                    fielder.playerProfileImageSnapshot ? (
                       <S3Image
-                        imageKey={fielder.profileImageUrl}
+                        imageKey={fielder.playerProfileImageSnapshot}
                         alt={fielder.playerNameSnapshot}
                         width={44}
                         height={44}

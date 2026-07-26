@@ -52,9 +52,9 @@ function StrikeCard({
     >
       {/* Image */}
       <div className="relative mx-auto mb-3 h-20 w-20 overflow-hidden rounded-2xl border border-(--color-bg-border) shadow-sm">
-        {player?.profileImageUrl ? (
+        {player?.playerProfileImageSnapshot ? (
           <S3Image
-            imageKey={player.profileImageUrl}
+            imageKey={player.playerProfileImageSnapshot}
             alt={player.playerNameSnapshot}
             width={80}
             height={80}
