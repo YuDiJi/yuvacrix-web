@@ -61,7 +61,7 @@ export default function HeroCard({ card }: Props) {
     <article className="overflow-hidden rounded-3xl border border-(--color-bg-border) bg-(--color-bg-card) shadow-(--shadow-card)">
       <div
         className={cn(
-          "relative overflow-hidden bg-gradient-to-br px-4 pb-4 pt-4 text-white",
+          "relative overflow-hidden bg-linear-to-br px-4 pb-4 pt-4 text-white",
           config.gradientClassName,
         )}
       >
@@ -91,7 +91,7 @@ export default function HeroCard({ card }: Props) {
         </div>
 
         <div className="relative mt-4 overflow-hidden rounded-2xl border border-white/20 bg-black/15">
-          <div className="relative aspect-[4/3] w-full overflow-hidden">
+          <div className="relative aspect-4/3 w-full overflow-hidden">
             {player.profileImageUrl ? (
               <S3Image
                 imageKey={player.profileImageUrl}
@@ -105,7 +105,7 @@ export default function HeroCard({ card }: Props) {
               <HeroPlayerFallback playerName={player.playerName} />
             )}
 
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/45 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black via-black/45 to-transparent" />
 
             <div className="absolute inset-x-0 bottom-0 p-4">
               <h4 className="font-(family-name:--font-display) text-2xl font-black uppercase tracking-[0.04em] text-white">
@@ -244,7 +244,7 @@ function StatBox({ label, value }: { label: string; value: string | number }) {
         {value}
       </p>
 
-      <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.05em] text-(--color-text-muted)">
+      <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-(--color-text-muted)">
         {label}
       </p>
     </div>

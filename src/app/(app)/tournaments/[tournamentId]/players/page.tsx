@@ -205,7 +205,7 @@ export default function PlayersPage() {
         >
           No Players Yet
         </h3>
-        <p className="mt-2 max-w-[220px] text-sm leading-relaxed text-(--color-text-secondary)">
+        <p className="mt-2 max-w-55 text-sm leading-relaxed text-(--color-text-secondary)">
           Add players to your squad and start scoring matches.
         </p>
         <button
