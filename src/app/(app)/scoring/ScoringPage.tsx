@@ -4,6 +4,7 @@ import { Copy, ChevronUp, User, Volleyball } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
 import { selectMatchId } from "@/store/startMatch/selectors";
 import {
+  useChangeStrikeManuallyMutation,
   useGetScoringStateQuery,
   useRecordBallMutation,
 } from "@/store/api/scoringApi";
@@ -29,6 +30,8 @@ import NextBatterSheet from "./NextBatter";
 
 import { useRouter } from "next/navigation";
 import { SyncStatus, SyncStatusToast } from "./SyncStatusToast";
+import { DialogBottom } from "@/components/common/DialogBottom";
+import { S3Image } from "@/components/common/S3Image";
 
 export type DialogType =
   | "WIDE"
@@ -62,9 +65,13 @@ export default function ScoringPage() {
   } = useGetScoringStateQuery(matchId ?? skipToken);
 
   const [recordBall, { isLoading: isRecording }] = useRecordBallMutation();
+  const [changeStrikeManually, { isLoading: isChangingStrike }] =
+    useChangeStrikeManuallyMutation();
 
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncMessage, setSyncMessage] = useState("Synced");
+
+  const [showStrikeConfirm, setShowStrikeConfirm] = useState(false);
 
   const [openDialog, setOpenDialog] = useState<null | DialogType>(null);
   const [flow, setFlow] = useState<ScoringFlow>("IDLE");
@@ -76,6 +83,54 @@ export default function ScoringPage() {
       (matchData?.players ?? []).map((player) => [player.playerId, player]),
     );
   }, [matchData?.players]);
+
+  const handleNonStrikerClick = () => {
+    if (
+      !state?.currentStrikerId ||
+      !state?.currentNonStrikerId ||
+      isChangingStrike ||
+      isRecording ||
+      scoringLocked
+    ) {
+      return;
+    }
+
+    setShowStrikeConfirm(true);
+  };
+
+  const handleConfirmStrikeChange = async () => {
+    if (
+      !matchId ||
+      !state?.inningsId ||
+      !state.currentStrikerId ||
+      !state.currentNonStrikerId ||
+      isChangingStrike
+    ) {
+      return;
+    }
+
+    setSyncStatus("saving");
+
+    try {
+      await changeStrikeManually({
+        matchId,
+        inningsId: state.inningsId,
+        strikerId: state.currentNonStrikerId,
+        nonStrikerId: state.currentStrikerId,
+      }).unwrap();
+
+      setShowStrikeConfirm(false);
+      setSyncMessage("Strike changed");
+      setSyncStatus("synced");
+
+      window.setTimeout(() => {
+        setSyncStatus("idle");
+      }, 1200);
+    } catch (error) {
+      console.error("Failed to change strike:", error);
+      setSyncStatus("error");
+    }
+  };
 
   async function handleRuns(batRuns: number) {
     if (!state || !matchId || isRecording) return;
@@ -276,50 +331,84 @@ export default function ScoringPage() {
           {/* Top Row: Batsmen */}
           <div className="flex border-b border-(--color-bg-border)">
             {/* Striker (Left) */}
-            <div className="flex-1 p-2.5 flex items-start gap-3 border-l-[3px] border-l-(--color-live) relative">
-              <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#4DFFDE] rounded-full shadow-[0_0_6px_#4DFFDE]" />
 
-              <div className="w-8 h-8 rounded-full bg-[#4DFFDE]/15 flex items-center justify-center shrink-0">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#4DFFDE"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="rotate-45"
-                >
-                  <path d="M6 14l-4 4" />
-                  <path d="M14 6l-8 8" />
-                  <rect width="12" height="18" x="8" y="2" rx="2" />
-                </svg>
-              </div>
-              <div className="min-w-0 pt-0.5">
-                <h3 className="font-display font-black text-xs uppercase text-(--color-navy) truncate tracking-wide">
-                  {striker?.playerNameSnapshot}
-                </h3>
-                <button className="mt-0.5 text-[9px] font-bold text-[#4DFFDE] uppercase tracking-widest hover:opacity-80">
-                  REPLACE
-                </button>
+            <div className="relative flex-1 border-l-[3px] border-l-(--color-live) p-2.5">
+              <div className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#4DFFDE] shadow-[0_0_6px_#4DFFDE]" />
+
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#4DFFDE]/15">
+                  {striker?.playerProfileImageSnapshot ? (
+                    <S3Image
+                      imageKey={striker.playerProfileImageSnapshot}
+                      width={14}
+                      height={14}
+                      alt="Player image"
+                      fallback={<User size={16} strokeWidth={2.5} />}
+                      className="w-full h-full object cover rounded-full"
+                    />
+                  ) : (
+                    <User size={16} strokeWidth={2.5} />
+                  )}
+                </div>
+
+                <div className="min-w-0 pt-0.5">
+                  <h3 className="truncate font-display text-xs font-black uppercase tracking-wide text-(--color-navy)">
+                    {striker?.playerNameSnapshot}
+                  </h3>
+
+                  <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-widest text-[#4DFFDE]">
+                    On strike
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Non-Striker (Right) */}
-            <div className="flex-1 p-2.5 flex items-start gap-3 border-l border-(--color-bg-border) bg-(--color-bg-card) opacity-70">
-              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-400">
-                <User size={16} strokeWidth={2.5} />
+
+            <button
+              type="button"
+              onClick={handleNonStrikerClick}
+              disabled={
+                isChangingStrike ||
+                isRecording ||
+                scoringLocked ||
+                !state?.currentStrikerId ||
+                !state?.currentNonStrikerId
+              }
+              className={cn(
+                "flex-1 border-l border-(--color-bg-border) p-2.5",
+                "bg-slate-50 text-left transition-colors",
+                "hover:bg-slate-100 active:bg-slate-200",
+                "disabled:pointer-events-none disabled:opacity-50 opacity-60",
+              )}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                  {nonStriker?.playerProfileImageSnapshot ? (
+                    <S3Image
+                      imageKey={nonStriker.playerProfileImageSnapshot}
+                      width={14}
+                      height={14}
+                      alt="Player image"
+                      fallback={<User size={16} strokeWidth={2.5} />}
+                      className="w-full h-full object cover rounded-full"
+                    />
+                  ) : (
+                    <User size={16} strokeWidth={2.5} />
+                  )}
+                </div>
+
+                <div className="min-w-0 pt-0.5">
+                  <h3 className="truncate font-display text-xs font-black uppercase tracking-wide text-(--color-navy)">
+                    {nonStriker?.playerNameSnapshot}
+                  </h3>
+
+                  <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-widest text-(--color-brand)">
+                    Tap to make striker
+                  </span>
+                </div>
               </div>
-              <div className="min-w-0 pt-0.5">
-                <h3 className="font-display font-black text-xs uppercase text-slate-400 truncate tracking-wide">
-                  {nonStriker?.playerNameSnapshot}
-                </h3>
-                <button className="mt-0.5 text-[9px] font-bold text-[#4DFFDE] uppercase tracking-widest hover:opacity-80">
-                  REPLACE
-                </button>
-              </div>
-            </div>
+            </button>
           </div>
 
           {/* Bottom Row: Bowler */}
@@ -367,7 +456,9 @@ export default function ScoringPage() {
         {/* Row 1 */}
         <div className="flex flex-1 border-b border-(--color-bg-border)">
           <button
-            disabled={loadingState || isRecording || scoringLocked}
+            disabled={
+              loadingState || isRecording || isChangingStrike || scoringLocked
+            }
             onClick={() => handleRuns(0)}
             className={cn(
               "flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors",
@@ -378,7 +469,9 @@ export default function ScoringPage() {
             0
           </button>
           <button
-            disabled={loadingState || isRecording || scoringLocked}
+            disabled={
+              loadingState || isRecording || isChangingStrike || scoringLocked
+            }
             onClick={() => handleRuns(1)}
             className={cn(
               "flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors",
@@ -389,7 +482,9 @@ export default function ScoringPage() {
             1
           </button>
           <button
-            disabled={loadingState || isRecording || scoringLocked}
+            disabled={
+              loadingState || isRecording || isChangingStrike || scoringLocked
+            }
             onClick={() => handleRuns(2)}
             className={cn(
               "flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors",
@@ -416,14 +511,18 @@ export default function ScoringPage() {
           )}
         >
           <button
-            disabled={loadingState || isRecording || scoringLocked}
+            disabled={
+              loadingState || isRecording || isChangingStrike || scoringLocked
+            }
             onClick={() => handleRuns(3)}
             className="flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors"
           >
             3
           </button>
           <button
-            disabled={loadingState || isRecording || scoringLocked}
+            disabled={
+              loadingState || isRecording || isChangingStrike || scoringLocked
+            }
             onClick={() => handleRuns(4)}
             className="flex-1 flex flex-col items-center justify-center border-r border-(--color-bg-border) active:bg-(--color-four)/5 transition-colors"
           >
@@ -435,7 +534,9 @@ export default function ScoringPage() {
             </span>
           </button>
           <button
-            disabled={loadingState || isRecording || scoringLocked}
+            disabled={
+              loadingState || isRecording || isChangingStrike || scoringLocked
+            }
             onClick={() => handleRuns(6)}
             className="flex-1 flex flex-col items-center justify-center border-r border-(--color-bg-border) active:bg-(--color-six)/5 transition-colors"
           >
@@ -649,6 +750,83 @@ export default function ScoringPage() {
         </span>
         <ChevronUp size={16} className="text-white/80" />
       </button>
+
+      <DialogBottom
+        open={showStrikeConfirm}
+        onClose={() => {
+          if (!isChangingStrike) {
+            setShowStrikeConfirm(false);
+          }
+        }}
+      >
+        <div className="flex flex-col">
+          <div className="text-center">
+            <h2 className="font-display text-2xl font-black uppercase tracking-wide text-(--color-navy)">
+              Change Strike?
+            </h2>
+
+            <p className="mt-2 text-sm leading-5 text-(--color-text-secondary)">
+              <span className="font-bold text-(--color-navy)">
+                {nonStriker?.playerNameSnapshot}
+              </span>{" "}
+              will become the striker and{" "}
+              <span className="font-bold text-(--color-navy)">
+                {striker?.playerNameSnapshot}
+              </span>{" "}
+              will move to the non-striker end.
+            </p>
+          </div>
+
+          <div className="mt-6 rounded-xl border border-(--color-bg-border) bg-(--color-bg-tint) p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-(--color-text-muted)">
+                  Current striker
+                </p>
+
+                <p className="truncate font-display text-base font-black uppercase text-(--color-navy)">
+                  {striker?.playerNameSnapshot}
+                </p>
+              </div>
+
+              <span className="shrink-0 text-xl text-(--color-text-muted)">
+                →
+              </span>
+
+              <div className="min-w-0 text-right">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-(--color-text-muted)">
+                  New striker
+                </p>
+
+                <p className="truncate font-display text-base font-black uppercase text-(--color-brand)">
+                  {nonStriker?.playerNameSnapshot}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              disabled={isChangingStrike}
+              onClick={() => setShowStrikeConfirm(false)}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              className="flex-1"
+              disabled={isChangingStrike}
+              onClick={handleConfirmStrikeChange}
+            >
+              {isChangingStrike ? "Changing..." : "Change Strike"}
+            </Button>
+          </div>
+        </div>
+      </DialogBottom>
     </div>
   );
 }

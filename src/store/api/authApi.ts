@@ -11,6 +11,7 @@ export const authApi = baseApi.injectEndpoints({
           mobile,
         },
       }),
+      invalidatesTags: ["Auth"],
     }),
 
     verifyOtp: builder.mutation<
@@ -57,6 +58,7 @@ export const authApi = baseApi.injectEndpoints({
         url: "/auth/logout",
         method: "POST",
       }),
+      invalidatesTags: ["Auth"],
     }),
   }),
 });
