@@ -163,3 +163,34 @@
     display: none;
   }
 }
+
+/* ── Landing Page Only ─────────────────────────────────────── */
+
+@layer utilities {
+  .landing-page {
+    overflow-x: hidden;
+  }
+
+  .landing-text-stroke {
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.55);
+  }
+
+  .landing-text-balance {
+    text-wrap: balance;
+  }
+
+  .landing-text-pretty {
+    text-wrap: pretty;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page *,
+  .landing-page *::before,
+  .landing-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

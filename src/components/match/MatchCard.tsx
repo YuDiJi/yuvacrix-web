@@ -105,7 +105,6 @@ function matchTypeLabel(type: string): string {
 import { cn } from "@/lib/cn";
 // ─── Team Avatar ──────────────────────────────────────────────────────────────
 
-import { useRouter } from "next/navigation";
 import { S3Image } from "../common/S3Image";
 import { MatchCardModel, MatchCardStatus } from "@/types/matchCard";
 
@@ -149,8 +148,6 @@ export function MatchCard({
   match: MatchCardModel;
   onClick: () => void;
 }) {
-  const router = useRouter();
-
   const teamAName = match.teamA.name;
   const teamBName = match.teamB.name;
   const venue_city = match?.venue?.city;
@@ -161,6 +158,7 @@ export function MatchCard({
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className="fixture-bar w-full rounded-2xl bg-(--color-bg-card) shadow-(--shadow-card) text-left transition-all duration-150 active:scale-[0.99] hover:shadow-[0_4px_20px_rgba(13,27,62,0.10)]"
     >
@@ -256,18 +254,30 @@ export function MatchCard({
             className="flex items-center gap-3 shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={onClick}
-              className="text-[11px] font-(family-name:--font-display) font-black uppercase tracking-[0.07em] text-(--color-brand) hover:opacity-70 transition-opacity"
+            <div
+              className="flex shrink-0 items-center gap-3"
+              onClick={(event) => event.stopPropagation()}
             >
-              Insights
-            </button>
-            <button
-              onClick={onClick}
-              className="text-[11px] font-(family-name:--font-display) font-black uppercase tracking-[0.07em] text-(--color-brand) hover:opacity-70 transition-opacity"
-            >
-              Squads
-            </button>
+              {match.capabilities?.insightsAvailable && (
+                <button
+                  type="button"
+                  onClick={onClick}
+                  className="text-[11px] font-(family-name:--font-display) font-black uppercase tracking-[0.07em] text-(--color-brand) transition-opacity hover:opacity-70"
+                >
+                  Insights
+                </button>
+              )}
+
+              {match.capabilities?.scorecardAvailable && (
+                <button
+                  type="button"
+                  onClick={onClick}
+                  className="text-[11px] font-(family-name:--font-display) font-black uppercase tracking-[0.07em] text-(--color-brand) transition-opacity hover:opacity-70"
+                >
+                  Scorecard
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </>

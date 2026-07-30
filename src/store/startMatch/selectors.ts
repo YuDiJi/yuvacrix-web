@@ -29,3 +29,6 @@ export const selectCreationMode = (state: RootState) =>
 
 export const selectTournamentGroupId = (state: RootState) =>
   state.startMatch.groupId;
+
+export const selectCreatedMatchId = (state: RootState) =>
+  state.startMatch.matchId ?? null;

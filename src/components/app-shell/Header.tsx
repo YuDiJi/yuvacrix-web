@@ -5,7 +5,11 @@ import { isBottomNavRoute } from "./routeHelpers";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useHeader } from "@/providers/HeaderProvider";
 import { useAppSelector } from "@/store/hooks";
-import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
+import {
+  selectCreatedMatchId,
+  selectTeamA,
+  selectTeamB,
+} from "@/store/startMatch/selectors";
 import { getRouteConfig } from "./config/getRouteConfig";
 
 function Header({
@@ -20,6 +24,7 @@ function Header({
 
   const teamA = useAppSelector(selectTeamA);
   const teamB = useAppSelector(selectTeamB);
+  const matchId = useAppSelector(selectCreatedMatchId);
 
   const { header } = useHeader();
   const searchParams = useSearchParams();
@@ -50,12 +55,33 @@ function Header({
   const showBackButton = config?.showBackButton ?? false;
   // const showNotifications = header.showNotifications;
 
+  const handleBack = () => {
+    const backConfig = config?.back;
+
+    if (!backConfig || backConfig.type === "history") {
+      router.back();
+      return;
+    }
+
+    if (backConfig.type === "disabled") {
+      return;
+    }
+
+    if (backConfig.type === "route") {
+      if (backConfig.replace) {
+        router.replace(backConfig.href);
+      } else {
+        router.push(backConfig.href);
+      }
+    }
+  };
+
   return (
     <header className="safe-top relative z-30 flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-(--color-navy) px-4">
       {/* Hamburger */}
       {showBackButton ? (
         <button
-          onClick={() => router.back()}
+          onClick={() => handleBack()}
           className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white/80 transition-all active:scale-90"
           aria-label="Go back"
         >

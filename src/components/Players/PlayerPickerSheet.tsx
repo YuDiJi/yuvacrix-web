@@ -36,15 +36,21 @@ function roleTag(p: MatchDetailsPlayer): string {
   return t.join(" · ");
 }
 
-function PlayerAvatar({ player, size = 48 }: { player: any; size?: number }) {
+function PlayerAvatar({
+  player,
+  size = 48,
+}: {
+  player: MatchDetailsPlayer;
+  size?: number;
+}) {
   return (
     <div
       className="shrink-0 overflow-hidden rounded-full border-2 border-(--color-bg-border)"
       style={{ width: size, height: size }}
     >
-      {player?.profileImageUrl ? (
+      {player?.playerProfileImageSnapshot ? (
         <S3Image
-          imageKey={player.profileImageUrl}
+          imageKey={player.playerProfileImageSnapshot}
           alt={player.playerNameSnapshot}
           width={size}
           height={size}
@@ -91,9 +97,7 @@ export function PlayerPickerSheet({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return q
-      ? players?.filter((p: any) =>
-          p.playerNameSnapshot.toLowerCase().includes(q),
-        )
+      ? players?.filter((p) => p.playerNameSnapshot.toLowerCase().includes(q))
       : players;
   }, [players, query]);
 
@@ -135,7 +139,7 @@ export function PlayerPickerSheet({
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            {filtered?.map((player: any) => {
+            {filtered?.map((player) => {
               const isDisabled = disabledIds.includes(player.playerId);
               const isSelected = selectedPlayerId === player.playerId;
               const tag = roleTag(player);

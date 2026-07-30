@@ -43,6 +43,15 @@ export type MatchCardTeam = {
   wicketKeeperName?: string | null;
 };
 
+export type MatchCardCapabilities = {
+  scorecardAvailable: boolean;
+  resultAvailable?: boolean;
+  tournamentTableAvailable: boolean;
+  leaderboardAvailable: boolean;
+  insightsAvailable: boolean;
+  highlightsAvailable?: boolean;
+};
+
 export type MatchCardModel = {
   matchId: string;
   fixtureId?: string | null;
@@ -50,11 +59,14 @@ export type MatchCardModel = {
   status: MatchCardStatus;
   primaryAction?: MatchCardPrimaryAction | null;
   matchType?: string | null;
+  ballType?: string | null;
 
   lineupMode?: "FIXED" | "FLEXIBLE";
 
   teamA: MatchCardTeam;
   teamB: MatchCardTeam;
+
+  winnerTeamId?: string;
 
   scheduledAt?: string | null;
   startedAt?: string | null;
@@ -72,5 +84,7 @@ export type MatchCardModel = {
   roundId?: string | null;
   roundName?: string | null;
 
-  source: "MATCH" | "TOURNAMENT";
+  source?: "MATCH" | "TOURNAMENT";
+
+  capabilities?: MatchCardCapabilities;
 };

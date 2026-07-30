@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 import Matches from "./Matches";
 import { useState } from "react";
 import Tournaments from "./Tournaments";
+import { Stats } from "@/components/stats/page";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,7 @@ export default function MatchesPage() {
       </div>
       {activeTab === "Matches" && <Matches />}
       {activeTab === "Tournaments" && <Tournaments />}
+      {activeTab === "Stats" && <Stats />}
     </div>
   );
 }
