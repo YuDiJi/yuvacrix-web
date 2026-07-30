@@ -37,6 +37,11 @@ export const routeConfig: Record<string, RouteConfig> = {
     showBackButton: false,
   },
 
+  "/my-performance": {
+    title: "My Performance",
+    showBackButton: false,
+  },
+
   "/contact-us": {
     title: "Contact Us",
     showBackButton: false,

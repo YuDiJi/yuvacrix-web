@@ -95,7 +95,7 @@ export const drawerSections: DrawerSection[] = [
       {
         label: "My Performance",
         icon: BarChart3,
-        href: "/performance",
+        href: "/my-performance",
       },
       {
         label: "My Awards",
