@@ -74,12 +74,12 @@ export const matchApi = baseApi.injectEndpoints({
       }),
     }),
 
-    getMyMatches: builder.query<any, void>({
-      query: () => ({
-        url: "/matches/me/created",
-      }),
-      providesTags: ["Matches"],
-    }), /////////////////// add types later
+    // getMyMatches: builder.query<any, void>({
+    //   query: () => ({
+    //     url: "/matches/me/created",
+    //   }),
+    //   providesTags: ["Matches"],
+    // }), /////////////////// add types later
 
     getMyMatchesOverview: builder.query<GetMyMatchesResponse, void>({
       query: () => ({
@@ -113,7 +113,7 @@ export const {
   useSubmitTossMutation,
   useStartMatchMutation,
   useMarkReadyForTossMutation,
-  useGetMyMatchesQuery,
+  // useGetMyMatchesQuery,
   useGetMyMatchesOverviewQuery,
   useGetMatchByIdQuery,
   useCompleteMatchMutation,

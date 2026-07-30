@@ -3,6 +3,8 @@ import { baseApi } from "./baseApi";
 import {
   AddTeamMemberDto,
   CreateTeamDto,
+  GetMyCricketProfileTeamsQuery,
+  GetMyCricketProfileTeamsResponse,
   Team,
   TeamMember,
 } from "@/types/team";
@@ -78,6 +80,27 @@ export const teamApi = baseApi.injectEndpoints({
     //   }),
     //   invalidatesTags: ["Members", "Team"],
     // }),
+
+    getMyCricketProfileTeams: builder.query<
+      GetMyCricketProfileTeamsResponse,
+      GetMyCricketProfileTeamsQuery | void
+    >({
+      query: (params) => ({
+        url: "/cricket-profile/me/teams",
+        method: "GET",
+        params: {
+          skip: params?.skip ?? 0,
+          limit: params?.limit ?? 10,
+          ...(params?.currentOnly !== undefined
+            ? {
+                currentOnly: params.currentOnly,
+              }
+            : {}),
+        },
+      }),
+
+      providesTags: ["CricketProfileTeams"],
+    }),
   }),
 });
 
@@ -88,4 +111,5 @@ export const {
   useAddTeamMemberMutation,
   useRemoveTeamMemberMutation,
   useGetTeamDetailQuery,
+  useGetMyCricketProfileTeamsQuery,
 } = teamApi;

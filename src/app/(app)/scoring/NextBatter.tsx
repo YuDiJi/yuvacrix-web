@@ -183,6 +183,8 @@ const NextBatterSheet = ({
     }
   };
 
+  console.log(availableBattingPlayers);
+
   return (
     <DialogBottom open={open} onClose={() => {}}>
       <div className="flex flex-col gap-4">

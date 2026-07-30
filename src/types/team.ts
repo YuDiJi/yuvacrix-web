@@ -27,3 +27,52 @@ export interface TeamMember {
   profileImageUrl?: null | string;
   roles: string[];
 }
+
+// ─── Cricket profile team history ─────────────────────────────────────────────
+
+export type TeamMembershipStatus =
+  | "ACTIVE"
+  | "INACTIVE"
+  | "LEFT"
+  | "REMOVED"
+  | (string & {});
+
+export type CricketProfileTeamPerformance = {
+  played: number;
+  won: number;
+  lost: number;
+};
+
+export type CricketProfileTeamHistoryItem = {
+  teamId: string;
+  name: string;
+  shortName: string | null;
+  logoUrl: string | null;
+  initials: string;
+  city: string | null;
+
+  memberSince: string | null;
+  membershipStatus: TeamMembershipStatus;
+
+  isVerified: boolean;
+
+  performance: CricketProfileTeamPerformance;
+};
+
+export type CricketProfileTeamsPagination = {
+  skip: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+};
+
+export type GetMyCricketProfileTeamsResponse = {
+  items: CricketProfileTeamHistoryItem[];
+  pagination: CricketProfileTeamsPagination;
+};
+
+export type GetMyCricketProfileTeamsQuery = {
+  skip?: number;
+  limit?: number;
+  currentOnly?: boolean;
+};
