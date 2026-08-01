@@ -50,7 +50,7 @@ export default function MyPerformance() {
 
         {activeTab === "BOWLING" && <BowlingPerformance />}
 
-        {activeTab === "COMPARE" && (
+        {/* {activeTab === "COMPARE" && (
           <TabPlaceholder
             title="Compare Players"
             description="Search for another player and compare performance."
@@ -62,7 +62,7 @@ export default function MyPerformance() {
             title="Face Off"
             description="Select an opponent to view head-to-head statistics."
           />
-        )}
+        )} */}
       </main>
     </div>
   );

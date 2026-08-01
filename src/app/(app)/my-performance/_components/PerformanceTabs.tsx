@@ -2,7 +2,8 @@
 
 import type { PerformanceTabs as PerformanceTabsAvailability } from "@/types/performance";
 
-export type PerformanceTab = "BATTING" | "BOWLING" | "COMPARE" | "FACE_OFF";
+export type PerformanceTab = "BATTING" | "BOWLING";
+// | "COMPARE" | "FACE_OFF";
 
 type PerformanceTabsProps = {
   activeTab: PerformanceTab;
@@ -32,16 +33,16 @@ export default function PerformanceTabs({
       label: "Bowling",
       available: tabs.bowlingAvailable,
     },
-    {
-      key: "COMPARE",
-      label: "Compare",
-      available: tabs.compareAvailable,
-    },
-    {
-      key: "FACE_OFF",
-      label: "Face Off",
-      available: tabs.faceOffAvailable,
-    },
+    // {
+    //   key: "COMPARE",
+    //   label: "Compare",
+    //   available: tabs.compareAvailable,
+    // },
+    // {
+    //   key: "FACE_OFF",
+    //   label: "Face Off",
+    //   available: tabs.faceOffAvailable,
+    // },
   ];
 
   return (
@@ -49,7 +50,7 @@ export default function PerformanceTabs({
       aria-label="Performance categories"
       className="sticky top-0 z-20 border-b border-(--color-bg-border) bg-(--color-bg-card)/95 shadow-sm backdrop-blur"
     >
-      <div className="grid grid-cols-4">
+      <div className="grid grid-cols-2">
         {tabItems.map((tab) => {
           const isActive = activeTab === tab.key;
 

@@ -61,8 +61,9 @@ export default function ScoringPage() {
     data: state,
     isLoading: loadingState,
     isFetching: isFetchingState,
-    refetch: refetchScoringState,
-  } = useGetScoringStateQuery(matchId ?? skipToken);
+  } = useGetScoringStateQuery(matchId ?? skipToken, {
+    refetchOnMountOrArgChange: true,
+  });
 
   const [recordBall, { isLoading: isRecording }] = useRecordBallMutation();
   const [changeStrikeManually, { isLoading: isChangingStrike }] =
@@ -83,6 +84,9 @@ export default function ScoringPage() {
       (matchData?.players ?? []).map((player) => [player.playerId, player]),
     );
   }, [matchData?.players]);
+
+  const scoringStateRefreshing =
+    isFetchingState && state?.inningsCompleted === true;
 
   const handleNonStrikerClick = () => {
     if (
@@ -225,7 +229,17 @@ export default function ScoringPage() {
   };
 
   useEffect(() => {
-    if (!state || flow !== "IDLE") return;
+    if (!state || isFetchingState) return;
+
+    if (flow === "START_NEXT_INNINGS" && !state.inningsCompleted) {
+      setFlow("IDLE");
+      return;
+    }
+
+    if (flow === "MATCH_COMPLETED" && !state.inningsCompleted) {
+      setFlow("IDLE");
+      return;
+    }
 
     if (flow !== "IDLE") return;
 
@@ -370,6 +384,7 @@ export default function ScoringPage() {
               onClick={handleNonStrikerClick}
               disabled={
                 isChangingStrike ||
+                scoringStateRefreshing ||
                 isRecording ||
                 scoringLocked ||
                 !state?.currentStrikerId ||
@@ -457,7 +472,11 @@ export default function ScoringPage() {
         <div className="flex flex-1 border-b border-(--color-bg-border)">
           <button
             disabled={
-              loadingState || isRecording || isChangingStrike || scoringLocked
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
             }
             onClick={() => handleRuns(0)}
             className={cn(
@@ -470,7 +489,11 @@ export default function ScoringPage() {
           </button>
           <button
             disabled={
-              loadingState || isRecording || isChangingStrike || scoringLocked
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
             }
             onClick={() => handleRuns(1)}
             className={cn(
@@ -483,7 +506,11 @@ export default function ScoringPage() {
           </button>
           <button
             disabled={
-              loadingState || isRecording || isChangingStrike || scoringLocked
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
             }
             onClick={() => handleRuns(2)}
             className={cn(
@@ -512,7 +539,11 @@ export default function ScoringPage() {
         >
           <button
             disabled={
-              loadingState || isRecording || isChangingStrike || scoringLocked
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
             }
             onClick={() => handleRuns(3)}
             className="flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors"
@@ -521,7 +552,11 @@ export default function ScoringPage() {
           </button>
           <button
             disabled={
-              loadingState || isRecording || isChangingStrike || scoringLocked
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
             }
             onClick={() => handleRuns(4)}
             className="flex-1 flex flex-col items-center justify-center border-r border-(--color-bg-border) active:bg-(--color-four)/5 transition-colors"
@@ -535,7 +570,11 @@ export default function ScoringPage() {
           </button>
           <button
             disabled={
-              loadingState || isRecording || isChangingStrike || scoringLocked
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
             }
             onClick={() => handleRuns(6)}
             className="flex-1 flex flex-col items-center justify-center border-r border-(--color-bg-border) active:bg-(--color-six)/5 transition-colors"
