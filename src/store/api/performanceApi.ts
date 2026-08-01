@@ -5,6 +5,7 @@ import { baseApi } from "./baseApi";
 import type {
   BattingAnalysisResponse,
   BattingAnalysisSection,
+  BattingPartnershipsResponse,
   BattingPerformanceResponse,
   BowlingAnalysisResponse,
   BowlingAnalysisSection,
@@ -170,6 +171,24 @@ export const performanceApi = baseApi.injectEndpoints({
         params: filters ? removeUndefinedParams(filters) : undefined,
       }),
     }),
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Top 5 partnership tab
+    // GET /cricket-profile/me/performance/batting/partnerships
+    // ─────────────────────────────────────────────────────────────────────────
+
+    getMyBattingPartnerships: builder.query<
+      BattingPartnershipsResponse,
+      { limit?: number } | void
+    >({
+      query: (params) => ({
+        url: "/cricket-profile/me/performance/batting/partnerships",
+        method: "GET",
+        params: {
+          limit: params?.limit ?? 5,
+        },
+      }),
+    }),
   }),
 
   overrideExisting: false,
@@ -199,4 +218,7 @@ export const {
 
   useGetMyFaceOffQuery,
   useLazyGetMyFaceOffQuery,
+
+  useGetMyBattingPartnershipsQuery,
+  useLazyGetMyBattingPartnershipsQuery,
 } = performanceApi;

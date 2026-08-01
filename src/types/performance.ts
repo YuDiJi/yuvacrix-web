@@ -62,7 +62,8 @@ export type BowlingAnalysisSection =
   | "BOWLING_ANGLE"
   | "WAGON_WHEEL"
   | "SHOT_IMPACT"
-  | "BATTING_POSITION_WICKETS";
+  | "BATTING_POSITION_WICKETS"
+  | "BOWLING_OVER_SLOT";
 
 export type BattingPositionGroup =
   | "TOP_ORDER"
@@ -264,97 +265,6 @@ export type BattingOverallStats = {
   ducks: number;
 };
 
-export type BattingRecentInnings = {
-  matchId: string;
-  inningsId: string;
-  inningsNumber: 1 | 2;
-
-  teamId: string;
-  opponentTeamId: string;
-
-  runs: number;
-  balls: number;
-  fours: number;
-  sixes: number;
-  strikeRate: number;
-
-  isOut: boolean;
-  isNotOut: boolean;
-  dismissalType: WicketType | null;
-
-  battingOrder: number | null;
-  completedAt: string;
-
-  representedTeamName: string;
-  opponentTeamName: string;
-};
-
-export type BattingCurrentForm = {
-  inningsConsidered: number;
-  runs: number;
-  balls: number;
-  dismissals: number;
-  notOuts: number;
-  average: number | null;
-  strikeRate: number | null;
-  fours: number;
-  sixes: number;
-  recentInnings: BattingRecentInnings[];
-};
-
-export type BattingYearlyStats = BattingOverallStats & {
-  year: number;
-};
-
-export type BattingByMatchInnings = {
-  inningsNumber: 1 | 2;
-  matches: number;
-  innings: number;
-  runs: number;
-  balls: number;
-  dismissals: number;
-  notOuts: number;
-  average: number | null;
-  strikeRate: number | null;
-  fours: number;
-  sixes: number;
-};
-
-export type BattingByPitchType = {
-  pitchType: PitchType;
-  matches: number;
-  innings: number;
-  runs: number;
-  balls: number;
-  dismissals: number;
-  average: number | null;
-  strikeRate: number | null;
-  fours: number;
-  sixes: number;
-};
-
-export type BattingDismissalItem = {
-  dismissalType: WicketType;
-  dismissals: number;
-  percentage: number;
-};
-
-export type BattingDismissals = {
-  totalDismissals: number;
-  items: BattingDismissalItem[];
-};
-
-export type BattingRunComposition = {
-  totalRecordedEvents: number;
-  dots: number;
-  ones: number;
-  twos: number;
-  threes: number;
-  fours: number;
-  sixes: number;
-  other: number;
-};
-
 export type PerformanceFiltersApplied = {
   teamId: string | null;
   tournamentId: string | null;
@@ -370,18 +280,6 @@ export type PerformanceFiltersApplied = {
 export type BattingPerformanceMetadata = CommonPerformanceMetadata & {
   includedBattingInnings: number;
   filtersApplied: PerformanceFiltersApplied;
-};
-
-export type BattingPerformanceResponse = {
-  playerId: string;
-  overall: BattingOverallStats;
-  currentForm: BattingCurrentForm;
-  yearly: BattingYearlyStats[];
-  byMatchInnings: BattingByMatchInnings[];
-  byPitchType: BattingByPitchType[];
-  dismissals: BattingDismissals;
-  runComposition: BattingRunComposition;
-  metadata: BattingPerformanceMetadata;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -872,40 +770,83 @@ export type BowlingExtras = {
   items: BowlingExtraItem[];
 };
 
+export type BowlingWicketsByInningsItem = {
+  wicketBucket: number;
+  label: string;
+  innings: number;
+  percentage: number;
+};
+
+export type BowlingWicketsByInningsInsights = {
+  matchesWithThreePlusWickets: number;
+  decidedMatchesWithThreePlusWickets: number;
+  winsWithThreePlusWickets: number;
+  teamWinPercentageWithThreePlusWickets: number | null;
+
+  wicketlessMatches: number;
+  decidedWicketlessMatches: number;
+  lossesWhenWicketless: number;
+  teamLossPercentageWhenWicketless: number | null;
+};
+
+export type BowlingWicketsByInningsData = {
+  totalBowlingInnings: number;
+  items: BowlingWicketsByInningsItem[];
+  insights: BowlingWicketsByInningsInsights;
+};
+
 export type BowlingPerformanceResponse = {
   playerId: string;
+
   overall: BowlingStats;
+  currentForm: BowlingCurrentForm;
+
   yearly: BowlingYearlyStats[];
   byMatchInnings: BowlingByMatchInnings[];
+  wicketsByInnings: BowlingWicketsByInningsData;
   byPitchType: BowlingByPitchType[];
+
   wicketTypes: BowlingWicketTypes;
   runComposition: BowlingRunComposition;
   extras: BowlingExtras;
-  metadata: {
-    includedCompletedMatches: number;
-    includedBowlingInnings: number;
-    generatedAt: string;
-    source: string;
-    version: string;
-    completedMatchesOnly: boolean;
-    activeBallEventsOnly: boolean;
-    formulas: Record<string, string>;
-    filtersApplied: Record<string, string | number | null>;
-  };
+
+  metadata: BowlingPerformanceMetadata;
 };
 
 export type BowlingRecentInnings = {
   matchId: string;
   inningsId: string;
-  inningsNumber: 1 | 2;
+  inningsNumber: number;
+
+  teamId: string;
+  opponentTeamId: string;
+
   representedTeamName: string;
   opponentTeamName: string;
+
   legalBalls: number;
   overs: string;
   maidens: number;
+
   runsConceded: number;
   wickets: number;
+
+  economy: number;
+  average: number | null;
+  strikeRate: number | null;
+
+  dotBalls: number;
+  wides: number;
+  noBalls: number;
+
+  foursConceded: number;
+  sixesConceded: number;
+
   completedAt: string;
+};
+
+export type BowlingCurrentForm = BowlingStats & {
+  recentInnings: BowlingRecentInnings[];
 };
 
 export type BowlingCoverage = {
@@ -939,16 +880,38 @@ export type BowlingShotImpactData = {
 };
 
 export type BowlingBattingPositionItem = {
-  key: string;
+  battingOrder: number;
   label: string;
-  group: string;
+  wickets: number;
+  percentage: number;
+};
+
+export type BowlingBattingPositionGroupItem = {
+  group: BattingPositionGroup;
+  label: string;
   wickets: number;
   percentage: number;
 };
 
 export type BowlingBattingPositionData = {
-  items: BowlingBattingPositionItem[];
+  eligibleWicketEvents: number;
+  classifiedWicketEvents: number;
+
+  byPosition: BowlingBattingPositionItem[];
+  byGroup: BowlingBattingPositionGroupItem[];
 };
+
+// export type BowlingBattingPositionItem = {
+//   key: string;
+//   label: string;
+//   group: string;
+//   wickets: number;
+//   percentage: number;
+// };
+
+// export type BowlingBattingPositionData = {
+//   items: BowlingBattingPositionItem[];
+// };
 
 export type BowlingWagonWheelPoint = {
   x: number;
@@ -973,6 +936,49 @@ export type BowlingAnalysisDataMap = {
   WAGON_WHEEL: BowlingWagonWheelData;
   SHOT_IMPACT: BowlingShotImpactData;
   BATTING_POSITION_WICKETS: BowlingBattingPositionData;
+  BOWLING_OVER_SLOT: BowlingOverSlotData;
+};
+
+export type BowlingOverSlotItem = {
+  slotKey: string;
+  label: string;
+
+  startOver: number;
+  endOver: number;
+
+  innings: number;
+  deliveries: number;
+  legalBalls: number;
+  overs: string;
+
+  runsConceded: number;
+  wickets: number;
+  dotBalls: number;
+
+  economy: number | null;
+  bowlingStrikeRate: number | null;
+  dotBallPercentage: number;
+};
+
+export type BowlingOverSlotInsight = {
+  slotKey: string;
+  label: string;
+  value: number;
+};
+
+export type BowlingOverSlotData = {
+  eligibleEvents: number;
+  recordedEvents: number;
+  slotSize: number;
+
+  items: BowlingOverSlotItem[];
+
+  insights: {
+    mostWicketsSlot: BowlingOverSlotInsight | null;
+    mostRunsConcededSlot: BowlingOverSlotInsight | null;
+    mostDotBallsSlot: BowlingOverSlotInsight | null;
+    bestEconomySlot: BowlingOverSlotInsight | null;
+  };
 };
 
 export type BowlingAnalysisResponse<T extends BowlingAnalysisSection> = {
@@ -986,5 +992,258 @@ export type BowlingAnalysisResponse<T extends BowlingAnalysisSection> = {
     version: string;
     completedMatchesOnly: boolean;
     activeBallEventsOnly: boolean;
+  };
+};
+
+export type BattingStats = {
+  matches: number;
+  innings: number;
+  runs: number;
+  balls: number;
+
+  highestScore: number;
+  highestScoreNotOut: boolean;
+
+  dismissals: number;
+  notOuts: number;
+
+  average: number | null;
+  strikeRate: number | null;
+
+  dotBalls: number;
+  fours: number;
+  sixes: number;
+
+  thirties: number;
+  fifties: number;
+  hundreds: number;
+  ducks: number;
+};
+
+export type BattingRecentInnings = {
+  matchId: string;
+  inningsId: string;
+  inningsNumber: number;
+
+  teamId: string;
+  opponentTeamId: string;
+
+  runs: number;
+  balls: number;
+  fours: number;
+  sixes: number;
+  strikeRate: number;
+
+  isOut: boolean;
+  isNotOut: boolean;
+  dismissalType: string | null;
+
+  battingOrder: number;
+
+  completedAt: string;
+  representedTeamName: string;
+  opponentTeamName: string;
+};
+
+export type BattingCurrentForm = {
+  inningsConsidered: number;
+
+  runs: number;
+  balls: number;
+
+  dismissals: number;
+  notOuts: number;
+
+  average: number | null;
+  strikeRate: number | null;
+
+  fours: number;
+  sixes: number;
+
+  recentInnings: BattingRecentInnings[];
+};
+
+export type BattingYearlyStats = {
+  key: string;
+  label: string;
+  year: number;
+  stats: BattingStats;
+};
+
+export type BattingByMatchInnings = {
+  key: string;
+  label: string;
+  inningsNumber: number;
+  stats: BattingStats;
+};
+
+export type BattingByPitchType = {
+  key: string;
+  label: string;
+  pitchType: string;
+  stats: BattingStats;
+};
+
+export type BattingDismissalItem = {
+  dismissalType: string;
+  dismissals: number;
+  percentage: number;
+};
+
+export type BattingDismissals = {
+  totalDismissals: number;
+  items: BattingDismissalItem[];
+};
+
+export type BattingRunComposition = {
+  totalRecordedEvents: number;
+
+  dots: number;
+  ones: number;
+  twos: number;
+  threes: number;
+  fours: number;
+  sixes: number;
+  other: number;
+};
+
+export type BattingByPosition = {
+  battingPosition: number;
+  label: string;
+  group: BattingPositionGroup;
+  stats: {
+    average: number;
+    balls: number;
+    dismissals: number;
+    dotBalls: number;
+    ducks: number;
+    fifties: number;
+    fours: number;
+    highestScore: number;
+    highestScoreNotOut: boolean;
+    hundreds: number;
+    innings: number;
+    matches: number;
+    notOuts: number;
+    runs: number;
+    sixes: number;
+    strikeRate: number;
+    thirties: number;
+  };
+};
+
+export type BattingPerformanceResponse = {
+  playerId: string;
+
+  overall: BattingStats;
+  currentForm: BattingCurrentForm;
+
+  yearly: BattingYearlyStats[];
+  byMatchInnings: BattingByMatchInnings[];
+  byBattingPosition: BattingByPosition[];
+  byPitchType: BattingByPitchType[];
+
+  dismissals: BattingDismissals;
+  runComposition: BattingRunComposition;
+
+  metadata: {
+    includedCompletedMatches: number;
+    includedBattingInnings: number;
+    generatedAt: string;
+    source: string;
+    version: string;
+    completedMatchesOnly: boolean;
+    activeBallEventsOnly: boolean;
+
+    filtersApplied: {
+      teamId: string | null;
+      tournamentId: string | null;
+      seriesId: string | null;
+      year: number | null;
+      matchType: string | null;
+      ballType: string | null;
+      competitionType: string | null;
+      pitchType: string | null;
+      inningsNumber: number | null;
+    };
+  };
+};
+
+export type BattingPartnershipEndReason =
+  | "WICKET"
+  | "INNINGS_COMPLETED"
+  | "RETIRED"
+  | "OTHER";
+
+export type BattingPartnershipPlayer = {
+  playerId: string;
+  playerName: string;
+  profileImageUrl: string | null;
+};
+
+export type BattingPartnershipItem = {
+  rank: number;
+
+  partner: BattingPartnershipPlayer;
+
+  partnershipRuns: number;
+  legalBalls: number;
+
+  profilePlayerRuns: number;
+  partnerRuns: number;
+  extras: number;
+
+  profilePlayerFours: number;
+  profilePlayerSixes: number;
+
+  partnerFours: number;
+  partnerSixes: number;
+
+  endReason: BattingPartnershipEndReason;
+
+  dismissedPlayerId: string | null;
+  wicketType: string | null;
+
+  matchId: string;
+  inningsId: string;
+  inningsNumber: number;
+
+  representedTeamId: string;
+  opponentTeamId: string;
+
+  representedTeamName: string;
+  opponentTeamName: string;
+
+  completedAt: string;
+};
+
+export type BattingPartnershipsResponse = {
+  playerId: string;
+  items: BattingPartnershipItem[];
+
+  metadata: {
+    includedCompletedMatches: number;
+    partnershipsFound: number;
+    returned: number;
+    limit: number;
+
+    generatedAt: string;
+    source: string;
+    version: string;
+
+    completedMatchesOnly: boolean;
+    activeBallEventsOnly: boolean;
+
+    filtersApplied: {
+      teamId: string | null;
+      tournamentId: string | null;
+      seriesId: string | null;
+      year: number | null;
+      matchType: string | null;
+      ballType: string | null;
+      competitionType: string | null;
+      pitchType: string | null;
+      inningsNumber: number | null;
+    };
   };
 };

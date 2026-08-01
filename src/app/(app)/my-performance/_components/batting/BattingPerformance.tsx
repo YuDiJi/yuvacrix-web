@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import {
   useGetMyBattingPerformanceQuery,
   useLazyGetMyBattingAnalysisQuery,
+  useLazyGetMyBattingPartnershipsQuery,
 } from "@/store/api/performanceApi";
 
 import type {
@@ -31,21 +32,12 @@ import BattingWagonWheel from "./sections/BattingWagonWheel";
 import BattingYearlyAnalysis from "./sections/BattingYearlyAnalysis";
 
 export default function BattingPerformance() {
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isError,
-    refetch,
-  } = useGetMyBattingPerformanceQuery();
+  const { data, isLoading, isFetching, isError, refetch } =
+    useGetMyBattingPerformanceQuery();
 
   const [
     loadShots,
-    {
-      data: shotsData,
-      isFetching: isShotsLoading,
-      isError: isShotsError,
-    },
+    { data: shotsData, isFetching: isShotsLoading, isError: isShotsError },
   ] = useLazyGetMyBattingAnalysisQuery();
 
   const [
@@ -84,11 +76,11 @@ export default function BattingPerformance() {
     },
   ] = useLazyGetMyBattingAnalysisQuery();
 
+  const [loadPartnerships, partnerships] =
+    useLazyGetMyBattingPartnershipsQuery();
+
   const requestSection = useCallback(
-    (
-      trigger: typeof loadShots,
-      section: BattingAnalysisSection,
-    ) => {
+    (trigger: typeof loadShots, section: BattingAnalysisSection) => {
       void trigger({ section }, true);
     },
     [],
@@ -138,26 +130,18 @@ export default function BattingPerformance() {
         onVisible={() => requestSection(loadShots, "SHOTS")}
       >
         <BattingShotsAnalysis
-          response={
-            shotsData as
-              | BattingAnalysisResponse<"SHOTS">
-              | undefined
-          }
+          response={shotsData as BattingAnalysisResponse<"SHOTS"> | undefined}
           isLoading={isShotsLoading}
           isError={isShotsError}
         />
       </LazyPerformanceSection>
 
       <LazyPerformanceSection
-        onVisible={() =>
-          requestSection(loadWagonWheel, "WAGON_WHEEL")
-        }
+        onVisible={() => requestSection(loadWagonWheel, "WAGON_WHEEL")}
       >
         <BattingWagonWheel
           response={
-            wagonWheelData as
-              | BattingAnalysisResponse<"WAGON_WHEEL">
-              | undefined
+            wagonWheelData as BattingAnalysisResponse<"WAGON_WHEEL"> | undefined
           }
           isLoading={isWagonWheelLoading}
           isError={isWagonWheelError}
@@ -166,14 +150,12 @@ export default function BattingPerformance() {
 
       <BattingRunTypes data={data.runComposition} />
 
-      <BattingPositionAnalysis items={[]} />
+      <BattingPositionAnalysis items={data.byBattingPosition} />
 
       <BattingInningsAnalysis items={data.byMatchInnings} />
 
       <LazyPerformanceSection
-        onVisible={() =>
-          requestSection(loadBowlingStyle, "BOWLING_STYLE")
-        }
+        onVisible={() => requestSection(loadBowlingStyle, "BOWLING_STYLE")}
       >
         <BattingBowlingStyleAnalysis
           response={
@@ -187,9 +169,7 @@ export default function BattingPerformance() {
       </LazyPerformanceSection>
 
       <LazyPerformanceSection
-        onVisible={() =>
-          requestSection(loadBowlingAngle, "BOWLING_ANGLE")
-        }
+        onVisible={() => requestSection(loadBowlingAngle, "BOWLING_ANGLE")}
       >
         <BattingAngleAnalysis
           response={
@@ -207,9 +187,7 @@ export default function BattingPerformance() {
       >
         <BattingPaceSpinAnalysis
           response={
-            paceSpinData as
-              | BattingAnalysisResponse<"PACE_SPIN">
-              | undefined
+            paceSpinData as BattingAnalysisResponse<"PACE_SPIN"> | undefined
           }
           isLoading={isPaceSpinLoading}
           isError={isPaceSpinError}
@@ -220,7 +198,22 @@ export default function BattingPerformance() {
 
       <BattingDismissalAnalysis data={data.dismissals} />
 
-      <BattingPartnerships items={[]} />
+      <LazyPerformanceSection
+        onVisible={() => {
+          void loadPartnerships(
+            {
+              limit: 5,
+            },
+            true,
+          );
+        }}
+      >
+        <BattingPartnerships
+          data={partnerships.data}
+          isLoading={partnerships.isFetching}
+          isError={partnerships.isError}
+        />
+      </LazyPerformanceSection>
 
       <BattingYearlyAnalysis items={data.yearly} />
 

@@ -12,7 +12,9 @@ export default function BattingInningsAnalysis({
   items,
 }: BattingInningsAnalysisProps) {
   const bestAverage = items.length
-    ? [...items].sort((a, b) => (b.average ?? -1) - (a.average ?? -1))[0]
+    ? [...items].sort(
+        (a, b) => (b.stats.average ?? -1) - (a.stats.average ?? -1),
+      )[0]
     : null;
 
   return (
@@ -24,70 +26,69 @@ export default function BattingInningsAnalysis({
     >
       <PerformanceTable
         rows={items}
-        getRowKey={(row) => String(row.inningsNumber)}
-        minWidth={700}
+        getRowKey={(row) => row.key}
+        minWidth={760}
         columns={[
           {
             key: "innings",
-            header: "Inns No.",
-            render: (row) => row.inningsNumber,
+            header: "Innings",
+            render: (row) => row.label,
           },
           {
             key: "matches",
             header: "Matches",
             align: "center",
-            render: (row) => row.matches,
+            render: (row) => row.stats.matches,
           },
           {
             key: "inningsCount",
             header: "Innings",
             align: "center",
-            render: (row) => row.innings,
+            render: (row) => row.stats.innings,
           },
           {
             key: "runs",
             header: "Runs",
             align: "center",
-            render: (row) => row.runs,
+            render: (row) => row.stats.runs,
           },
           {
             key: "average",
             header: "Avg",
             align: "center",
-            render: (row) => format(row.average),
+            render: (row) => formatNumber(row.stats.average),
           },
           {
             key: "strikeRate",
             header: "SR",
             align: "center",
-            render: (row) => format(row.strikeRate),
+            render: (row) => formatNumber(row.stats.strikeRate),
           },
           {
             key: "notOuts",
             header: "NO",
             align: "center",
-            render: (row) => row.notOuts,
+            render: (row) => row.stats.notOuts,
           },
           {
             key: "fours",
             header: "4s",
             align: "center",
-            render: (row) => row.fours,
+            render: (row) => row.stats.fours,
           },
           {
             key: "sixes",
             header: "6s",
             align: "center",
-            render: (row) => row.sixes,
+            render: (row) => row.stats.sixes,
           },
         ]}
       />
 
       {bestAverage && (
         <div className="mt-4">
-          <PerformanceInsight value={format(bestAverage.average)}>
-            Best batting average is in innings number{" "}
-            {bestAverage.inningsNumber}
+          <PerformanceInsight value={formatNumber(bestAverage.stats.average)}>
+            Best batting average is in {bestAverage.label.toLowerCase()}
           </PerformanceInsight>
         </div>
       )}
@@ -95,6 +96,10 @@ export default function BattingInningsAnalysis({
   );
 }
 
-function format(value: number | null) {
-  return value === null ? "—" : value?.toFixed(2);
+function formatNumber(value: number | null) {
+  if (value === null || !Number.isFinite(value)) {
+    return "—";
+  }
+
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }

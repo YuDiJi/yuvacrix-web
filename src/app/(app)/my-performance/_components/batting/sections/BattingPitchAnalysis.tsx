@@ -32,37 +32,37 @@ export default function BattingPitchAnalysis({
             key: "innings",
             header: "Inns",
             align: "center",
-            render: (row) => row.innings,
+            render: (row) => row.stats.innings,
           },
           {
             key: "runs",
             header: "Runs",
             align: "center",
-            render: (row) => row.runs,
+            render: (row) => row.stats.runs,
           },
           {
             key: "average",
             header: "Avg",
             align: "center",
-            render: (row) => format(row.average),
+            render: (row) => format(row.stats.average),
           },
           {
             key: "strikeRate",
             header: "SR",
             align: "center",
-            render: (row) => format(row.strikeRate),
+            render: (row) => format(row.stats.strikeRate),
           },
           {
             key: "fours",
             header: "4s",
             align: "center",
-            render: (row) => row.fours,
+            render: (row) => row.stats.fours,
           },
           {
             key: "sixes",
             header: "6s",
             align: "center",
-            render: (row) => row.sixes,
+            render: (row) => row.stats.sixes,
           },
         ]}
       />

@@ -13,7 +13,7 @@ export default function BattingYearlyAnalysis({
   items,
 }: BattingYearlyAnalysisProps) {
   const bestYear = items.length
-    ? [...items].sort((a, b) => b.runs - a.runs)[0]
+    ? [...items].sort((a, b) => b.stats.runs - a.stats.runs)[0]
     : null;
 
   return (
@@ -39,7 +39,7 @@ export default function BattingYearlyAnalysis({
                 <strong className="text-(--color-brand)">
                   {bestYear.year}
                 </strong>{" "}
-                with {bestYear.runs} runs
+                with {bestYear.stats.runs} runs
               </PerformanceInsight>
             </div>
           )}

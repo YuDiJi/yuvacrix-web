@@ -38,11 +38,11 @@ export default function BowlingPerformance() {
   const [loadBattingPosition, battingPosition] =
     useLazyGetMyBowlingAnalysisQuery();
 
+  const [loadBowlingPosition, bowlingPosition] =
+    useLazyGetMyBowlingAnalysisQuery();
+
   const load = useCallback(
-    (
-      trigger: typeof loadAngle,
-      section: BowlingAnalysisSection,
-    ) => {
+    (trigger: typeof loadAngle, section: BowlingAnalysisSection) => {
       void trigger({ section }, true);
     },
     [],
@@ -78,18 +78,26 @@ export default function BowlingPerformance() {
         </div>
       )}
 
-      <BowlingCurrentForm recentInnings={[]} summary={data.overall} />
-      <BowlingPositionAnalysis items={[]} />
+      <BowlingCurrentForm data={data.currentForm} />
+      <LazyPerformanceSection
+        onVisible={() => load(loadBowlingPosition, "BOWLING_OVER_SLOT")}
+      >
+        <BowlingPositionAnalysis
+          response={
+            bowlingPosition.data as
+              | BowlingAnalysisResponse<"BOWLING_OVER_SLOT">
+              | undefined
+          }
+          isLoading={bowlingPosition.isFetching}
+          isError={bowlingPosition.isError}
+        />
+      </LazyPerformanceSection>
       <BowlingWicketTypes data={data.wicketTypes} />
 
-      <LazyPerformanceSection
-        onVisible={() => load(loadImpact, "SHOT_IMPACT")}
-      >
+      <LazyPerformanceSection onVisible={() => load(loadImpact, "SHOT_IMPACT")}>
         <BowlingImpactAnalysis
           response={
-            impact.data as
-              | BowlingAnalysisResponse<"SHOT_IMPACT">
-              | undefined
+            impact.data as BowlingAnalysisResponse<"SHOT_IMPACT"> | undefined
           }
           isLoading={impact.isFetching}
           isError={impact.isError}
@@ -103,9 +111,7 @@ export default function BowlingPerformance() {
       >
         <BowlingSideAnalysis
           response={
-            angle.data as
-              | BowlingAnalysisResponse<"BOWLING_ANGLE">
-              | undefined
+            angle.data as BowlingAnalysisResponse<"BOWLING_ANGLE"> | undefined
           }
           isLoading={angle.isFetching}
           isError={angle.isError}
@@ -115,9 +121,7 @@ export default function BowlingPerformance() {
       <BowlingPitchAnalysis items={data.byPitchType} />
 
       <LazyPerformanceSection
-        onVisible={() =>
-          load(loadBattingPosition, "BATTING_POSITION_WICKETS")
-        }
+        onVisible={() => load(loadBattingPosition, "BATTING_POSITION_WICKETS")}
       >
         <BattingPositionWickets
           response={
@@ -130,7 +134,8 @@ export default function BowlingPerformance() {
         />
       </LazyPerformanceSection>
 
-      <BowlingWicketsByInnings items={[]} />
+      <BowlingWicketsByInnings data={data.wicketsByInnings} />
+
       <BowlingRunTypes data={data.runComposition} />
 
       <LazyPerformanceSection

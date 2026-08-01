@@ -54,8 +54,8 @@ export function CompletionSheet({
 
   const handleNext = async () => {
     if (!matchId || !state) return;
-    onContinue();
     onClose();
+    onContinue();
   };
 
   const playersById = useMemo(() => {
@@ -79,12 +79,12 @@ export function CompletionSheet({
                 ? "Match result"
                 : ""}
         </h2>
-        <button
+        {/* <button
           onClick={onClose}
           className="text-slate-600 hover:text-slate-900 transition-colors"
         >
           <Settings size={22} strokeWidth={1.5} />
-        </button>
+        </button> */}
       </div>
 
       {/* Stats Box */}
