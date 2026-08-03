@@ -186,7 +186,9 @@ export const routeConfig: Record<string, RouteConfig> = {
     title: "Tournament",
     showBackButton: true,
     back: {
-      type: "history",
+      type: "route",
+      href: "/my-cricket",
+      replace: true,
     },
   },
 

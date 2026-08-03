@@ -12,7 +12,10 @@ import {
   useCreatePlayerMutation,
   useLazySearchPlayerMobileQuery,
 } from "@/store/api/playerApi";
-import { useAddTeamMemberMutation } from "@/store/api/teamApi";
+import {
+  useAddTeamMemberMutation,
+  useRemoveTeamMemberMutation,
+} from "@/store/api/teamApi";
 import type { Player } from "@/types/player";
 
 import MobileSearchForm from "./MobileSearchForm";
@@ -56,6 +59,11 @@ export function CreatePlayerFlow({
 
   const [addTeamMember, { isLoading: isAddingTeam }] =
     useAddTeamMemberMutation();
+
+  const [removeTeamMember, { isLoading: isRemoving }] =
+    useRemoveTeamMemberMutation();
+
+  const [removingPlayerId, setRemovingPlayerId] = useState<string | null>(null);
 
   function resetFlow() {
     setMobile("");
@@ -169,6 +177,39 @@ export function CreatePlayerFlow({
     }
   }
 
+  async function handleRemovePlayer(playerId: string) {
+    if (!teamId) {
+      setError("Team ID not found.");
+      return;
+    }
+
+    setError("");
+    setRemovingPlayerId(playerId);
+
+    try {
+      await removeTeamMember({
+        teamId,
+        playerId,
+      }).unwrap();
+
+      setPlayers((prev) => prev.filter((player) => player.id !== playerId));
+    } catch (err) {
+      const message =
+        err &&
+        typeof err === "object" &&
+        "data" in err &&
+        typeof err.data === "object" &&
+        err.data !== null &&
+        "message" in err.data
+          ? String(err.data.message)
+          : "Failed to remove player from team.";
+
+      setError(message);
+    } finally {
+      setRemovingPlayerId(null);
+    }
+  }
+
   const primaryLabel =
     step === "SEARCH_MOBILE" ? "Search Player" : "Create Player";
 
@@ -180,28 +221,28 @@ export function CreatePlayerFlow({
   return (
     <div className="h-full bg-(--color-bg-base)">
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 pt-5">
+        <p className="mt-1 text-xs text-(--color-text-muted)">
+          Players are added to the team immediately.
+        </p>
         {players.length > 0 && (
           <div>
             <div className="mb-2 flex items-center justify-between px-0.5">
               <div className="flex items-center gap-2">
                 <Users size={14} className="text-(--color-brand)" />
                 <p className="text-section-label">
-                  Added Players ({players.length})
+                  Recently Added ({players.length})
                 </p>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setPlayers([])}
-                className="text-xs font-semibold text-(--color-text-muted) transition-colors hover:text-(--color-live)"
-              >
-                Clear all
-              </button>
             </div>
 
             <div className="flex flex-col gap-2 rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-3 shadow-(--shadow-card)">
               {players.map((player) => (
-                <CreatePlayerCard key={player.id} player={player} />
+                <CreatePlayerCard
+                  key={player.id}
+                  player={player}
+                  onRemove={() => handleRemovePlayer(player.id)}
+                  isRemoving={removingPlayerId === player.id}
+                />
               ))}
             </div>
           </div>
@@ -270,12 +311,17 @@ export function CreatePlayerFlow({
         </Button>
 
         {players.length > 0 && (
-          <Button fullWidth variant="secondary" onClick={() => onDone(players)}>
+          <Button
+            size="sm"
+            fullWidth
+            variant="secondary"
+            onClick={() => onDone(players)}
+          >
             {doneLabel
               ? doneLabel(players.length)
-              : `Done — Add ${players.length} Player${
+              : `Done — ${players.length} Player${
                   players.length > 1 ? "s" : ""
-                } to Team`}
+                } added to Team`}
           </Button>
         )}
       </div>
