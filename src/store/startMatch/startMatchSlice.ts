@@ -5,8 +5,17 @@ type MatchPlayerRole = {
   id: string;
   name: string;
 };
+type MatchCreationMode = "PLAY_NOW" | "SCHEDULE";
 
 type StartMatchState = {
+  matchSource: "NORMAL" | "TOURNAMENT";
+
+  tournamentId: string | null;
+  roundId: string | null;
+  groupId: string | null;
+  fixtureId: string | null;
+  creationMode: MatchCreationMode;
+
   teamA: Team | null;
   teamB: Team | null;
 
@@ -23,6 +32,14 @@ type StartMatchState = {
 };
 
 const initialState: StartMatchState = {
+  matchSource: "NORMAL",
+
+  tournamentId: null,
+  roundId: null,
+  groupId: null,
+  fixtureId: null,
+  creationMode: "PLAY_NOW",
+
   teamA: null,
   teamB: null,
 
@@ -83,10 +100,12 @@ const startMatchSlice = createSlice({
       action: PayloadAction<{
         matchId: string;
         lineUpMode: "FIXED" | "FLEXIBLE";
+        fixtureId?: string;
       }>,
     ) => {
       state.matchId = action.payload.matchId;
       state.lineUpMode = action.payload.lineUpMode;
+      state.fixtureId = action.payload.fixtureId ?? null;
     },
 
     setMatchContext: (
@@ -118,7 +137,35 @@ const startMatchSlice = createSlice({
       state.teamBKeeper = action.payload.teamBKeeper;
     },
 
+    setMatchCreationMode: (state, action: PayloadAction<MatchCreationMode>) => {
+      state.creationMode = action.payload;
+    },
+
+    setTournamentMatchContext: (
+      state,
+      action: PayloadAction<{
+        tournamentId: string;
+        roundId: string;
+        groupId?: string | null;
+      }>,
+    ) => {
+      state.matchSource = "TOURNAMENT";
+      state.tournamentId = action.payload.tournamentId;
+      state.roundId = action.payload.roundId;
+      state.groupId = action.payload.groupId ?? null;
+    },
+
+    setTournamentGroupId: (state, action: PayloadAction<string | null>) => {
+      state.groupId = action.payload;
+    },
+
     resetMatch: (state) => {
+      state.matchSource = "NORMAL";
+      state.tournamentId = null;
+      state.roundId = null;
+      state.groupId = null;
+      state.fixtureId = null;
+      state.creationMode = "PLAY_NOW";
       state.teamA = null;
       state.teamB = null;
       state.teamACaptain = null;
@@ -139,6 +186,9 @@ export const {
   setActiveTeam,
   setMatchIdMode,
   setMatchContext,
+  setTournamentMatchContext,
+  setMatchCreationMode,
+  setTournamentGroupId,
   resetMatch,
 } = startMatchSlice.actions;
 

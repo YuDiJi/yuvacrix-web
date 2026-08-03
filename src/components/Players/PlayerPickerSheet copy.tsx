@@ -1,9 +1,9 @@
 import { cn } from "@/lib/cn";
 import { BattingStyle, BowlingStyle } from "@/types/player";
 import { Check, ChevronRight, Search, Users, X } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "../common/Button";
+import { S3Image } from "../common/S3Image";
 
 interface InningsPlayer {
   playerId: string;
@@ -39,12 +39,17 @@ function PlayerAvatar({ player, size = 48 }: { player: any; size?: number }) {
       style={{ width: size, height: size }}
     >
       {player?.profileImageUrl ? (
-        <Image
-          src={player.profileImageUrl}
+        <S3Image
+          imageKey={player.profileImageUrl}
           alt={player.playerNameSnapshot}
           width={size}
           height={size}
           className="h-full w-full object-cover"
+          fallback={
+            <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+              {player.playerNameSnapshot.charAt(0)}
+            </div>
+          }
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">

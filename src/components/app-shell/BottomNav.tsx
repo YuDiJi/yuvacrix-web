@@ -12,7 +12,9 @@ export default function BottomNav({
   drawerOpen: boolean;
 }) {
   return (
-    <nav className="safe-bottom absolute bottom-0 left-0 right-0 z-30 border-t border-(--color-bg-border) bg-white/97 backdrop-blur-2xl">
+    // <nav className="safe-bottom absolute bottom-0 left-0 right-0 z-30 border-t border-(--color-bg-border) bg-white/97 backdrop-blur-2xl">
+    <nav className="safe-bottom fixed bottom-0 left-1/2 right-auto z-50 w-full -translate-x-1/2 border-t border-(--color-bg-border) bg-white/97 backdrop-blur-2xl md:max-w-107.5">
+      {/* <nav className="safe-bottom fixed bottom-0 left-1/2 right-auto z-50 w-full max-w-107.5 -translate-x-1/2 border-t border-(--color-bg-border) bg-white/97 backdrop-blur-2xl"> */}
       <div className="grid grid-cols-3">
         {bottomNav.map((item) => {
           const Icon = item.icon;

@@ -10,6 +10,8 @@ export type BowlingStyle =
   | "LEFT_ARM_ORTHODOX"
   | "LEFT_ARM_WRIST_SPIN";
 
+export type PlayerRole = "BATTER" | "BOWLER" | "ALL_ROUNDER" | "WICKET_KEEPER";
+
 export interface Player {
   id: string;
   fullName: string;
@@ -20,6 +22,10 @@ export interface Player {
   gender?: "MALE" | "FEMALE" | "OTHER";
   dateOfBirth?: string;
   city?: string;
+  bio?: string;
+  playerRole?: PlayerRole;
+  battingStyle?: BattingStyle;
+  bowlingStyle?: BowlingStyle;
   createdSource: string;
   createdBy: {
     actorType: string;
@@ -39,10 +45,15 @@ export interface GetPlayerResponse {
 
 export interface CreatePlayerDto {
   fullName: string;
-  city?: string;
+  fullNameLower?: string;
+  profileImageUrl?: string;
   gender?: string;
   dateOfBirth?: string;
-  profileImageUrl?: string;
+  city?: string;
+  bio?: string;
+  playerRole?: PlayerRole;
+  battingStyle?: BattingStyle;
+  bowlingStyle?: BowlingStyle;
   createdSource: string;
   createdByActorType: string;
   createdByActorId: string;

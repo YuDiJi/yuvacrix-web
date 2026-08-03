@@ -22,6 +22,7 @@ import {
   setTeamARoles,
   setTeamBRoles,
 } from "@/store/startMatch/startMatchSlice";
+import { S3Image } from "@/components/common/S3Image";
 
 export default function SelectPlayersPage() {
   // const { setHeader } = useHeader();
@@ -182,7 +183,7 @@ export default function SelectPlayersPage() {
         >
           No Players Yet
         </h3>
-        <p className="mt-2 max-w-[220px] text-sm leading-relaxed text-(--color-text-secondary)">
+        <p className="mt-2 max-w-55 text-sm leading-relaxed text-(--color-text-secondary)">
           Add players to your squad and start scoring matches.
         </p>
         <button
@@ -200,21 +201,48 @@ export default function SelectPlayersPage() {
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-28">
         {/* Team banner */}
         <div className="mb-4 flex items-center gap-4 rounded-2xl bg-(--color-navy) px-5 py-4 shadow-[0_4px_20px_rgba(13,27,62,0.20)]">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="rgba(255,255,255,0.85)"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-          </div>
+          {currentTeam?.logoUrl ? (
+            <S3Image
+              imageKey={currentTeam.logoUrl}
+              alt={currentTeam?.name}
+              width={48}
+              height={48}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10"
+              fallback={
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.85)"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </div>
+              }
+            />
+          ) : (
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(255,255,255,0.85)"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <p
               className="font-(family-name:--font-display) text-xl font-black uppercase text-white truncate"

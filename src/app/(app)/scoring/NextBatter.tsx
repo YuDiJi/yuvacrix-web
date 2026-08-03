@@ -5,10 +5,10 @@ import { cn } from "@/lib/cn";
 import { ScoringState } from "@/types/innings";
 import { MatchDetailsPlayer } from "@/types/match";
 import { ArrowLeft, Check, User } from "lucide-react";
-import Image from "next/image";
 import React, { useState } from "react";
 import { WICKET_CONFIG } from "./out/constant";
 import { useChangeStrikeManuallyMutation } from "@/store/api/scoringApi";
+import { S3Image } from "@/components/common/S3Image";
 
 type NextBatterSheetProps = {
   players: MatchDetailsPlayer[] | undefined;
@@ -54,13 +54,18 @@ function StrikeCard({
     >
       {/* Image */}
       <div className="relative mx-auto mb-3 h-20 w-20 overflow-hidden rounded-2xl border border-(--color-bg-border) shadow-sm">
-        {player?.profileImageUrl ? (
-          <Image
-            src={player.profileImageUrl}
+        {player?.playerProfileImageSnapshot ? (
+          <S3Image
+            imageKey={player.playerProfileImageSnapshot}
             alt={player.playerNameSnapshot}
             width={80}
             height={80}
             className="h-full w-full object-cover"
+            fallback={
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                {player.playerNameSnapshot.charAt(0)}
+              </div>
+            }
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">
@@ -114,7 +119,6 @@ const NextBatterSheet = ({
     useChangeStrikeManuallyMutation();
 
   const availableBatterIds = new Set(state?.availableBatters ?? []);
-  console.log(availableBatterIds);
 
   const availableBattingPlayers = players?.filter((player) =>
     availableBatterIds.has(player.playerId),
@@ -178,6 +182,8 @@ const NextBatterSheet = ({
       console.error(error);
     }
   };
+
+  console.log(availableBattingPlayers);
 
   return (
     <DialogBottom open={open} onClose={() => {}}>

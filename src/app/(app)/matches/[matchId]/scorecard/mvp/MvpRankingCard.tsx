@@ -1,5 +1,6 @@
 "use client";
 
+import { S3Image } from "@/components/common/S3Image";
 import { MvpPlayer } from "@/types/scorecard";
 
 type Props = {
@@ -26,7 +27,8 @@ const RANK_COLORS: Record<number, string> = {
 
 export default function MvpRankingCard({ player, rank, highlighted }: Props) {
   const rankBg = RANK_COLORS[rank] ?? "bg-(--color-bg-base)";
-  const rankText = rank <= 3 ? "text-(--color-text-inverse)" : "text-(--color-text-secondary)";
+  const rankText =
+    rank <= 3 ? "text-(--color-text-inverse)" : "text-(--color-text-secondary)";
 
   return (
     <div
@@ -36,19 +38,25 @@ export default function MvpRankingCard({ player, rank, highlighted }: Props) {
     >
       {/* Rank badge */}
       <span
-        className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${rankBg} ${rankText}`}
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${rankBg} ${rankText}`}
       >
         {rank}
       </span>
 
       {/* Avatar */}
-      <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-(--color-bg-border) bg-white">
+      <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-(--color-bg-border) bg-white">
         {player.profileImageSnapshot ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={player.profileImageSnapshot}
+          <S3Image
+            imageKey={player.profileImageSnapshot}
             alt={player.playerNameSnapshot}
+            width={36}
+            height={36}
             className="h-full w-full object-cover"
+            fallback={
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                {player.playerNameSnapshot.charAt(0)}
+              </div>
+            }
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">
@@ -73,7 +81,7 @@ export default function MvpRankingCard({ player, rank, highlighted }: Props) {
       </div>
 
       {/* MVP score */}
-      <span className="flex-shrink-0 font-display text-[20px] font-black text-(--color-navy)">
+      <span className="shrink-0 font-display text-[20px] font-black text-(--color-navy)">
         {player.mvpScore}
       </span>
     </div>

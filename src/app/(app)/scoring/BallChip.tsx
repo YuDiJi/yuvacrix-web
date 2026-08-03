@@ -28,14 +28,95 @@ interface ParsedBall {
   isDot: boolean;
 }
 
-function parseBall(ball: OverBall): ParsedBall {
-  const sym = ball.symbol ?? "";
+// ─── Colour config ────────────────────────────────────────────────────────────
 
-  // Wicket
-  if (ball.isWicket || sym === "W" || sym.startsWith("W")) {
-    const runPart = sym.replace(/^W/, "").replace(/[A-Z_]+$/, "");
+function parseBall(ball: OverBall): ParsedBall {
+  const sym = (ball.symbol ?? "").trim().toUpperCase();
+
+  /*
+   * Extras must be checked before wickets because:
+   * WD starts with W but is a wide, not a wicket.
+   *
+   * Supported formats:
+   * WD, 2WD
+   * WIDE, 2WIDE
+   * NB, 2NB
+   * NO_BALL, 2NO_BALL
+   * B, 2B
+   * BYE, 2BYE
+   * LB, 2LB
+   * LEG_BYE, 2LEG_BYE
+   */
+
+  const extraPatterns: Array<{
+    suffixes: string[];
+    kind: ExtraType;
+    label: string;
+  }> = [
+    {
+      suffixes: ["LEG_BYE", "LB"],
+      kind: "LEG_BYE",
+      label: "LB",
+    },
+    {
+      suffixes: ["NO_BALL", "NB"],
+      kind: "NO_BALL",
+      label: "NB",
+    },
+    {
+      suffixes: ["WIDE", "WD"],
+      kind: "WIDE",
+      label: "WD",
+    },
+    {
+      suffixes: ["BYE", "B"],
+      kind: "BYE",
+      label: "BYE",
+    },
+  ];
+
+  for (const pattern of extraPatterns) {
+    const matchedSuffix = pattern.suffixes.find((suffix) =>
+      sym.endsWith(suffix),
+    );
+
+    if (!matchedSuffix) continue;
+
+    const runPart = sym.slice(0, -matchedSuffix.length);
+
+    const parsedRuns = Number.parseInt(runPart, 10);
+
+    const runs = Number.isNaN(parsedRuns) ? (ball.runs ?? 0) : parsedRuns;
+
     return {
-      runDisplay: runPart ? `${runPart}W` : "W",
+      runDisplay: String(runs),
+      extraLabel: pattern.label,
+      extraKind: pattern.kind,
+      isFour: false,
+      isSix: false,
+      isWicket: false,
+      isDot: false,
+    };
+  }
+
+  /*
+   * Wickets:
+   * W
+   * 0W
+   * 1W
+   * BW
+   *
+   * Prefer ball.isWicket because symbols can vary.
+   */
+  if (ball.isWicket) {
+    const numericRunMatch = sym.match(/^(\d+)W$/);
+    const runsBeforeWicket = numericRunMatch?.[1];
+
+    return {
+      runDisplay:
+        runsBeforeWicket && runsBeforeWicket !== "0"
+          ? `${runsBeforeWicket}W`
+          : "W",
       extraLabel: "",
       extraKind: null,
       isFour: false,
@@ -45,42 +126,9 @@ function parseBall(ball: OverBall): ParsedBall {
     };
   }
 
-  // Extras — symbol like "2NO_BALL", "3WIDE", "3BYE", "2LEG_BYE", "1WIDE"
-  const extraMap: Record<string, ExtraType> = {
-    LEG_BYE: "LEG_BYE",
-    NO_BALL: "NO_BALL",
-    WIDE: "WIDE",
-    BYE: "BYE",
-  };
+  const runs = ball.runs ?? Number.parseInt(sym, 10);
 
-  const extraLabelMap: Record<string, string> = {
-    LEG_BYE: "LB",
-    NO_BALL: "NB",
-    WIDE: "WD",
-    BYE: "BYE",
-  };
-
-  for (const [key, kind] of Object.entries(extraMap)) {
-    if (sym.endsWith(key)) {
-      //   const runPart = sym.replace(key, "").replace(/_/g, "");
-      //   const runs = runPart === "" ? "0" : runPart;
-
-      const runs = sym.slice(0, -key.length) || "0";
-      return {
-        runDisplay: runs,
-        extraLabel: extraLabelMap[key],
-        extraKind: kind,
-        isFour: false,
-        isSix: false,
-        isWicket: false,
-        isDot: false,
-      };
-    }
-  }
-
-  // Pure run values
-  const num = parseInt(sym, 10);
-  if (sym === "0" || num === 0) {
+  if (runs === 0 || sym === "0") {
     return {
       runDisplay: "•",
       extraLabel: "",
@@ -91,7 +139,8 @@ function parseBall(ball: OverBall): ParsedBall {
       isDot: true,
     };
   }
-  if (num === 4) {
+
+  if (runs === 4) {
     return {
       runDisplay: "4",
       extraLabel: "",
@@ -102,7 +151,8 @@ function parseBall(ball: OverBall): ParsedBall {
       isDot: false,
     };
   }
-  if (num === 6) {
+
+  if (runs === 6) {
     return {
       runDisplay: "6",
       extraLabel: "",
@@ -114,9 +164,8 @@ function parseBall(ball: OverBall): ParsedBall {
     };
   }
 
-  // 1, 2, 3, 5, 7 — plain runs
   return {
-    runDisplay: String(num),
+    runDisplay: Number.isNaN(runs) ? sym : String(runs),
     extraLabel: "",
     extraKind: null,
     isFour: false,
@@ -125,8 +174,6 @@ function parseBall(ball: OverBall): ParsedBall {
     isDot: false,
   };
 }
-
-// ─── Colour config ────────────────────────────────────────────────────────────
 
 function getBallStyle(p: ParsedBall): {
   circleCls: string;

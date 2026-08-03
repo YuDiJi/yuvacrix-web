@@ -4,6 +4,7 @@ import { Copy, ChevronUp, User, Volleyball } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
 import { selectMatchId } from "@/store/startMatch/selectors";
 import {
+  useChangeStrikeManuallyMutation,
   useGetScoringStateQuery,
   useRecordBallMutation,
 } from "@/store/api/scoringApi";
@@ -28,6 +29,9 @@ import { ScoringState } from "@/types/innings";
 import NextBatterSheet from "./NextBatter";
 
 import { useRouter } from "next/navigation";
+import { SyncStatus, SyncStatusToast } from "./SyncStatusToast";
+import { DialogBottom } from "@/components/common/DialogBottom";
+import { S3Image } from "@/components/common/S3Image";
 
 export type DialogType =
   | "WIDE"
@@ -47,20 +51,61 @@ type ScoringFlow =
   | "START_NEXT_INNINGS"
   | "MATCH_COMPLETED";
 
+function InlineSkeleton({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-block animate-pulse rounded-md bg-white/20",
+        className,
+      )}
+      aria-hidden="true"
+    />
+  );
+}
+
+function CardSkeleton({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-block animate-pulse rounded-md bg-slate-200",
+        className,
+      )}
+      aria-hidden="true"
+    />
+  );
+}
+
 export default function ScoringPage() {
   const router = useRouter();
   const matchId = useAppSelector(selectMatchId);
   const { data: matchData } = useGetMatchByIdQuery(
     matchId ? { matchId } : skipToken,
   );
-  const { data: state } = useGetScoringStateQuery(matchId ?? skipToken);
+  const {
+    data: state,
+    isLoading: loadingState,
+    isFetching: isFetchingState,
+  } = useGetScoringStateQuery(matchId ?? skipToken, {
+    refetchOnMountOrArgChange: true,
+  });
 
   const [recordBall, { isLoading: isRecording }] = useRecordBallMutation();
+  const [changeStrikeManually, { isLoading: isChangingStrike }] =
+    useChangeStrikeManuallyMutation();
+
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const [syncMessage, setSyncMessage] = useState("Synced");
+
+  const [showStrikeConfirm, setShowStrikeConfirm] = useState(false);
 
   const [openDialog, setOpenDialog] = useState<null | DialogType>(null);
   const [flow, setFlow] = useState<ScoringFlow>("IDLE");
   const [completedOverSnapshot, setCompletedOverSnapshot] =
     useState<ScoringState | null>(null);
+
+  const isInitialStateLoading = loadingState && !state;
+  const isInitialMatchLoading = !matchData;
+  const isInitialPageLoading = (loadingState && !state) || !matchData;
 
   const playersById = useMemo(() => {
     return new Map(
@@ -68,8 +113,61 @@ export default function ScoringPage() {
     );
   }, [matchData?.players]);
 
+  const scoringStateRefreshing =
+    isFetchingState && state?.inningsCompleted === true;
+
+  const handleNonStrikerClick = () => {
+    if (
+      !state?.currentStrikerId ||
+      !state?.currentNonStrikerId ||
+      isChangingStrike ||
+      isRecording ||
+      scoringLocked
+    ) {
+      return;
+    }
+
+    setShowStrikeConfirm(true);
+  };
+
+  const handleConfirmStrikeChange = async () => {
+    if (
+      !matchId ||
+      !state?.inningsId ||
+      !state.currentStrikerId ||
+      !state.currentNonStrikerId ||
+      isChangingStrike
+    ) {
+      return;
+    }
+
+    setSyncStatus("saving");
+
+    try {
+      await changeStrikeManually({
+        matchId,
+        inningsId: state.inningsId,
+        strikerId: state.currentNonStrikerId,
+        nonStrikerId: state.currentStrikerId,
+      }).unwrap();
+
+      setShowStrikeConfirm(false);
+      setSyncMessage("Strike changed");
+      setSyncStatus("synced");
+
+      window.setTimeout(() => {
+        setSyncStatus("idle");
+      }, 1200);
+    } catch (error) {
+      console.error("Failed to change strike:", error);
+      setSyncStatus("error");
+    }
+  };
+
   async function handleRuns(batRuns: number) {
-    if (!state || !matchId) return;
+    if (!state || !matchId || isRecording) return;
+
+    setSyncStatus("saving");
 
     try {
       const response = await recordBall({
@@ -81,6 +179,22 @@ export default function ScoringPage() {
         },
       }).unwrap();
 
+      setSyncStatus("refreshing");
+
+      // await refetchScoringState().unwrap();
+
+      setSyncMessage(
+        batRuns === 0
+          ? "Dot ball synced"
+          : `${batRuns} ${batRuns === 1 ? "run" : "runs"} synced`,
+      );
+
+      setSyncStatus("synced");
+
+      window.setTimeout(() => {
+        setSyncStatus("idle");
+      }, 1200);
+
       if (response.nextAction?.type === "SELECT_NEXT_BOWLER") {
         setCompletedOverSnapshot(state);
       }
@@ -88,11 +202,14 @@ export default function ScoringPage() {
       setOpenDialog(null);
     } catch (error) {
       console.error(error);
+      setSyncStatus("error");
     }
   }
 
   const handleExtra = async (type: ExtraType, additionalRuns: number) => {
-    if (!matchId || !state) return;
+    if (!matchId || !state || isRecording) return;
+
+    setSyncStatus("saving");
 
     try {
       const response = await recordBall({
@@ -110,6 +227,24 @@ export default function ScoringPage() {
         },
       }).unwrap();
 
+      setSyncStatus("refreshing");
+
+      // await refetchScoringState().unwrap();
+
+      const messageByType: Partial<Record<ExtraType, string>> = {
+        WIDE: "Wide synced",
+        NO_BALL: "No ball synced",
+        BYE: "Bye synced",
+        LEG_BYE: "Leg bye synced",
+      };
+
+      setSyncMessage(messageByType[type] ?? "Delivery synced");
+      setSyncStatus("synced");
+
+      window.setTimeout(() => {
+        setSyncStatus("idle");
+      }, 1200);
+
       if (response.nextAction?.type === "SELECT_NEXT_BOWLER") {
         setCompletedOverSnapshot(state);
       }
@@ -117,11 +252,22 @@ export default function ScoringPage() {
       setOpenDialog(null);
     } catch (error) {
       console.error(error);
+      setSyncStatus("error");
     }
   };
 
   useEffect(() => {
-    if (!state || flow !== "IDLE") return;
+    if (!state || isFetchingState) return;
+
+    if (flow === "START_NEXT_INNINGS" && !state.inningsCompleted) {
+      setFlow("IDLE");
+      return;
+    }
+
+    if (flow === "MATCH_COMPLETED" && !state.inningsCompleted) {
+      setFlow("IDLE");
+      return;
+    }
 
     if (flow !== "IDLE") return;
 
@@ -193,21 +339,41 @@ export default function ScoringPage() {
       <div className="bg-(--color-navy) text-white pb-10 rounded-b-sm shrink-0">
         <div className="flex flex-col items-center pt-6 px-4">
           <h3 className="text-2xl font-bold leading-none text-(--color-six)/80 uppercase font-display text-center">
-            {battingTeam?.teamNameSnapshot}
+            {/* {battingTeam?.teamNameSnapshot} */}
+            {isInitialPageLoading ? (
+              <InlineSkeleton className="h-6 w-40" />
+            ) : (
+              (battingTeam?.teamNameSnapshot ?? "Batting Team")
+            )}
           </h3>
           <div className="flex items-baseline font-display">
-            <span className="text-[3.5rem] font-black leading-none tracking-tight">
-              {displayState?.score ?? "0/0"}
-            </span>
-            <span className="text-[#4DFFDE] text-2xl font-bold ml-2">
-              ({displayState?.oversText ?? "0.0"})
-            </span>
+            {isInitialStateLoading ? (
+              <>
+                <InlineSkeleton className="h-12 w-28" />
+                <InlineSkeleton className="ml-2 h-7 w-14" />
+              </>
+            ) : (
+              <>
+                <span className="text-[3.5rem] font-black leading-none tracking-tight">
+                  {displayState?.score ?? "—"}
+                </span>
+
+                <span className="ml-2 text-2xl font-bold text-[#4DFFDE]">
+                  ({displayState?.oversText ?? "—"})
+                </span>
+              </>
+            )}
           </div>
 
           <p className="mt-2 text-[10px] font-bold text-white/60 uppercase tracking-widest font-display text-center">
             {/* {tossWinner?.teamNameSnapshot} won the toss and elected to{" "}
             {matchData?.match?.toss?.decision} */}
-            {displayState?.runRateSummary}
+            {/* {displayState?.runRateSummary} */}
+            {isInitialStateLoading ? (
+              <InlineSkeleton className="h-2.5 w-44" />
+            ) : (
+              (displayState?.runRateSummary ?? "—")
+            )}
           </p>
 
           {/* <div className="mt-2 flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-md">
@@ -227,50 +393,93 @@ export default function ScoringPage() {
           {/* Top Row: Batsmen */}
           <div className="flex border-b border-(--color-bg-border)">
             {/* Striker (Left) */}
-            <div className="flex-1 p-2.5 flex items-start gap-3 border-l-[3px] border-l-(--color-live) relative">
-              <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#4DFFDE] rounded-full shadow-[0_0_6px_#4DFFDE]" />
 
-              <div className="w-8 h-8 rounded-full bg-[#4DFFDE]/15 flex items-center justify-center shrink-0">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#4DFFDE"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="rotate-45"
-                >
-                  <path d="M6 14l-4 4" />
-                  <path d="M14 6l-8 8" />
-                  <rect width="12" height="18" x="8" y="2" rx="2" />
-                </svg>
-              </div>
-              <div className="min-w-0 pt-0.5">
-                <h3 className="font-display font-black text-xs uppercase text-(--color-navy) truncate tracking-wide">
-                  {striker?.playerNameSnapshot}
-                </h3>
-                <button className="mt-0.5 text-[9px] font-bold text-[#4DFFDE] uppercase tracking-widest hover:opacity-80">
-                  REPLACE
-                </button>
+            <div className="relative flex-1 border-l-[3px] border-l-(--color-live) p-2.5">
+              <div className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#4DFFDE] shadow-[0_0_6px_#4DFFDE]" />
+
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#4DFFDE]/15">
+                  {striker?.playerProfileImageSnapshot ? (
+                    <S3Image
+                      imageKey={striker.playerProfileImageSnapshot}
+                      width={14}
+                      height={14}
+                      alt="Player image"
+                      fallback={<User size={16} strokeWidth={2.5} />}
+                      className="w-full h-full object cover rounded-full"
+                    />
+                  ) : (
+                    <User size={16} strokeWidth={2.5} />
+                  )}
+                </div>
+
+                <div className="min-w-0 pt-0.5">
+                  <h3 className="truncate font-display text-xs font-black uppercase tracking-wide text-(--color-navy)">
+                    {isInitialPageLoading || isChangingStrike ? (
+                      <CardSkeleton className="h-3 w-24" />
+                    ) : (
+                      (striker?.playerNameSnapshot ?? "—")
+                    )}
+                  </h3>
+
+                  <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-widest text-[#4DFFDE]">
+                    On strike
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Non-Striker (Right) */}
-            <div className="flex-1 p-2.5 flex items-start gap-3 border-l border-(--color-bg-border) bg-(--color-bg-card) opacity-70">
-              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-400">
-                <User size={16} strokeWidth={2.5} />
+
+            <button
+              type="button"
+              onClick={handleNonStrikerClick}
+              disabled={
+                isChangingStrike ||
+                scoringStateRefreshing ||
+                isRecording ||
+                scoringLocked ||
+                !state?.currentStrikerId ||
+                !state?.currentNonStrikerId
+              }
+              className={cn(
+                "flex-1 border-l border-(--color-bg-border) p-2.5",
+                "bg-slate-50 text-left transition-colors",
+                "hover:bg-slate-100 active:bg-slate-200",
+                "disabled:pointer-events-none disabled:opacity-50 opacity-60",
+              )}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                  {nonStriker?.playerProfileImageSnapshot ? (
+                    <S3Image
+                      imageKey={nonStriker.playerProfileImageSnapshot}
+                      width={14}
+                      height={14}
+                      alt="Player image"
+                      fallback={<User size={16} strokeWidth={2.5} />}
+                      className="w-full h-full object cover rounded-full"
+                    />
+                  ) : (
+                    <User size={16} strokeWidth={2.5} />
+                  )}
+                </div>
+
+                <div className="min-w-0 pt-0.5">
+                  <h3 className="truncate font-display text-xs font-black uppercase tracking-wide text-(--color-navy)">
+                    {isInitialPageLoading || isChangingStrike ? (
+                      <CardSkeleton className="h-3 w-24" />
+                    ) : (
+                      (nonStriker?.playerNameSnapshot ?? "—")
+                    )}
+                  </h3>
+
+                  <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-widest text-(--color-brand)">
+                    Tap to make striker
+                  </span>
+                </div>
               </div>
-              <div className="min-w-0 pt-0.5">
-                <h3 className="font-display font-black text-xs uppercase text-slate-400 truncate tracking-wide">
-                  {nonStriker?.playerNameSnapshot}
-                </h3>
-                <button className="mt-0.5 text-[9px] font-bold text-[#4DFFDE] uppercase tracking-widest hover:opacity-80">
-                  REPLACE
-                </button>
-              </div>
-            </div>
+            </button>
           </div>
 
           {/* Bottom Row: Bowler */}
@@ -284,13 +493,23 @@ export default function ScoringPage() {
                     <Volleyball />
                   </div>
                   <h3 className="font-display font-black text-xs uppercase text-(--color-navy) tracking-wide truncate">
-                    {bowler?.playerNameSnapshot}
+                    {/* {bowler?.playerNameSnapshot} */}
+                    {isInitialPageLoading ? (
+                      <CardSkeleton className="h-3 w-24" />
+                    ) : (
+                      (bowler?.playerNameSnapshot ?? "—")
+                    )}
                   </h3>
                 </div>
                 {/* Add 'shrink-0' so this data block never collapses or gets pushed out */}
                 <div className="text-right shrink-0">
                   <div className="font-display text-lg font-black text-(--color-navy) leading-none mb-1">
-                    {displayState?.currentBowlerFigures?.display || "0-0-0-0"}
+                    {/* {displayState?.currentBowlerFigures?.display || "0-0-0-0"} */}
+                    {isInitialStateLoading ? (
+                      <CardSkeleton className="h-4 w-20" />
+                    ) : (
+                      displayState?.currentBowlerFigures?.display || "0-0-0-0"
+                    )}
                   </div>
                   {/* <div className="text-[8px] font-bold text-(--color-text-muted) uppercase tracking-widest font-display">
                     O-M-R-W
@@ -300,9 +519,20 @@ export default function ScoringPage() {
 
               {/* Recent Balls */}
               <div className="flex gap-1 overflow-x-auto w-full pb-1  scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {displayState?.currentOver?.balls?.map((ball) => (
+                {/* {displayState?.currentOver?.balls?.map((ball) => (
                   <BallChip key={ball.sequenceNumber} ball={ball} />
-                ))}
+                ))} */}
+
+                {isInitialStateLoading
+                  ? Array.from({ length: 6 }).map((_, index) => (
+                      <span
+                        key={index}
+                        className="h-7 w-7 shrink-0 animate-pulse rounded-full bg-slate-200"
+                      />
+                    ))
+                  : displayState?.currentOver?.balls?.map((ball) => (
+                      <BallChip key={ball.sequenceNumber} ball={ball} />
+                    ))}
               </div>
             </div>
           </div>
@@ -318,7 +548,13 @@ export default function ScoringPage() {
         {/* Row 1 */}
         <div className="flex flex-1 border-b border-(--color-bg-border)">
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
+            }
             onClick={() => handleRuns(0)}
             className={cn(
               "flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors",
@@ -329,7 +565,13 @@ export default function ScoringPage() {
             0
           </button>
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
+            }
             onClick={() => handleRuns(1)}
             className={cn(
               "flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors",
@@ -340,7 +582,13 @@ export default function ScoringPage() {
             1
           </button>
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
+            }
             onClick={() => handleRuns(2)}
             className={cn(
               "flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors",
@@ -367,14 +615,26 @@ export default function ScoringPage() {
           )}
         >
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
+            }
             onClick={() => handleRuns(3)}
             className="flex-1 border-r border-(--color-bg-border) font-display text-3xl font-black text-(--color-navy) active:bg-slate-50 transition-colors"
           >
             3
           </button>
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
+            }
             onClick={() => handleRuns(4)}
             className="flex-1 flex flex-col items-center justify-center border-r border-(--color-bg-border) active:bg-(--color-four)/5 transition-colors"
           >
@@ -386,7 +646,13 @@ export default function ScoringPage() {
             </span>
           </button>
           <button
-            disabled={isRecording || scoringLocked}
+            disabled={
+              loadingState ||
+              scoringStateRefreshing ||
+              isRecording ||
+              isChangingStrike ||
+              scoringLocked
+            }
             onClick={() => handleRuns(6)}
             className="flex-1 flex flex-col items-center justify-center border-r border-(--color-bg-border) active:bg-(--color-six)/5 transition-colors"
           >
@@ -543,8 +809,8 @@ export default function ScoringPage() {
             resetFlow();
           }}
           onContinue={() => {
-            router.push(`/start-match/start-innings`);
             setFlow("IDLE");
+            router.push(`/start-match/start-innings`);
           }}
           onContinueThisOver={() => {
             setFlow("AWAITING_NEXT_OVER");
@@ -592,6 +858,7 @@ export default function ScoringPage() {
         />
       </div>
 
+      <SyncStatusToast status={syncStatus} successMessage={syncMessage} />
       {/* 4. BOTTOM ACTION SHEET TRIGGER */}
       <button className="h-6 shrink-0 bg-(--color-navy) flex items-center justify-center gap-2 w-full active:bg-[#0a1532] transition-colors safe-bottom pt-0">
         <span className="font-display text-xs font-bold text-white uppercase tracking-widest">
@@ -599,6 +866,83 @@ export default function ScoringPage() {
         </span>
         <ChevronUp size={16} className="text-white/80" />
       </button>
+
+      <DialogBottom
+        open={showStrikeConfirm}
+        onClose={() => {
+          if (!isChangingStrike) {
+            setShowStrikeConfirm(false);
+          }
+        }}
+      >
+        <div className="flex flex-col">
+          <div className="text-center">
+            <h2 className="font-display text-2xl font-black uppercase tracking-wide text-(--color-navy)">
+              Change Strike?
+            </h2>
+
+            <p className="mt-2 text-sm leading-5 text-(--color-text-secondary)">
+              <span className="font-bold text-(--color-navy)">
+                {nonStriker?.playerNameSnapshot}
+              </span>{" "}
+              will become the striker and{" "}
+              <span className="font-bold text-(--color-navy)">
+                {striker?.playerNameSnapshot}
+              </span>{" "}
+              will move to the non-striker end.
+            </p>
+          </div>
+
+          <div className="mt-6 rounded-xl border border-(--color-bg-border) bg-(--color-bg-tint) p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-(--color-text-muted)">
+                  Current striker
+                </p>
+
+                <p className="truncate font-display text-base font-black uppercase text-(--color-navy)">
+                  {striker?.playerNameSnapshot}
+                </p>
+              </div>
+
+              <span className="shrink-0 text-xl text-(--color-text-muted)">
+                →
+              </span>
+
+              <div className="min-w-0 text-right">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-(--color-text-muted)">
+                  New striker
+                </p>
+
+                <p className="truncate font-display text-base font-black uppercase text-(--color-brand)">
+                  {nonStriker?.playerNameSnapshot}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              disabled={isChangingStrike}
+              onClick={() => setShowStrikeConfirm(false)}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              className="flex-1"
+              disabled={isChangingStrike}
+              onClick={handleConfirmStrikeChange}
+            >
+              {isChangingStrike ? "Changing..." : "Change Strike"}
+            </Button>
+          </div>
+        </div>
+      </DialogBottom>
     </div>
   );
 }

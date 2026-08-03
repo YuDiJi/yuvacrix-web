@@ -33,14 +33,14 @@ export const scoringApi = baseApi.injectEndpoints({
       providesTags: ["ScoringState"],
     }),
 
-    completeInnings: builder.mutation<any, CompleteInningsRequest>({
-      query: ({ matchId, inningsId, ...body }) => ({
-        url: `/match/${matchId}/scoring/innings/${inningsId}/complete`,
-        method: "POST",
-        body,
-      }),
-      invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
-    }),
+    // completeInnings: builder.mutation<any, CompleteInningsRequest>({
+    //   query: ({ matchId, inningsId, ...body }) => ({
+    //     url: `/match/${matchId}/scoring/innings/${inningsId}/complete`,
+    //     method: "POST",
+    //     body,
+    //   }),
+    //   invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
+    // }),
 
     // getInningsState: builder.query<
     //   ScoringState,
@@ -101,7 +101,7 @@ export const scoringApi = baseApi.injectEndpoints({
           inningsId,
           strikerId,
           nonStrikerId,
-          reason,
+          // reason,
         },
       }),
       invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
@@ -142,6 +142,6 @@ export const {
   useStartNextOverMutation,
   useContinueCurrentOverMutation,
   useChangeStrikeManuallyMutation,
-  useCompleteInningsMutation,
+  // useCompleteInningsMutation,
   // useGetInningsStateQuery,
 } = scoringApi;

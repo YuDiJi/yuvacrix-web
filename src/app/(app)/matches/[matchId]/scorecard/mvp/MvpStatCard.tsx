@@ -1,5 +1,7 @@
 "use client";
 
+import { S3Image } from "@/components/common/S3Image";
+
 type StatItem = {
   label: string;
   value: string;
@@ -7,7 +9,11 @@ type StatItem = {
 
 type Props = {
   title: string;
-  player?: { playerNameSnapshot: string; teamNameSnapshot: string; profileImageSnapshot?: string | null } | null;
+  player?: {
+    playerNameSnapshot: string;
+    teamNameSnapshot: string;
+    profileImageSnapshot?: string | null;
+  } | null;
   stats: StatItem[];
   accent?: "brand" | "sky";
 };
@@ -22,8 +28,14 @@ function getInitials(name?: string): string {
     .slice(0, 2);
 }
 
-export default function MvpStatCard({ title, player, stats, accent = "brand" }: Props) {
-  const accentColor = accent === "sky" ? "bg-(--color-sky)" : "bg-(--color-brand)";
+export default function MvpStatCard({
+  title,
+  player,
+  stats,
+  accent = "brand",
+}: Props) {
+  const accentColor =
+    accent === "sky" ? "bg-(--color-sky)" : "bg-(--color-brand)";
 
   if (!player) {
     return (
@@ -46,13 +58,19 @@ export default function MvpStatCard({ title, player, stats, accent = "brand" }: 
       <div className="p-3">
         {/* Player */}
         <div className="flex items-center gap-2">
-          <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-(--color-bg-border) bg-white">
+          <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-(--color-bg-border) bg-white">
             {player.profileImageSnapshot ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={player.profileImageSnapshot}
+              <S3Image
+                imageKey={player.profileImageSnapshot}
                 alt={player.playerNameSnapshot}
+                width={36}
+                height={36}
                 className="h-full w-full object-cover"
+                fallback={
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                    {player.playerNameSnapshot.charAt(0)}
+                  </div>
+                }
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">

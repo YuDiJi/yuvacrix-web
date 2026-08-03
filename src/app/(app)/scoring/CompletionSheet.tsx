@@ -54,8 +54,8 @@ export function CompletionSheet({
 
   const handleNext = async () => {
     if (!matchId || !state) return;
-    onContinue();
     onClose();
+    onContinue();
   };
 
   const playersById = useMemo(() => {
@@ -79,12 +79,12 @@ export function CompletionSheet({
                 ? "Match result"
                 : ""}
         </h2>
-        <button
+        {/* <button
           onClick={onClose}
           className="text-slate-600 hover:text-slate-900 transition-colors"
         >
           <Settings size={22} strokeWidth={1.5} />
-        </button>
+        </button> */}
       </div>
 
       {/* Stats Box */}
@@ -187,8 +187,11 @@ export function CompletionSheet({
               (Included a fallback to demonstrate the exact UI from your image if state is empty)
             */}
             {state?.matchResult &&
-              state.matchResult.scoreRows.map((score) => (
-                <div className="flex items-center px-4 py-3 border-b border-(--color-bg-border) last:border-0">
+              state.matchResult.scoreRows.map((score, index) => (
+                <div
+                  key={index}
+                  className="flex items-center px-4 py-3 border-b border-(--color-bg-border) last:border-0"
+                >
                   <span className="text-body font-medium text-(--color-text-body) flex-1 truncate pr-2">
                     {score.teamName}
                   </span>

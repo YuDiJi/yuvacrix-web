@@ -5,12 +5,26 @@ import Image from "next/image";
 import { Camera } from "lucide-react";
 import { cn } from "@/lib/cn";
 
+// type ImageUploaderProps = {
+//   onFileSelect?: (file: File | null) => void;
+//   initialImage?: string;
+//   uploadText?: string;
+//   changeText?: string;
+//   maxSizeMB?: number;
+// };
+
 type ImageUploaderProps = {
   onFileSelect?: (file: File | null) => void;
   initialImage?: string;
   uploadText?: string;
   changeText?: string;
   maxSizeMB?: number;
+
+  variant?: "avatar" | "logo" | "banner";
+  className?: string;
+  buttonClassName?: string;
+  previewClassName?: string;
+  showHelpText?: boolean;
 };
 
 export function ImageUploader({
@@ -19,6 +33,12 @@ export function ImageUploader({
   uploadText = "Upload Photo",
   changeText = "Change Photo",
   maxSizeMB = 5,
+
+  variant = "avatar",
+  className,
+  buttonClassName,
+  previewClassName,
+  showHelpText = true,
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -44,6 +64,12 @@ export function ImageUploader({
     reader.readAsDataURL(file);
   }
 
+  const variantClass: any = {
+    avatar: "h-36 w-36 rounded-full",
+    logo: "h-20 w-20 rounded-full",
+    banner: "h-44 w-full rounded-none",
+  }[variant];
+
   return (
     <>
       <div className="relative">
@@ -51,20 +77,21 @@ export function ImageUploader({
           type="button"
           onClick={() => inputRef.current?.click()}
           className={cn(
-            "relative flex h-36 w-36 items-center justify-center overflow-hidden rounded-full",
+            "relative flex items-center justify-center overflow-hidden",
             "border-[3px] border-dashed transition-all duration-200 active:scale-95",
+            variantClass,
             preview
               ? "border-(--color-brand)"
               : "border-(--color-text-muted)/40 hover:border-(--color-brand)/60",
+            buttonClassName,
           )}
         >
           {preview ? (
             <Image
               src={preview}
               alt="Preview"
-              width={144}
-              height={144}
-              className="h-full w-full object-cover"
+              fill
+              className={cn("object-cover", previewClassName)}
             />
           ) : (
             <div

@@ -15,5 +15,20 @@ export const selectTeamBKeeper = (state: RootState) =>
   state.startMatch.teamBKeeper;
 
 export const selectMatchId = (state: RootState) => state.startMatch.matchId;
+
+export const selectTournamentId = (state: RootState) =>
+  state.startMatch.tournamentId;
+
+export const selectRoundId = (state: RootState) => state.startMatch.roundId;
+
 export const selectLineUpMode = (state: RootState) =>
   state.startMatch.lineUpMode;
+
+export const selectCreationMode = (state: RootState) =>
+  state.startMatch.creationMode;
+
+export const selectTournamentGroupId = (state: RootState) =>
+  state.startMatch.groupId;
+
+export const selectCreatedMatchId = (state: RootState) =>
+  state.startMatch.matchId ?? null;

@@ -3,10 +3,10 @@
 // Mode controls which actions render. Parent owns all state.
 
 import { useState } from "react";
-import Image from "next/image";
 import { Trash2, GripVertical } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { PlayerCardProps } from "./Types";
+import { S3Image } from "../common/S3Image";
 
 // ─── Inline delete confirmation (same as original) ───────────────────────────
 
@@ -74,9 +74,11 @@ function WKIcon({ active }: { active: boolean }) {
 export function PlayerCard({
   player,
   mode,
+  adminId,
   isCaptain,
   isKeeper,
   isSelected,
+  onAdminChange,
   onCaptainToggle,
   onKeeperToggle,
   onSelectionToggle,
@@ -88,7 +90,8 @@ export function PlayerCard({
 
   const isHighlighted = isCaptain || isKeeper;
   const isLineupMode = mode === "flexible-lineup" || mode === "fixed-lineup";
-  const isTeamMgmt = mode === "team-management";
+  const isTeamMgmt =
+    mode === "team-management" || mode === "team-management-tournament";
 
   // A deselected player in lineup mode gets a muted appearance
   const isMuted = isLineupMode && !isSelected;
@@ -137,12 +140,24 @@ export function PlayerCard({
           )}
         >
           {player.profileImageUrl ? (
-            <Image
-              src={player.profileImageUrl}
+            // <Image
+            //   src={player.profileImageUrl}
+            //   alt={player.fullName}
+            //   width={48}
+            //   height={48}
+            //   className="h-full w-full object-cover"
+            // />
+            <S3Image
+              imageKey={player.profileImageUrl}
               alt={player.fullName}
               width={48}
               height={48}
               className="h-full w-full object-cover"
+              fallback={
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                  {player.fullName.charAt(0)}
+                </div>
+              }
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">
@@ -162,17 +177,52 @@ export function PlayerCard({
             {player.fullName}
           </p>
           {/* Role from captain/keeper assignment */}
-          {(isCaptain || isKeeper) && isSelected && (
-            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-(--color-brand)">
-              {isCaptain && isKeeper
-                ? "Captain · Wicket-Keeper"
-                : isCaptain
-                  ? "Captain"
-                  : "Wicket-Keeper"}
-            </p>
-          )}
+          {(isCaptain || isKeeper || adminId === player.playerId) &&
+            isSelected && (
+              <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-(--color-brand)">
+                {adminId === player.playerId && "Admin · "}
+                {isCaptain && isKeeper
+                  ? "Captain · Wicket-Keeper"
+                  : isCaptain
+                    ? "Captain"
+                    : isKeeper
+                      ? "Wicket-Keeper"
+                      : ""}
+              </p>
+            )}
         </div>
 
+        {/* ── Admin (A) ──────────────────────────────────────────────── */}
+        {mode === "team-management-tournament" && onAdminChange && (
+          <button
+            onClick={() =>
+              onAdminChange(
+                adminId === player.playerId ? null : player.playerId,
+              )
+            }
+            disabled={isMuted}
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 active:scale-90",
+              adminId === player.playerId && isSelected
+                ? "border-(--color-brand) bg-(--color-brand) shadow-[0_2px_8px_rgba(27,63,160,0.30)]"
+                : "border-(--color-bg-border) bg-(--color-bg-base) hover:border-(--color-sky)/50",
+              isMuted && "cursor-not-allowed",
+            )}
+            aria-label={`${adminId === player.playerId ? "Remove" : "Set"} captain`}
+          >
+            <span
+              className={cn(
+                "font-(family-name:--font-display) text-sm font-black",
+                adminId === player.playerId && isSelected
+                  ? "text-white"
+                  : "text-(--color-text-secondary)",
+              )}
+              style={{ letterSpacing: "0.04em" }}
+            >
+              A
+            </span>
+          </button>
+        )}
         {/* ── Captain (C) ──────────────────────────────────────────────── */}
         <button
           onClick={onCaptainToggle}

@@ -7,10 +7,10 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const NAV_LINKS = [
-  { label: "Features", href: "#features" },
+  { label: "Live Scoring", href: "#live-scoring" },
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Gallery", href: "#gallery" },
-  { label: "About", href: "#about" },
+  { label: "Tournaments", href: "#tournaments" },
+  { label: "Players", href: "#players" },
 ];
 
 export default function MarketingLayout({
@@ -63,7 +63,7 @@ export default function MarketingLayout({
                 onError={() => {}} // fallback handled below
               /> */}
               <Image
-                src="/public/logo/logo_dark.png"
+                src="/logo/logo_dark.png"
                 alt="YuvaCrix"
                 width={140}
                 height={36}
@@ -209,7 +209,7 @@ export default function MarketingLayout({
       </aside>
 
       {/* ─── MAIN ────────────────────────────────────────────────── */}
-      <main className="flex-1 pt-16">{children}</main>
+      <main className="flex-1">{children}</main>
 
       {/* ─── FOOTER ──────────────────────────────────────────────── */}
       <footer className="bg-[#070d1a] text-white/50 border-t border-white/8">

@@ -14,7 +14,6 @@ import {
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { Team } from "@/types/team";
-import Image from "next/image";
 import {
   selectTeamACaptain,
   selectTeamAKeeper,
@@ -28,9 +27,10 @@ import {
   useSubmitTeamLineupMutation,
 } from "@/store/api/matchApi";
 import type { MatchType, BallType, PitchType } from "@/types/match";
-import { LineupModeSheet } from "./LineupModeSheet";
-import ScheduleModal from "./ScheduleModal";
+import { LineupModeSheet } from "@/components/match/LineupModeSheet";
 import { setMatchIdMode } from "@/store/startMatch/startMatchSlice";
+import { S3Image } from "@/components/common/S3Image";
+import ScheduleModal from "@/components/match/ScheduleModal";
 
 // ─── Zod schema ───────────────────────────────────────────────────────────────
 
@@ -110,7 +110,7 @@ function OfficialRow({
   name: string | undefined;
 }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-md bg-white/[0.06] px-2 py-1">
+    <div className="flex items-center gap-1.5 rounded-md bg-white/6 px-2 py-1">
       <span className="w-5 shrink-0 font-(family-name:--font-display) text-[9px] font-black uppercase tracking-widest text-(--color-sky)">
         {label}
       </span>
@@ -145,12 +145,19 @@ function TeamColumn({
       <div className="relative mb-0.5">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#4b5563] shadow-[0_4px_16px_rgba(0,0,0,0.30)]">
           {detail?.logoUrl ? (
-            <Image
-              src={detail.logoUrl}
+            <S3Image
+              imageKey={detail.logoUrl}
               alt={detail.name ?? ""}
-              height={40}
-              width={40}
-              className="rounded-full object-cover"
+              width={64}
+              height={64}
+              className="w-full h-full rounded-full object-cover"
+              fallback={
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
+                  <span className="font-bold text-white">
+                    {detail?.name?.slice(0, 1).toUpperCase() ?? "?"}
+                  </span>
+                </div>
+              }
             />
           ) : (
             <span
@@ -300,7 +307,8 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
     setLineupError("");
 
     // Just open the lineup mode sheet
-    setLineupSheetOpen(true);
+    // setLineupSheetOpen(true);
+    handleLineupContinue("FLEXIBLE");
   });
 
   // ── NEXT (TOSS) flow — Step 2: lineup mode chosen ────────────────────────

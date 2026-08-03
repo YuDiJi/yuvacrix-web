@@ -4,7 +4,6 @@
 import { Search, SlidersHorizontal, Plus, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGetOwnedTeamQuery } from "@/store/api/teamApi";
-import Image from "next/image";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -14,9 +13,9 @@ import {
   setTeamB,
 } from "@/store/startMatch/startMatchSlice";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
+import { TeamCard } from "@/components/team/TeamCard";
 
 export default function SelectTeamPage() {
-  // const { setHeader } = useHeader();
   const dispatch = useAppDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -59,6 +58,7 @@ export default function SelectTeamPage() {
         >
           <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-(--color-navy) shadow-[0_8px_32px_rgba(13,27,62,0.18)]">
             <svg
+              xmlns="http://www.w3.org/2000/svg"
               width="44"
               height="44"
               viewBox="0 0 24 24"
@@ -69,10 +69,22 @@ export default function SelectTeamPage() {
               strokeLinejoin="round"
               aria-hidden="true"
             >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              {/* <title xmlns="">add-team-02</title> */}
+              <g
+                width="44"
+                height="44"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="rgba(255,255,255,0.85)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 20v-2.03c0-1.242.56-2.46 1.69-2.975C6.068 14.366 7.722 14 9.5 14c1.245 0 2.429.18 3.5.503" />
+                <circle cx="9.5" cy="7.5" r="3.5" />
+                <path d="M14.5 4.145a3.502 3.502 0 0 1 0 6.71M18 14v6m-3-3h6" />
+              </g>
             </svg>
           </div>
           {/* Decorative ring */}
@@ -86,7 +98,7 @@ export default function SelectTeamPage() {
         >
           No Teams Yet
         </h3>
-        <p className="mt-2 text-sm text-(--color-text-secondary) leading-relaxed max-w-[220px]">
+        <p className="mt-2 text-sm text-(--color-text-secondary) leading-relaxed max-w-55">
           Create your first team and start scoring matches with your squad.
         </p>
       </div>
@@ -129,7 +141,7 @@ export default function SelectTeamPage() {
       <p className="text-section-label mb-3 px-1">All Teams</p>
 
       {/* Team List */}
-      <div className="flex flex-col gap-3">
+      {/* <div className="flex flex-col gap-3">
         {filteredTeams.map((team) => (
           <div
             key={team.id}
@@ -160,7 +172,6 @@ export default function SelectTeamPage() {
             )}
           >
             <div className="flex items-center gap-3.5">
-              {/* Team logo / avatar */}
               <div
                 className={cn(
                   "h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-(--color-bg-border)",
@@ -169,12 +180,19 @@ export default function SelectTeamPage() {
                 )}
               >
                 {team.logoUrl ? (
-                  <Image
-                    src={team.logoUrl || "/default-team-logo.png"}
+                  <S3Image
+                    imageKey={team.logoUrl}
                     alt={team.name}
                     width={56}
                     height={56}
-                    className="h-full w-full object-cover"
+                    className="object-cover w-full h-full"
+                    fallback={
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-(--color-brand)">
+                        <span className="font-bold text-white">
+                          {team.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    }
                   />
                 ) : (
                   <span
@@ -186,7 +204,6 @@ export default function SelectTeamPage() {
                 )}
               </div>
 
-              {/* Info */}
               <div>
                 <h4
                   className="font-(family-name:--font-display) text-base font-black uppercase text-(--color-text-primary)"
@@ -203,6 +220,29 @@ export default function SelectTeamPage() {
               className="shrink-0 text-(--color-text-muted)"
             />
           </div>
+        ))}
+      </div> */}
+      <div className="flex flex-col gap-3">
+        {filteredTeams.map((team) => (
+          <TeamCard
+            key={team.id}
+            team={team}
+            disabled={
+              (teamType === "A" && team.id === teamB?.id) ||
+              (teamType === "B" && team.id === teamA?.id)
+            }
+            onClick={(team) => {
+              if (teamType === "A") {
+                dispatch(setTeamA(team));
+                dispatch(setActiveTeam("A"));
+              } else {
+                dispatch(setTeamB(team));
+                dispatch(setActiveTeam("B"));
+              }
+
+              router.push("/start-match/select-players");
+            }}
+          />
         ))}
       </div>
 

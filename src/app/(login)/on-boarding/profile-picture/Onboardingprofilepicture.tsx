@@ -1,16 +1,13 @@
 // src/app/(marketing)/on-boarding/_components/OnboardingProfilePicture.tsx
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { useUpdateProfileMutation } from "@/store/api/authApi";
 import { useUpdatePlayerMutation } from "@/store/api/playerApi";
-import Image from "next/image";
+import { useUploadFileMutation } from "@/store/api/uploadApi";
 import { ImageUploader } from "@/components/common/ImageUploader";
-
-// ─── Step indicator (shared style) ────────────────────────────────────────────
 
 function StepDots({ current, total }: { current: number; total: number }) {
   return (
@@ -32,29 +29,36 @@ function StepDots({ current, total }: { current: number; total: number }) {
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 export function OnboardingProfilePicture() {
   const router = useRouter();
-  const [updatePlayer, { isLoading }] = useUpdatePlayerMutation();
 
-  const [preview, setPreview] = useState<string | null>(null);
+  const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
+  const [updatePlayer, { isLoading: isUpdating }] = useUpdatePlayerMutation();
+
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
 
+  const isLoading = isUploading || isUpdating;
+
   async function handleContinue(skip = false) {
     if (isLoading) return;
+
     setError("");
+
     try {
       if (!skip && file) {
-        // Send as FormData for file upload — adjust to your API as needed
-        // const formData = new FormData();
-        // formData.append("profileImageUrl", file);
-        // await useUpdatePlayerMutation(formData).unwrap();
+        const uploadResponse = await uploadFile({
+          purpose: "PLAYER_AVATAR",
+          file,
+        }).unwrap();
+
+        const profileImageKey = uploadResponse.file.key;
+
         await updatePlayer({
-          profileImageUrl: file.name,
+          profileImageUrl: profileImageKey,
         }).unwrap();
       }
+
       router.push("/home");
     } catch {
       setError("Failed to upload photo. You can skip for now.");
@@ -63,7 +67,6 @@ export function OnboardingProfilePicture() {
 
   return (
     <>
-      {/* ── Dark hero header ─────────────────────────────────────────────── */}
       <div
         className="relative shrink-0 overflow-hidden bg-(--color-navy) px-6 pb-8 pt-14"
         style={{ minHeight: "200px" }}
@@ -74,6 +77,7 @@ export function OnboardingProfilePicture() {
             background: "radial-gradient(circle, #4b8bff 0%, transparent 70%)",
           }}
         />
+
         <div
           className="pointer-events-none absolute -bottom-8 -left-8 h-40 w-40 rounded-full opacity-10"
           style={{
@@ -89,34 +93,31 @@ export function OnboardingProfilePicture() {
         >
           Profile Photo
         </h1>
+
         <p className="mt-1.5 text-sm font-medium text-white/60">
           Add a photo so your teammates recognise you
         </p>
       </div>
 
-      {/* ── White card body ───────────────────────────────────────────────── */}
       <div
         className="relative z-10 flex flex-1 flex-col rounded-t-[28px] bg-(--color-bg-base) px-5 pt-8 pb-4"
         style={{ marginTop: "-20px" }}
       >
-        {/* ── Avatar picker ─────────────────────────────────────────────── */}
         <div className="flex flex-1 flex-col items-center justify-center gap-6">
-          {/* Upload label */}
-
           <ImageUploader uploadText="Upload Photo" onFileSelect={setFile} />
 
-          {/* Info card — only shown when no photo yet */}
           {!file && (
             <div className="w-full rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) px-5 py-4 shadow-(--shadow-card)">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-tint)">
                   <Camera size={16} className="text-(--color-brand)" />
                 </div>
+
                 <div>
                   <p className="text-sm font-semibold text-(--color-text-primary)">
                     Why add a photo?
                   </p>
-                  <p className="mt-0.5 text-xs text-(--color-text-muted) leading-relaxed">
+                  <p className="mt-0.5 text-xs leading-relaxed text-(--color-text-muted)">
                     Your photo helps teammates and opponents identify you on the
                     scorecard and match feed.
                   </p>
@@ -125,15 +126,12 @@ export function OnboardingProfilePicture() {
             </div>
           )}
 
-          {/* Error */}
           {error && (
             <p className="text-sm font-medium text-(--color-live)">{error}</p>
           )}
         </div>
 
-        {/* ── CTAs ─────────────────────────────────────────────────────── */}
-        <div className="safe-bottom mt-4 shrink-0 flex flex-col gap-2.5 border-t border-(--color-bg-border) bg-(--color-bg-base) pt-3">
-          {/* Continue / Save */}
+        <div className="safe-bottom mt-4 flex shrink-0 flex-col gap-2.5 border-t border-(--color-bg-border) bg-(--color-bg-base) pt-3">
           <button
             onClick={() => handleContinue(false)}
             disabled={isLoading}
@@ -141,7 +139,7 @@ export function OnboardingProfilePicture() {
               "flex h-14 w-full items-center justify-center gap-2 rounded-2xl",
               "font-(family-name:--font-display) text-lg font-black uppercase tracking-[0.06em] text-white",
               "transition-all duration-200 active:scale-[0.97]",
-              preview && !isLoading
+              file && !isLoading
                 ? "bg-(--color-brand) shadow-(--shadow-button)"
                 : !isLoading
                   ? "bg-(--color-brand)/70 text-white/80"
@@ -152,13 +150,12 @@ export function OnboardingProfilePicture() {
               <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             ) : (
               <>
-                {preview ? "Save & Continue" : "Continue"}
+                {file ? "Save & Continue" : "Continue"}
                 <ChevronRight size={18} />
               </>
             )}
           </button>
 
-          {/* Skip */}
           <button
             onClick={() => handleContinue(true)}
             disabled={isLoading}

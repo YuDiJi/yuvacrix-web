@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Check } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { MatchDetailsPlayer } from "@/types/match";
@@ -6,6 +5,7 @@ import { WicketFlowState } from "@/types/scoring";
 import { cn } from "@/lib/cn";
 import { WICKET_CONFIG } from "./constant";
 import { Dispatch, SetStateAction, useState } from "react";
+import { S3Image } from "@/components/common/S3Image";
 
 type ConfirmProps = {
   form: WicketFlowState;
@@ -44,13 +44,18 @@ function PlayerChip({
           avatarSize,
         )}
       >
-        {player?.profileImageUrl ? (
-          <Image
-            src={player.profileImageUrl}
+        {player?.playerProfileImageSnapshot ? (
+          <S3Image
+            imageKey={player.playerProfileImageSnapshot}
             alt={player.playerNameSnapshot}
             width={size === "md" ? 36 : 28}
             height={size === "md" ? 36 : 28}
             className="h-full w-full object-cover"
+            fallback={
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                {player.playerNameSnapshot.charAt(0)}
+              </div>
+            }
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">
@@ -145,13 +150,18 @@ export default function Confirm({
         <div className="rounded-2xl border-2 border-(--color-brand) bg-(--color-bg-tint) p-3 shadow-[0_4px_16px_rgba(27,63,160,0.10)] flex items-center gap-3">
           {/* Avatar */}
           <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-(--color-bg-border) bg-white shadow-sm">
-            {dismissedPlayer?.profileImageUrl ? (
-              <Image
-                src={dismissedPlayer.profileImageUrl}
+            {dismissedPlayer?.playerProfileImageSnapshot ? (
+              <S3Image
+                imageKey={dismissedPlayer.playerProfileImageSnapshot}
                 alt={dismissedPlayer.playerNameSnapshot}
                 width={56}
                 height={56}
                 className="h-full w-full object-cover"
+                fallback={
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-(--color-navy)">
+                    {dismissedPlayer.playerNameSnapshot.charAt(0)}
+                  </div>
+                }
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">

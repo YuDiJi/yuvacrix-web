@@ -6,7 +6,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
+        hostname: "yuvacrix-prod-uploads.s3.eu-north-1.amazonaws.com",
       },
     ],
   },

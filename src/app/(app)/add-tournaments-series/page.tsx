@@ -1,7 +1,9 @@
-import React from "react";
+import { CreateTypeChoice } from "./_components/Createtypechoice";
 
-const page = () => {
-  return <div>My Cricket</div>;
-};
-
-export default page;
+export default function AddTournamentsSeriesPage() {
+  return (
+    <div className="flex min-h-full flex-col bg-(--color-bg-base)">
+      <CreateTypeChoice />
+    </div>
+  );
+}
