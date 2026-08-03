@@ -132,13 +132,13 @@ export function PlayerPickerSheet({
         </div>
       </div>
       {/* List */}
-      <div className="flex-1 overflow-y-auto pb-2  [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden">
+      <div className="flex-1 overflow-y-auto pb-2  scrollbar-none ">
         {filtered?.length === 0 ? (
           <p className="py-8 text-center text-sm italic text-(--color-text-muted)">
             No players found
           </p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 overflow-y-auto scrollbar-none">
             {filtered?.map((player) => {
               const isDisabled = disabledIds.includes(player.playerId);
               const isSelected = selectedPlayerId === player.playerId;
