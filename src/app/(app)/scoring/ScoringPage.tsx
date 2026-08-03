@@ -51,6 +51,30 @@ type ScoringFlow =
   | "START_NEXT_INNINGS"
   | "MATCH_COMPLETED";
 
+function InlineSkeleton({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-block animate-pulse rounded-md bg-white/20",
+        className,
+      )}
+      aria-hidden="true"
+    />
+  );
+}
+
+function CardSkeleton({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-block animate-pulse rounded-md bg-slate-200",
+        className,
+      )}
+      aria-hidden="true"
+    />
+  );
+}
+
 export default function ScoringPage() {
   const router = useRouter();
   const matchId = useAppSelector(selectMatchId);
@@ -78,6 +102,10 @@ export default function ScoringPage() {
   const [flow, setFlow] = useState<ScoringFlow>("IDLE");
   const [completedOverSnapshot, setCompletedOverSnapshot] =
     useState<ScoringState | null>(null);
+
+  const isInitialStateLoading = loadingState && !state;
+  const isInitialMatchLoading = !matchData;
+  const isInitialPageLoading = (loadingState && !state) || !matchData;
 
   const playersById = useMemo(() => {
     return new Map(
@@ -311,21 +339,41 @@ export default function ScoringPage() {
       <div className="bg-(--color-navy) text-white pb-10 rounded-b-sm shrink-0">
         <div className="flex flex-col items-center pt-6 px-4">
           <h3 className="text-2xl font-bold leading-none text-(--color-six)/80 uppercase font-display text-center">
-            {battingTeam?.teamNameSnapshot}
+            {/* {battingTeam?.teamNameSnapshot} */}
+            {isInitialPageLoading ? (
+              <InlineSkeleton className="h-6 w-40" />
+            ) : (
+              (battingTeam?.teamNameSnapshot ?? "Batting Team")
+            )}
           </h3>
           <div className="flex items-baseline font-display">
-            <span className="text-[3.5rem] font-black leading-none tracking-tight">
-              {displayState?.score ?? "0/0"}
-            </span>
-            <span className="text-[#4DFFDE] text-2xl font-bold ml-2">
-              ({displayState?.oversText ?? "0.0"})
-            </span>
+            {isInitialStateLoading ? (
+              <>
+                <InlineSkeleton className="h-12 w-28" />
+                <InlineSkeleton className="ml-2 h-7 w-14" />
+              </>
+            ) : (
+              <>
+                <span className="text-[3.5rem] font-black leading-none tracking-tight">
+                  {displayState?.score ?? "—"}
+                </span>
+
+                <span className="ml-2 text-2xl font-bold text-[#4DFFDE]">
+                  ({displayState?.oversText ?? "—"})
+                </span>
+              </>
+            )}
           </div>
 
           <p className="mt-2 text-[10px] font-bold text-white/60 uppercase tracking-widest font-display text-center">
             {/* {tossWinner?.teamNameSnapshot} won the toss and elected to{" "}
             {matchData?.match?.toss?.decision} */}
-            {displayState?.runRateSummary}
+            {/* {displayState?.runRateSummary} */}
+            {isInitialStateLoading ? (
+              <InlineSkeleton className="h-2.5 w-44" />
+            ) : (
+              (displayState?.runRateSummary ?? "—")
+            )}
           </p>
 
           {/* <div className="mt-2 flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-md">
@@ -367,7 +415,11 @@ export default function ScoringPage() {
 
                 <div className="min-w-0 pt-0.5">
                   <h3 className="truncate font-display text-xs font-black uppercase tracking-wide text-(--color-navy)">
-                    {striker?.playerNameSnapshot}
+                    {isInitialPageLoading || isChangingStrike ? (
+                      <CardSkeleton className="h-3 w-24" />
+                    ) : (
+                      (striker?.playerNameSnapshot ?? "—")
+                    )}
                   </h3>
 
                   <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-widest text-[#4DFFDE]">
@@ -415,7 +467,11 @@ export default function ScoringPage() {
 
                 <div className="min-w-0 pt-0.5">
                   <h3 className="truncate font-display text-xs font-black uppercase tracking-wide text-(--color-navy)">
-                    {nonStriker?.playerNameSnapshot}
+                    {isInitialPageLoading || isChangingStrike ? (
+                      <CardSkeleton className="h-3 w-24" />
+                    ) : (
+                      (nonStriker?.playerNameSnapshot ?? "—")
+                    )}
                   </h3>
 
                   <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-widest text-(--color-brand)">
@@ -437,13 +493,23 @@ export default function ScoringPage() {
                     <Volleyball />
                   </div>
                   <h3 className="font-display font-black text-xs uppercase text-(--color-navy) tracking-wide truncate">
-                    {bowler?.playerNameSnapshot}
+                    {/* {bowler?.playerNameSnapshot} */}
+                    {isInitialPageLoading ? (
+                      <CardSkeleton className="h-3 w-24" />
+                    ) : (
+                      (bowler?.playerNameSnapshot ?? "—")
+                    )}
                   </h3>
                 </div>
                 {/* Add 'shrink-0' so this data block never collapses or gets pushed out */}
                 <div className="text-right shrink-0">
                   <div className="font-display text-lg font-black text-(--color-navy) leading-none mb-1">
-                    {displayState?.currentBowlerFigures?.display || "0-0-0-0"}
+                    {/* {displayState?.currentBowlerFigures?.display || "0-0-0-0"} */}
+                    {isInitialStateLoading ? (
+                      <CardSkeleton className="h-4 w-20" />
+                    ) : (
+                      displayState?.currentBowlerFigures?.display || "0-0-0-0"
+                    )}
                   </div>
                   {/* <div className="text-[8px] font-bold text-(--color-text-muted) uppercase tracking-widest font-display">
                     O-M-R-W
@@ -453,9 +519,20 @@ export default function ScoringPage() {
 
               {/* Recent Balls */}
               <div className="flex gap-1 overflow-x-auto w-full pb-1  scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {displayState?.currentOver?.balls?.map((ball) => (
+                {/* {displayState?.currentOver?.balls?.map((ball) => (
                   <BallChip key={ball.sequenceNumber} ball={ball} />
-                ))}
+                ))} */}
+
+                {isInitialStateLoading
+                  ? Array.from({ length: 6 }).map((_, index) => (
+                      <span
+                        key={index}
+                        className="h-7 w-7 shrink-0 animate-pulse rounded-full bg-slate-200"
+                      />
+                    ))
+                  : displayState?.currentOver?.balls?.map((ball) => (
+                      <BallChip key={ball.sequenceNumber} ball={ball} />
+                    ))}
               </div>
             </div>
           </div>

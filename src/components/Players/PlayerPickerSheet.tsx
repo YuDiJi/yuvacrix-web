@@ -102,7 +102,7 @@ export function PlayerPickerSheet({
   }, [players, query]);
 
   return (
-    <div className="flex flex-col min-h-0 h-full">
+    <div className="flex flex-col min-h-0  max-h-[70vh]">
       {/* Title */}
       <div className="shrink-0 flex items-center justify-between border-b border-(--color-bg-border) pb-2">
         <div>
@@ -132,7 +132,7 @@ export function PlayerPickerSheet({
         </div>
       </div>
       {/* List */}
-      <div className="flex-1 overflow-y-auto pb-2  scrollbar-none ">
+      <div className="flex-1 overflow-y-auto pb-2 scrollbar-none">
         {filtered?.length === 0 ? (
           <p className="py-8 text-center text-sm italic text-(--color-text-muted)">
             No players found

@@ -115,7 +115,7 @@ export default function AddTeamPage() {
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
         {/* Icon */}
         <div
-          onClick={() => router.push("/start-match/create-team?team=")}
+          onClick={() => router.push(`tournaments/${tournamentId}/create-team`)}
           className="relative mb-6"
         >
           <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-(--color-navy) shadow-[0_8px_32px_rgba(13,27,62,0.18)]">
