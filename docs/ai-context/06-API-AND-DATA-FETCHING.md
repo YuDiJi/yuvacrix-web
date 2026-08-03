@@ -33,6 +33,7 @@ Extend `baseApi` with `injectEndpoints`:
 | `playerApi.ts` | Player search, create |
 | `matchApi.ts` | `POST /matches`, lineup, toss, `GET` my matches |
 | `scoringApi.ts` | `/match/{id}/scoring/*` — innings, balls, undo, bowler/strike changes |
+| `scorecardApi.ts` | `/matchescored/{id}/scorecard/*` — scorecard, summary, commentary, squads, MVP |
 
 Generated hooks follow RTK Query naming: `useGetMeQuery`, `useCreateMatchMutation`, `useRecordBallMutation`, etc.
 
@@ -49,6 +50,7 @@ Domain types live in `src/types/`:
 | `match.ts` | Match creation, lineup, status enums |
 | `innings.ts` | `ScoringState`, innings start/complete |
 | `scoring.ts` | Ball recording, wicket flow, undo |
+| `scorecard.ts` | Scorecard views and derived match summaries |
 
 Types are hand-written TypeScript — **no runtime Zod schemas for API responses** (Zod is used for form validation only, e.g. `MatchDetails.tsx` imports `zod/v4`).
 

@@ -70,4 +70,4 @@ Until automated tests exist, manually verify affected flows:
 ## Known Gaps
 
 - No test runner means regressions in scoring flow (recent bugfix commits: `inningsBugfix`, `matchComplete`) are caught manually only.
-- Stub pages (`dashboard`, `add-tournaments-series`) have no tests or implementation.
+- The `add-tournaments-series` placeholder route has no implementation or tests.

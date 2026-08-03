@@ -148,4 +148,4 @@ import { useAppDispatch } from "@/store/hooks";
 
 - Some pages are monolithic Client `page.tsx` files; others split into `Page.tsx` + `page.tsx`.
 - `_components` co-location is used for `start-match` but not consistently for all features (scoring uses sibling files + `out/` subfolder).
-- `dashboard/page.tsx` uses lowercase `const page = ()` — inconsistent with other pages.
+- `add-tournaments-series/page.tsx` uses lowercase `const page = ()` — inconsistent with other pages.

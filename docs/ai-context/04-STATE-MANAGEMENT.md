@@ -67,8 +67,9 @@ All inject into `baseApi` (`src/store/api/baseApi.ts`):
 | `playerApi.ts` | Player search/create |
 | `matchApi.ts` | Create match, lineup, toss, match list |
 | `scoringApi.ts` | Innings start, record ball, undo, bowler/batter changes |
+| `scorecardApi.ts` | Scorecard, summary, commentary, squads, and MVP reads |
 
-Tag types: `Auth`, `Player`, `Members`, `Team`, `Matches`, `ScoringState`.
+Tag types: `Auth`, `Player`, `Members`, `Team`, `Matches`, `ScoringState`, `Scorecard`.
 
 ## Typed Hooks
 
