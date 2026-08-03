@@ -307,7 +307,8 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
     setLineupError("");
 
     // Just open the lineup mode sheet
-    setLineupSheetOpen(true);
+    // setLineupSheetOpen(true);
+    handleLineupContinue("FLEXIBLE");
   });
 
   // ── NEXT (TOSS) flow — Step 2: lineup mode chosen ────────────────────────

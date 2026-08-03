@@ -137,64 +137,61 @@ export function PlayerList({
       )}
 
       {/* ── Cards ───────────────────────────────────────────────────────── */}
-      <DndContext
+      {/* <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={orderedPlayers.map((p) => p.playerId)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="flex flex-col gap-2.5">
-            {orderedPlayers.length === 0 ? (
-              <p className="py-8 text-center text-sm italic text-(--color-text-muted)">
-                {query ? `No players match "${query}"` : emptyMessage}
-              </p>
-            ) : (
-              orderedPlayers.map((player) => {
-                const isSelected =
-                  mode === "team-management"
-                    ? true
-                    : (selectedPlayerIds?.has(player.playerId) ?? true);
+      > */}
+      {/* <SortableContext
+        items={orderedPlayers.map((p) => p.playerId)}
+        strategy={verticalListSortingStrategy}
+      > */}
+      <div className="flex flex-col gap-2.5">
+        {orderedPlayers.length === 0 ? (
+          <p className="py-8 text-center text-sm italic text-(--color-text-muted)">
+            {query ? `No players match "${query}"` : emptyMessage}
+          </p>
+        ) : (
+          orderedPlayers.map((player) => {
+            const isSelected =
+              mode === "team-management"
+                ? true
+                : (selectedPlayerIds?.has(player.playerId) ?? true);
 
-                return (
-                  <SortablePlayerRow key={player.playerId} id={player.playerId}>
-                    <PlayerCard
-                      player={player}
-                      mode={mode}
-                      adminId={adminId}
-                      onAdminChange={onAdminChange}
-                      isCaptain={captainId === player.playerId}
-                      isKeeper={keeperId === player.playerId}
-                      isSelected={isSelected}
-                      onCaptainToggle={() =>
-                        onCaptainChange(
-                          captainId === player.playerId
-                            ? null
-                            : player.playerId,
-                        )
-                      }
-                      onKeeperToggle={() =>
-                        onKeeperChange(
-                          keeperId === player.playerId ? null : player.playerId,
-                        )
-                      }
-                      onSelectionToggle={
-                        onSelectionChange
-                          ? () =>
-                              onSelectionChange(player.playerId, !isSelected)
-                          : undefined
-                      }
-                      onDelete={onDelete}
-                    />
-                  </SortablePlayerRow>
-                );
-              })
-            )}
-          </div>
-        </SortableContext>
-      </DndContext>
+            return (
+              <SortablePlayerRow key={player.playerId} id={player.playerId}>
+                <PlayerCard
+                  player={player}
+                  mode={mode}
+                  adminId={adminId}
+                  onAdminChange={onAdminChange}
+                  isCaptain={captainId === player.playerId}
+                  isKeeper={keeperId === player.playerId}
+                  isSelected={isSelected}
+                  onCaptainToggle={() =>
+                    onCaptainChange(
+                      captainId === player.playerId ? null : player.playerId,
+                    )
+                  }
+                  onKeeperToggle={() =>
+                    onKeeperChange(
+                      keeperId === player.playerId ? null : player.playerId,
+                    )
+                  }
+                  onSelectionToggle={
+                    onSelectionChange
+                      ? () => onSelectionChange(player.playerId, !isSelected)
+                      : undefined
+                  }
+                  onDelete={onDelete}
+                />
+              </SortablePlayerRow>
+            );
+          })
+        )}
+      </div>
+      {/* </SortableContext> */}
+      {/* </DndContext> */}
 
       {/* ── End of list marker ──────────────────────────────────────────── */}
       {orderedPlayers.length > 0 && !query && (
