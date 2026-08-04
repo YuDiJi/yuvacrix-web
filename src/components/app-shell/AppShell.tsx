@@ -22,7 +22,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const showBottomNav = bottomNav.some(
     (item) =>
       item.href &&
-      (pathname === item.href || pathname.startsWith(`${item.href}/`)),
+      // (pathname === item.href || pathname.startsWith(`${item.href}/`)),
+      pathname === item.href,
   );
 
   return (

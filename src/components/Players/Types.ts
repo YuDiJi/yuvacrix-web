@@ -9,6 +9,7 @@
  * fixed-lineup     → C + WK + Playing toggle  (no delete, batting order handled separately)
  */
 export type PlayerListMode =
+  | "my-teams"
   | "team-management-tournament"
   | "team-management"
   | "flexible-lineup"

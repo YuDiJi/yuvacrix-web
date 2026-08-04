@@ -224,46 +224,50 @@ export function PlayerCard({
           </button>
         )}
         {/* ── Captain (C) ──────────────────────────────────────────────── */}
-        <button
-          onClick={onCaptainToggle}
-          disabled={isMuted}
-          className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 active:scale-90",
-            isCaptain && isSelected
-              ? "border-(--color-brand) bg-(--color-brand) shadow-[0_2px_8px_rgba(27,63,160,0.30)]"
-              : "border-(--color-bg-border) bg-(--color-bg-base) hover:border-(--color-sky)/50",
-            isMuted && "cursor-not-allowed",
-          )}
-          aria-label={`${isCaptain ? "Remove" : "Set"} captain`}
-        >
-          <span
+        {mode !== "my-teams" && (
+          <button
+            onClick={onCaptainToggle}
+            disabled={isMuted}
             className={cn(
-              "font-(family-name:--font-display) text-sm font-black",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 active:scale-90",
               isCaptain && isSelected
-                ? "text-white"
-                : "text-(--color-text-secondary)",
+                ? "border-(--color-brand) bg-(--color-brand) shadow-[0_2px_8px_rgba(27,63,160,0.30)]"
+                : "border-(--color-bg-border) bg-(--color-bg-base) hover:border-(--color-sky)/50",
+              isMuted && "cursor-not-allowed",
             )}
-            style={{ letterSpacing: "0.04em" }}
+            aria-label={`${isCaptain ? "Remove" : "Set"} captain`}
           >
-            C
-          </span>
-        </button>
+            <span
+              className={cn(
+                "font-(family-name:--font-display) text-sm font-black",
+                isCaptain && isSelected
+                  ? "text-white"
+                  : "text-(--color-text-secondary)",
+              )}
+              style={{ letterSpacing: "0.04em" }}
+            >
+              C
+            </span>
+          </button>
+        )}
 
         {/* ── Wicketkeeper (WK) ─────────────────────────────────────────── */}
-        <button
-          onClick={onKeeperToggle}
-          disabled={isMuted}
-          className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 active:scale-90",
-            isKeeper && isSelected
-              ? "border-(--color-brand) bg-(--color-brand) shadow-[0_2px_8px_rgba(27,63,160,0.30)]"
-              : "border-(--color-bg-border) bg-(--color-bg-base) hover:border-(--color-sky)/50",
-            isMuted && "cursor-not-allowed",
-          )}
-          aria-label={`${isKeeper ? "Remove" : "Set"} wicketkeeper`}
-        >
-          <WKIcon active={isKeeper && isSelected} />
-        </button>
+        {mode !== "my-teams" && (
+          <button
+            onClick={onKeeperToggle}
+            disabled={isMuted}
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-150 active:scale-90",
+              isKeeper && isSelected
+                ? "border-(--color-brand) bg-(--color-brand) shadow-[0_2px_8px_rgba(27,63,160,0.30)]"
+                : "border-(--color-bg-border) bg-(--color-bg-base) hover:border-(--color-sky)/50",
+              isMuted && "cursor-not-allowed",
+            )}
+            aria-label={`${isKeeper ? "Remove" : "Set"} wicketkeeper`}
+          >
+            <WKIcon active={isKeeper && isSelected} />
+          </button>
+        )}
 
         {/* ── Playing toggle checkbox (lineup modes only) ──────────────── */}
         {isLineupMode && onSelectionToggle && (

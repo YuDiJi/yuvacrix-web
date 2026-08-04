@@ -4,7 +4,8 @@ import {
   CreateMatchDto,
   CreateMatchResponse,
   GetMatchByIdResponse,
-  GetMyMatchesResponse,
+  GetMyMatchesOverviewParams,
+  GetMyMatchesOverviewResponse,
   SubmitTeamCaptainWKRequest,
   SubmitTeamLineupRequest,
 } from "@/types/match";
@@ -81,10 +82,19 @@ export const matchApi = baseApi.injectEndpoints({
     //   providesTags: ["Matches"],
     // }), /////////////////// add types later
 
-    getMyMatchesOverview: builder.query<GetMyMatchesResponse, void>({
-      query: () => ({
+    getMyMatchesOverview: builder.query<
+      GetMyMatchesOverviewResponse,
+      GetMyMatchesOverviewParams
+    >({
+      query: ({ filter, skip, limit }) => ({
         url: "/matches/me/overview",
+        params: {
+          filter,
+          skip,
+          limit,
+        },
       }),
+
       providesTags: ["Matches"],
     }),
 
@@ -113,7 +123,6 @@ export const {
   useSubmitTossMutation,
   useStartMatchMutation,
   useMarkReadyForTossMutation,
-  // useGetMyMatchesQuery,
   useGetMyMatchesOverviewQuery,
   useGetMatchByIdQuery,
   useCompleteMatchMutation,

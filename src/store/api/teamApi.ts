@@ -5,6 +5,8 @@ import {
   CreateTeamDto,
   GetMyCricketProfileTeamsQuery,
   GetMyCricketProfileTeamsResponse,
+  GetMyTeamsOverviewParams,
+  GetMyTeamsOverviewResponse,
   Team,
   TeamMember,
 } from "@/types/team";
@@ -101,6 +103,22 @@ export const teamApi = baseApi.injectEndpoints({
 
       providesTags: ["CricketProfileTeams"],
     }),
+
+    getMyTeamsOverview: builder.query<
+      GetMyTeamsOverviewResponse,
+      GetMyTeamsOverviewParams
+    >({
+      query: ({ filter, skip, limit }) => ({
+        url: "/teams/me/overview",
+        params: {
+          filter,
+          skip,
+          limit,
+        },
+      }),
+
+      providesTags: ["Team"],
+    }),
   }),
 });
 
@@ -112,4 +130,5 @@ export const {
   useRemoveTeamMemberMutation,
   useGetTeamDetailQuery,
   useGetMyCricketProfileTeamsQuery,
+  useGetMyTeamsOverviewQuery,
 } = teamApi;
