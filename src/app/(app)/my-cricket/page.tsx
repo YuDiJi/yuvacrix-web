@@ -5,6 +5,7 @@ import Matches from "./Matches";
 import { useState } from "react";
 import Tournaments from "./Tournaments";
 import { Stats } from "@/components/stats/page";
+import Teams from "./Teams";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,7 +16,7 @@ const NAV_TABS = [
   "Tournaments",
   "Teams",
   "Stats",
-  "Highlights",
+  // "Highlights",
 ] as const;
 
 type NavTab = (typeof NAV_TABS)[number];
@@ -50,6 +51,7 @@ export default function MatchesPage() {
       </div>
       {activeTab === "Matches" && <Matches />}
       {activeTab === "Tournaments" && <Tournaments />}
+      {activeTab === "Teams" && <Teams />}
       {activeTab === "Stats" && <Stats />}
     </div>
   );

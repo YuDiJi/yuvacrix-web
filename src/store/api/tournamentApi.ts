@@ -22,6 +22,8 @@ export type TournamentStatus =
 
 export type TournamentBallType = "TENNIS" | "LEATHER" | "OTHER";
 
+export type TournamentOverviewFilter = "YOUR" | "PARTICIPATE" | "ALL"; /////// | "NETWORK"
+
 export type TournamentLocation = {
   city: string;
   groundName?: string;
@@ -148,13 +150,6 @@ export type CreateTournamentRequest = {
 
 export type UpdateTournamentRequest = Partial<CreateTournamentRequest>;
 
-export type GetOwnedTournamentsQuery = {
-  status?: TournamentStatus;
-  format?: TournamentFormat;
-  page?: number;
-  limit?: number;
-};
-
 export type SearchTournamentsQuery = {
   q?: string;
   page?: number;
@@ -223,6 +218,24 @@ export type TournamentAboutResponse = {
   };
 };
 
+export interface GetMyTournamentsOverviewParams {
+  filter: TournamentOverviewFilter;
+  skip: number;
+  limit: number;
+}
+
+export interface TournamentsOverviewPagination {
+  skip: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface GetMyTournamentsOverviewResponse {
+  items: Tournament[];
+  pagination: TournamentsOverviewPagination;
+}
+
 export const tournamentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createTournament: builder.mutation<Tournament, CreateTournamentRequest>({
@@ -234,15 +247,20 @@ export const tournamentApi = baseApi.injectEndpoints({
       invalidatesTags: ["Tournament"],
     }),
 
-    getMyOwnedTournaments: builder.query<
-      Tournament[],
-      GetOwnedTournamentsQuery | void
+    getMyTournamentsOverview: builder.query<
+      GetMyTournamentsOverviewResponse,
+      GetMyTournamentsOverviewParams
     >({
-      query: (params) => ({
-        url: "/tournaments/me/owned",
+      query: ({ filter, skip, limit }) => ({
+        url: "/tournaments/me/overview",
         method: "GET",
-        params: params ?? undefined,
+        params: {
+          filter,
+          skip,
+          limit,
+        },
       }),
+
       providesTags: ["Tournament"],
     }),
 
@@ -379,7 +397,7 @@ export const tournamentApi = baseApi.injectEndpoints({
 
 export const {
   useCreateTournamentMutation,
-  useGetMyOwnedTournamentsQuery,
+  useGetMyTournamentsOverviewQuery,
   useSearchPublicTournamentsQuery,
   useGetTournamentDetailsQuery,
   useUpdateTournamentMutation,

@@ -2,109 +2,66 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trophy } from "lucide-react";
+import { Users } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useAppDispatch } from "@/store/hooks";
-import { resetMatch } from "@/store/startMatch/startMatchSlice";
-
-import { useGetMyTournamentsOverviewQuery } from "@/store/api/tournamentApi";
+import { TeamCard } from "@/components/team/TeamCard";
+import { useGetMyTeamsOverviewQuery } from "@/store/api/teamApi";
 
 import type {
-  TournamentOverviewFilter,
-  Tournament,
-  TournamentsOverviewPagination,
-} from "@/store/api/tournamentApi";
-
-import { TournamentCard } from "./TournamentCard";
+  Team,
+  TeamOverviewFilter,
+  TeamsOverviewPagination,
+} from "@/types/team";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const TOURNAMENT_FILTERS: TournamentOverviewFilter[] = [
+const TEAM_FILTERS: TeamOverviewFilter[] = [
   "YOUR",
   "PARTICIPATE",
-  // "NETWORK",
+  //   "NETWORK",
   "ALL",
 ];
 
-const TOURNAMENT_FILTER_LABELS: Record<TournamentOverviewFilter, string> = {
+const TEAM_FILTER_LABELS: Record<TeamOverviewFilter, string> = {
   YOUR: "Your",
   PARTICIPATE: "Participate",
-  // NETWORK: "Network",
+  //   NETWORK: "Network",
   ALL: "All",
 };
 
-const TOURNAMENTS_LIMIT = 10;
+const TEAMS_LIMIT = 10;
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-function TournamentSkeletonCard() {
+function TeamCardSkeleton() {
   return (
     <div
       className={cn(
-        "fixture-bar animate-pulse space-y-3 rounded-r-2xl",
-        "bg-(--color-bg-card) p-4 shadow-(--shadow-card)",
+        "flex w-full animate-pulse items-center justify-between",
+        "rounded-2xl border border-(--color-bg-border)",
+        "bg-(--color-bg-card) p-3.5 shadow-(--shadow-card)",
       )}
     >
-      <div className="flex justify-between gap-4">
-        <div className="h-3 w-32 rounded-full bg-(--color-bg-border)" />
-        <div className="h-5 w-20 rounded-full bg-(--color-bg-border)" />
+      <div className="flex min-w-0 items-center gap-3.5">
+        <div className="h-14 w-14 shrink-0 rounded-xl bg-(--color-bg-border)" />
+
+        <div className="min-w-0 space-y-2">
+          <div className="h-4 w-36 rounded-full bg-(--color-bg-border)" />
+          <div className="h-3 w-20 rounded-full bg-(--color-bg-border)" />
+        </div>
       </div>
 
-      <div className="h-3 w-48 rounded-full bg-(--color-bg-border)" />
-
-      <div className="h-px bg-(--color-bg-border)" />
-
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full bg-(--color-bg-border)" />
-        <div className="h-4 w-36 rounded-full bg-(--color-bg-border)" />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full bg-(--color-bg-border)" />
-        <div className="h-4 w-28 rounded-full bg-(--color-bg-border)" />
-      </div>
+      <div className="h-5 w-5 rounded-full bg-(--color-bg-border)" />
     </div>
   );
 }
 
-function TournamentsSkeleton() {
+function TeamsSkeleton() {
   return (
     <div className="flex flex-col gap-3">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <TournamentSkeletonCard key={index} />
-      ))}
-    </div>
-  );
-}
-
-// ─── Filter chips ─────────────────────────────────────────────────────────────
-
-function FilterChips({
-  active,
-  onChange,
-}: {
-  active: TournamentOverviewFilter;
-  onChange: (filter: TournamentOverviewFilter) => void;
-}) {
-  return (
-    <div className="scrollbar-none flex gap-2 overflow-x-auto px-4 pb-1">
-      {TOURNAMENT_FILTERS.map((filter) => (
-        <button
-          key={filter}
-          type="button"
-          onClick={() => onChange(filter)}
-          className={cn(
-            "shrink-0 rounded-full px-5 py-2",
-            "font-(family-name:--font-display) text-sm font-bold uppercase tracking-[0.04em]",
-            "transition-all duration-150 active:scale-95",
-            active === filter
-              ? "bg-(--color-brand) text-white shadow-[0_2px_8px_rgba(27,63,160,0.3)]"
-              : "border border-(--color-bg-border) bg-(--color-bg-card) text-(--color-text-secondary) hover:border-(--color-brand)/30",
-          )}
-        >
-          {TOURNAMENT_FILTER_LABELS[filter]}
-        </button>
+      {Array.from({ length: 6 }).map((_, index) => (
+        <TeamCardSkeleton key={index} />
       ))}
     </div>
   );
@@ -112,59 +69,77 @@ function FilterChips({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function Tournaments() {
+export default function Teams() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  /*
+   * This prevents IntersectionObserver from starting the same request
+   * multiple times before React finishes updating its state.
+   */
   const loadingMoreLockRef = useRef(false);
 
   // ─── Filter state ──────────────────────────────────────────────────────────
 
-  const [activeFilter, setActiveFilter] =
-    useState<TournamentOverviewFilter>("YOUR");
+  const [activeFilter, setActiveFilter] = useState<TeamOverviewFilter>("YOUR");
 
+  /*
+   * This is separate from RTK Query's isLoading because cached queries may
+   * return isLoading=false immediately. We still want a full skeleton whenever
+   * the user changes filters.
+   */
   const [isFilterLoading, setIsFilterLoading] = useState(false);
 
   // ─── Pagination state ─────────────────────────────────────────────────────
 
   const [skip, setSkip] = useState(0);
 
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
 
-  const [pagination, setPagination] =
-    useState<TournamentsOverviewPagination | null>(null);
+  /*
+   * Store pagination separately from currentData.
+   *
+   * When skip changes, currentData may briefly become undefined. Keeping the
+   * latest pagination state ensures that the infinite-scroll sentinel remains
+   * mounted and the spinner remains visible.
+   */
+  const [pagination, setPagination] = useState<TeamsOverviewPagination | null>(
+    null,
+  );
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // ─── API ──────────────────────────────────────────────────────────────────
 
   const { currentData, isLoading, isFetching, isError } =
-    useGetMyTournamentsOverviewQuery({
+    useGetMyTeamsOverviewQuery({
       filter: activeFilter,
       skip,
-      limit: TOURNAMENTS_LIMIT,
+      limit: TEAMS_LIMIT,
     });
 
-  // ─── Merge API pages ──────────────────────────────────────────────────────
+  // ─── Receive and merge API pages ──────────────────────────────────────────
 
   useEffect(() => {
     if (!currentData) return;
 
-    setTournaments((previousTournaments) => {
+    setTeams((previousTeams) => {
+      /*
+       * skip === 0 means this is the first page for a filter.
+       * Replace the list instead of appending.
+       */
       if (currentData.pagination.skip === 0) {
         return currentData.items;
       }
 
-      const existingTournamentIds = new Set(
-        previousTournaments.map((tournament) => tournament.id),
+      const existingTeamIds = new Set(previousTeams.map((team) => team.id));
+
+      const newTeams = currentData.items.filter(
+        (team) => !existingTeamIds.has(team.id),
       );
 
-      const newTournaments = currentData.items.filter(
-        (tournament) => !existingTournamentIds.has(tournament.id),
-      );
-
-      return [...previousTournaments, ...newTournaments];
+      return [...previousTeams, ...newTeams];
     });
 
     setPagination(currentData.pagination);
@@ -175,7 +150,7 @@ export default function Tournaments() {
     loadingMoreLockRef.current = false;
   }, [currentData]);
 
-  // Stop loaders when a request fails.
+  // Stop loaders if the request fails.
 
   useEffect(() => {
     if (isFetching || !isError) return;
@@ -186,29 +161,29 @@ export default function Tournaments() {
     loadingMoreLockRef.current = false;
   }, [isError, isFetching]);
 
-  // ─── Derived states ────────────────────────────────────────────────────────
+  // ─── Pagination values ────────────────────────────────────────────────────
 
   const hasMore = pagination?.hasMore === true;
 
+  const hasReachedEnd =
+    pagination !== null &&
+    pagination.hasMore === false &&
+    teams.length > 0 &&
+    !isFetching &&
+    !isLoadingMore &&
+    !isFilterLoading;
+
   const showFullPageSkeleton =
-    isFilterLoading || (isLoading && tournaments.length === 0);
+    isFilterLoading || (isLoading && teams.length === 0);
 
   const showInitialError =
-    isError && tournaments.length === 0 && !isFilterLoading && !isLoading;
+    isError && teams.length === 0 && !isFilterLoading && !isLoading;
 
   const showEmptyState =
     !showFullPageSkeleton &&
     !showInitialError &&
     pagination !== null &&
-    tournaments.length === 0;
-
-  const hasReachedEnd =
-    pagination !== null &&
-    pagination.hasMore === false &&
-    tournaments.length > 0 &&
-    !isFetching &&
-    !isLoadingMore &&
-    !isFilterLoading;
+    teams.length === 0;
 
   // ─── Infinite scroll ──────────────────────────────────────────────────────
 
@@ -230,8 +205,11 @@ export default function Tournaments() {
       ([entry]) => {
         if (!entry?.isIntersecting) return;
 
-        const nextSkip = tournaments.length;
+        const nextSkip = teams.length;
 
+        /*
+         * Prevent requesting the same offset again.
+         */
         if (nextSkip <= skip) return;
 
         loadingMoreLockRef.current = true;
@@ -241,6 +219,11 @@ export default function Tournaments() {
       },
       {
         root: null,
+
+        /*
+         * Trigger once the spinner section enters the viewport.
+         * Keeping this at zero makes the spinner visible to the user.
+         */
         rootMargin: "0px",
         threshold: 0.1,
       },
@@ -251,64 +234,47 @@ export default function Tournaments() {
     return () => {
       observer.disconnect();
     };
-  }, [
-    hasMore,
-    isFetching,
-    isFilterLoading,
-    isLoadingMore,
-    skip,
-    tournaments.length,
-  ]);
+  }, [hasMore, isFetching, isLoadingMore, isFilterLoading, skip, teams.length]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
-  function handleFilterChange(filter: TournamentOverviewFilter) {
+  function handleFilterChange(filter: TeamOverviewFilter) {
     if (filter === activeFilter) return;
 
     loadingMoreLockRef.current = false;
 
     setActiveFilter(filter);
-    setSkip(0);
 
-    setTournaments([]);
+    setSkip(0);
+    setTeams([]);
     setPagination(null);
 
     setIsLoadingMore(false);
     setIsFilterLoading(true);
   }
 
-  function handleTournamentClick(tournament: Tournament) {
-    router.push(`/tournaments/${tournament.id}`);
+  function handleTeamClick(team: Team) {
+    router.push(`/my-cricket/${team.id}/players`);
   }
 
-  function handleCreateTournament() {
-    dispatch(resetMatch());
-
-    router.push("/add-tournaments-series/create-tournament");
-  }
-
-  function retryInitialRequest() {
-    /*
-     * Changing skip from 0 to 0 does not necessarily force RTK Query
-     * to execute again. If you require a retry button, prefer exposing
-     * refetch() from the query hook, as shown below.
-     */
-  }
+  //   function handleCreateTeam() {
+  //     router.push("/create-team");
+  //   }
 
   function getEmptyText() {
     switch (activeFilter) {
       case "PARTICIPATE":
-        return "You are not participating in any tournaments yet";
+        return "You haven't played for any teams yet";
 
-      // case "NETWORK":
-      //   return "No tournaments found in your network";
+      //   case "NETWORK":
+      //     return "No teams found in your network";
 
       case "ALL":
-        return "No tournaments found";
+        return "No teams found";
 
       case "YOUR":
       default:
-        return "You haven't created any tournaments yet";
+        return "You haven't created any teams yet";
     }
   }
 
@@ -316,15 +282,16 @@ export default function Tournaments() {
 
   return (
     <div className="flex h-full flex-col bg-(--color-bg-base)">
-      {/* Host tournament banner */}
-      <div className="flex items-center justify-between border-b border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3.5">
+      {/* ── Create team banner ──────────────────────────────────────────── */}
+
+      {/* <div className="flex items-center justify-between border-b border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3.5">
         <p className="text-sm font-medium text-(--color-text-secondary)">
-          Want to host a tournament?
+          Want to create a new team?
         </p>
 
         <button
           type="button"
-          onClick={handleCreateTournament}
+          onClick={handleCreateTeam}
           className={cn(
             "rounded-xl bg-(--color-brand) px-5 py-2",
             "font-(family-name:--font-display) text-sm font-black uppercase tracking-[0.06em]",
@@ -332,32 +299,68 @@ export default function Tournaments() {
             "transition-all active:scale-95",
           )}
         >
-          Start
+          Create
         </button>
-      </div>
+      </div> */}
 
-      {/* Filter chips */}
+      {/* ── Filters ─────────────────────────────────────────────────────── */}
+
       <div className="bg-(--color-bg-base) py-3">
-        <FilterChips active={activeFilter} onChange={handleFilterChange} />
+        <div className="scrollbar-none flex gap-2 overflow-x-auto px-4 pb-1">
+          {TEAM_FILTERS.map((filter) => (
+            <button
+              key={filter}
+              type="button"
+              onClick={() => handleFilterChange(filter)}
+              className={cn(
+                "shrink-0 rounded-full px-5 py-2",
+                "font-(family-name:--font-display) text-sm font-bold uppercase tracking-[0.04em]",
+                "transition-all duration-150 active:scale-95",
+                activeFilter === filter
+                  ? "bg-(--color-brand) text-white shadow-[0_2px_8px_rgba(27,63,160,0.3)]"
+                  : "border border-(--color-bg-border) bg-(--color-bg-card) text-(--color-text-secondary)",
+              )}
+            >
+              {TEAM_FILTER_LABELS[filter]}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Tournament list */}
+      {/* ── Teams area ──────────────────────────────────────────────────── */}
+
       <div className="flex-1 px-4 pb-6">
         {showFullPageSkeleton ? (
-          <TournamentsSkeleton />
+          <TeamsSkeleton />
         ) : showInitialError ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <p className="text-sm font-medium text-(--color-live)">
-              Failed to load tournaments.
+              Failed to load teams.
             </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsFilterLoading(true);
+                setSkip(0);
+              }}
+              className={cn(
+                "rounded-xl border border-(--color-brand)/25",
+                "bg-(--color-bg-card) px-5 py-2.5",
+                "font-(family-name:--font-display) text-sm font-black uppercase tracking-[0.06em]",
+                "text-(--color-brand)",
+              )}
+            >
+              Try Again
+            </button>
           </div>
         ) : showEmptyState ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-(--color-bg-tint)">
-              <Trophy
+              <Users
                 size={28}
-                strokeWidth={1.8}
                 className="text-(--color-brand)"
+                strokeWidth={1.8}
               />
             </div>
 
@@ -365,9 +368,9 @@ export default function Tournaments() {
               {getEmptyText()}
             </p>
 
-            <button
+            {/* <button
               type="button"
-              onClick={handleCreateTournament}
+              onClick={handleCreateTeam}
               className={cn(
                 "mt-1 rounded-xl bg-(--color-brand) px-5 py-2.5",
                 "font-(family-name:--font-display) text-sm font-black uppercase tracking-[0.06em]",
@@ -375,27 +378,32 @@ export default function Tournaments() {
                 "transition-all active:scale-95",
               )}
             >
-              Start a Tournament
-            </button>
+              Create Team
+            </button> */}
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {tournaments.map((tournament) => (
-              <TournamentCard
-                key={tournament.id}
-                tournament={tournament}
-                onClick={() => handleTournamentClick(tournament)}
+            {/* Team cards */}
+
+            {teams.map((team) => (
+              <TeamCard
+                key={team.id}
+                team={team}
+                onClick={handleTeamClick}
+                variant="navigate"
               />
             ))}
 
-            {/* Pagination error while retaining loaded tournaments */}
-            {isError && tournaments.length > 0 && !isLoadingMore && (
+            {/* Pagination failure while retaining loaded teams */}
+
+            {isError && teams.length > 0 && !isLoadingMore && (
               <p className="py-3 text-center text-xs font-medium text-(--color-live)">
-                Failed to load more tournaments.
+                Failed to load more teams.
               </p>
             )}
 
-            {/* Infinite-scroll sentinel */}
+            {/* Infinite-scroll sentinel and spinner */}
+
             {hasMore && !isError && (
               <div
                 ref={loadMoreRef}
@@ -403,9 +411,7 @@ export default function Tournaments() {
                   "flex items-center justify-center",
                   isLoadingMore ? "min-h-20 py-5" : "h-6",
                 )}
-                aria-label={
-                  isLoadingMore ? "Loading more tournaments" : undefined
-                }
+                aria-label={isLoadingMore ? "Loading more teams" : undefined}
                 aria-live="polite"
               >
                 {isLoadingMore && (
@@ -419,7 +425,8 @@ export default function Tournaments() {
               </div>
             )}
 
-            {/* End marker */}
+            {/* End message */}
+
             {hasReachedEnd && (
               <p className="py-3 text-center text-xs italic text-(--color-text-muted)">
                 You have reached the end
