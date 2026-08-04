@@ -5,6 +5,7 @@ import {
   CreateMatchResponse,
   GetMatchByIdResponse,
   GetMyMatchesResponse,
+  MyMatchOverviewFilter,
   SubmitTeamCaptainWKRequest,
   SubmitTeamLineupRequest,
 } from "@/types/match";
@@ -81,9 +82,13 @@ export const matchApi = baseApi.injectEndpoints({
     //   providesTags: ["Matches"],
     // }), /////////////////// add types later
 
-    getMyMatchesOverview: builder.query<GetMyMatchesResponse, void>({
-      query: () => ({
+    getMyMatchesOverview: builder.query<
+      GetMyMatchesResponse,
+      { filter: MyMatchOverviewFilter; skip: number; limit: number }
+    >({
+      query: (params) => ({
         url: "/matches/me/overview",
+        params,
       }),
       providesTags: ["Matches"],
     }),

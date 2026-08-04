@@ -210,7 +210,17 @@ export interface Match {
   updatedAt: string;
 }
 
-export type GetMyMatchesResponse = Match[];
+export type MyMatchOverviewFilter = "YOUR" | "PLAYED" | "NETWORK" | "ALL";
+
+export interface GetMyMatchesResponse {
+  items: Match[];
+  pagination: {
+    skip: number;
+    limit: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
 
 export type MatchSide = "TEAM_A" | "TEAM_B";
 

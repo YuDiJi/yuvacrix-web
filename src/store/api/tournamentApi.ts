@@ -155,6 +155,12 @@ export type GetOwnedTournamentsQuery = {
   limit?: number;
 };
 
+export type TournamentOverviewFilter = "YOUR" | "PARTICIPATE" | "NETWORK" | "ALL";
+export type GetTournamentOverviewResponse = {
+  items: Tournament[];
+  pagination: { skip: number; limit: number; total: number; hasMore: boolean };
+};
+
 export type SearchTournamentsQuery = {
   q?: string;
   page?: number;
@@ -243,6 +249,14 @@ export const tournamentApi = baseApi.injectEndpoints({
         method: "GET",
         params: params ?? undefined,
       }),
+      providesTags: ["Tournament"],
+    }),
+
+    getMyTournamentOverview: builder.query<
+      GetTournamentOverviewResponse,
+      { filter: TournamentOverviewFilter; skip: number; limit: number }
+    >({
+      query: (params) => ({ url: "/tournaments/me/overview", method: "GET", params }),
       providesTags: ["Tournament"],
     }),
 
@@ -380,6 +394,7 @@ export const tournamentApi = baseApi.injectEndpoints({
 export const {
   useCreateTournamentMutation,
   useGetMyOwnedTournamentsQuery,
+  useGetMyTournamentOverviewQuery,
   useSearchPublicTournamentsQuery,
   useGetTournamentDetailsQuery,
   useUpdateTournamentMutation,

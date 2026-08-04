@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/cn";
@@ -16,6 +16,7 @@ import {
 
 // import type { Match } from "@/types/match";
 import type { Team } from "@/types/team";
+import type { Match, MyMatchOverviewFilter } from "@/types/match";
 
 import { matchToMatchCard } from "@/lib/adapters/matchCardAdapter";
 import type { MatchCardModel } from "@/types/matchCard";
@@ -31,46 +32,81 @@ const MY_MATCH_TAB_LABELS: Record<MyMatchTab, string> = {
   ALL: "All",
 };
 
+const PAGE_LIMIT = 20;
+
+const MY_MATCH_TAB_FILTERS: Record<MyMatchTab, MyMatchOverviewFilter> = {
+  YOUR: "YOUR",
+  PLAYED: "PLAYED",
+  NETWORK: "NETWORK",
+  ALL: "ALL",
+};
+
 export default function MyMatches() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
   const [activeTab, setActiveTab] = useState<MyMatchTab>("YOUR");
+  const [skip, setSkip] = useState(0);
+  const [allMatches, setAllMatches] = useState<Match[]>([]);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<MatchCardModel | null>(
     null,
   );
   const [showLiveOptions, setShowLiveOptions] = useState(false);
 
-  const {
-    data: matches = [],
-    isLoading,
-    isError,
-  } = useGetMyMatchesOverviewQuery();
+  const filter = MY_MATCH_TAB_FILTERS[activeTab];
+  const { currentData, isLoading, isFetching, isError } =
+    useGetMyMatchesOverviewQuery({ filter, skip, limit: PAGE_LIMIT });
 
-  const filteredMatches = useMemo(() => {
-    if (activeTab === "PLAYED") {
-      return matches.filter((match) =>
-        ["COMPLETED", "IN_REVIEW", "ABANDONED", "CANCELLED"].includes(
-          match.status,
-        ),
-      );
+  useEffect(() => {
+    setSkip(0);
+    setAllMatches([]);
+  }, [filter]);
+
+  useEffect(() => {
+    if (!currentData?.items.length) {
+      return;
     }
 
-    if (activeTab === "NETWORK") {
-      return matches.filter((match) =>
-        ["LIVE", "INNINGS_BREAK"].includes(match.status),
+    setAllMatches((previousMatches) => {
+      const matchesById = new Map(
+        previousMatches.map((match) => [match.matchId, match]),
       );
-    }
 
-    // YOUR and ALL currently show the full response because
-    // the backend endpoint does not provide separate filters.
-    return matches;
-  }, [matches, activeTab]);
+      currentData.items.forEach((match) => {
+        matchesById.set(match.matchId, match);
+      });
+
+      return Array.from(matchesById.values());
+    });
+  }, [currentData]);
+
+  const hasMore = currentData?.pagination.hasMore ?? false;
 
   const matchCards = useMemo<MatchCardModel[]>(
-    () => filteredMatches.map(matchToMatchCard),
-    [filteredMatches],
+    () => allMatches.map(matchToMatchCard),
+    [allMatches],
   );
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore && !isFetching && !isError) {
+          setSkip(allMatches.length);
+        }
+      },
+      { rootMargin: "300px 0px" },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [allMatches.length, hasMore, isFetching, isError]);
 
   function getMatchRoute(match: MatchCardModel) {
     switch (match.status) {
@@ -230,7 +266,7 @@ export default function MyMatches() {
       </div>
 
       <div className="flex-1 px-4 pb-6">
-        {!isLoading && !isError && filteredMatches.length === 0 ? (
+        {!isLoading && !isError && allMatches.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-(--color-bg-tint)">
               <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -279,11 +315,19 @@ export default function MyMatches() {
         ) : (
           <MatchesList
             matches={matchCards}
-            isLoading={isLoading}
+            isLoading={isLoading && allMatches.length === 0}
             isError={isError}
             onMatchClick={handleMatchClick}
           />
         )}
+
+        {isFetching && allMatches.length > 0 && (
+          <div className="flex justify-center py-4">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--color-bg-border) border-t-(--color-brand)" />
+          </div>
+        )}
+
+        {hasMore && <div ref={loadMoreRef} aria-hidden="true" className="h-10" />}
       </div>
 
       {selectedMatch && (

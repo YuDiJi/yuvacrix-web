@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Team } from "@/types/team";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
@@ -12,7 +12,8 @@ import {
 import { useAppDispatch } from "@/store/hooks";
 import {
   Tournament,
-  useGetMyOwnedTournamentsQuery,
+  TournamentOverviewFilter,
+  useGetMyTournamentOverviewQuery,
 } from "@/store/api/tournamentApi";
 import { TournamentCard } from "./TournamentCard";
 
@@ -42,6 +43,9 @@ function SkeletonCard() {
 // ─── Filter chips ─────────────────────────────────────────────────────────────
 
 const FILTER_TABS: FilterTab[] = ["Your", "Participate", "Network", "All"];
+const FILTERS: Record<FilterTab, TournamentOverviewFilter> = {
+  Your: "YOUR", Participate: "PARTICIPATE", Network: "NETWORK", All: "ALL",
+};
 
 function FilterChips({
   active,
@@ -80,21 +84,11 @@ const Tournaments = () => {
   const [activeFilter, setActiveFilter] = useState<FilterTab>("Your");
 
   const {
-    data: tournaments,
+    data,
     isLoading,
     isError,
-  } = useGetMyOwnedTournamentsQuery();
-
-  const filtered = useMemo<Tournament[]>(() => {
-    const m = tournaments as Tournament[];
-    if (activeFilter === "Participate") {
-      return m.filter((x) => ["COMPLETED", "ACTIVE"].includes(x.status));
-    }
-    if (activeFilter === "Network") {
-      return m.filter((x) => x.status === "ARCHIVED");
-    }
-    return m; // Your + All
-  }, [tournaments, activeFilter]);
+  } = useGetMyTournamentOverviewQuery({ filter: FILTERS[activeFilter], skip: 0, limit: 20 });
+  const filtered = data?.items ?? [];
 
   const getMatchRoute = (tournament: Tournament) => {
     switch (tournament.status) {
