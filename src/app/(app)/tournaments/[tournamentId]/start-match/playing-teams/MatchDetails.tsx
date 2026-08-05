@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
@@ -264,7 +264,9 @@ const TournamentMatchDetails = ({
   const {
     trigger,
     setFocus,
+    setValue,
     control,
+    watch,
     handleSubmit,
     getValues,
     formState: { errors },
@@ -272,8 +274,8 @@ const TournamentMatchDetails = ({
     resolver: zodResolver(schema),
     defaultValues: {
       matchType: "LIMITED_OVERS",
-      oversLimit: 20,
-      oversPerBowler: 4,
+      oversLimit: 0,
+      oversPerBowler: 0,
       ballType: "TENNIS",
       city: "",
       groundName: "",
@@ -282,6 +284,32 @@ const TournamentMatchDetails = ({
       scheduledAt: undefined,
     },
   });
+
+  function calculateOversPerBowler(totalOvers: number): number {
+    if (!Number.isFinite(totalOvers) || totalOvers <= 0) {
+      return 0;
+    }
+
+    if (totalOvers <= 5) return 1;
+    if (totalOvers <= 9) return 2;
+    if (totalOvers <= 17) return 3;
+
+    // 18–22 → 4, 23–27 → 5, 28–32 → 6, and so on
+    return 4 + Math.floor((totalOvers - 18) / 5);
+  }
+
+  const oversLimit = watch("oversLimit");
+
+  useEffect(() => {
+    const calculatedOversPerBowler = calculateOversPerBowler(
+      Number(oversLimit),
+    );
+
+    setValue("oversPerBowler", calculatedOversPerBowler, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [oversLimit, setValue]);
 
   // ── Build payload ─────────────────────────────────────────────────────────
 
@@ -429,7 +457,9 @@ const TournamentMatchDetails = ({
         }),
       );
 
-      router.push("/start-match/line-up");
+      router.push(
+        `/start-match/line-up?from=tournament&tournamentId=${tournamentId}`,
+      );
     } catch (err) {
       const message =
         err instanceof Error
@@ -817,7 +847,7 @@ const TournamentMatchDetails = ({
         {creationMode === "PLAY_NOW" && (
           <button
             type="button"
-            onClick={onToss}
+            onClick={() => handleLineupContinue("FLEXIBLE")}
             disabled={isCreating}
             className="flex flex-1 items-center justify-center gap-1.5 bg-(--color-brand) py-4 font-(family-name:--font-display) text-xs font-black uppercase tracking-[0.06em] text-white shadow-[0_-2px_12px_rgba(27,63,160,0.20)] transition-all active:scale-[0.97] disabled:opacity-60"
           >
