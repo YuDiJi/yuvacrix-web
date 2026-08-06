@@ -8,49 +8,49 @@ import { cn } from "@/lib/cn";
 import { PlayerCard } from "./Playercard";
 import type { PlayerListItem, PlayerListProps } from "./Types";
 
-import {
-  DndContext,
-  DragEndEvent,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
+// import {
+//   DndContext,
+//   DragEndEvent,
+//   closestCenter,
+//   PointerSensor,
+//   useSensor,
+//   useSensors,
+// } from "@dnd-kit/core";
 
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  useSortable,
-  arrayMove,
-} from "@dnd-kit/sortable";
+// import {
+//   SortableContext,
+//   verticalListSortingStrategy,
+//   useSortable,
+//   arrayMove,
+// } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
 
-function SortablePlayerRow({
-  id,
-  children,
-}: {
-  id: string;
-  children: React.ReactNode;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
+// function SortablePlayerRow({
+//   id,
+//   children,
+// }: {
+//   id: string;
+//   children: React.ReactNode;
+// }) {
+//   const { attributes, listeners, setNodeRef, transform, transition } =
+//     useSortable({ id });
 
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        touchAction: "none",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+//   return (
+//     <div
+//       ref={setNodeRef}
+//       {...attributes}
+//       {...listeners}
+//       style={{
+//         transform: CSS.Transform.toString(transform),
+//         transition,
+//         touchAction: "none",
+//       }}
+//     >
+//       {children}
+//     </div>
+//   );
+// }
 
 export function PlayerList({
   players,
@@ -70,13 +70,14 @@ export function PlayerList({
   emptyMessage = "No players in roster",
 }: PlayerListProps) {
   const [query, setQuery] = useState("");
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-  );
+
+  // const sensors = useSensors(
+  //   useSensor(PointerSensor, {
+  //     activationConstraint: {
+  //       distance: 5,
+  //     },
+  //   }),
+  // );
 
   const orderedPlayers = useMemo(() => {
     const basePlayers = orderedPlayerIds?.length
@@ -94,25 +95,25 @@ export function PlayerList({
     return basePlayers.filter((p) => p.fullName.toLowerCase().includes(q));
   }, [players, orderedPlayerIds, query]);
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
+  // function handleDragEnd(event: DragEndEvent) {
+  //   const { active, over } = event;
 
-    if (!over || active.id === over.id) {
-      return;
-    }
+  //   if (!over || active.id === over.id) {
+  //     return;
+  //   }
 
-    const oldIndex = orderedPlayerIds?.indexOf(String(active.id)) ?? -1;
+  //   const oldIndex = orderedPlayerIds?.indexOf(String(active.id)) ?? -1;
 
-    const newIndex = orderedPlayerIds?.indexOf(String(over.id)) ?? -1;
+  //   const newIndex = orderedPlayerIds?.indexOf(String(over.id)) ?? -1;
 
-    if (oldIndex < 0 || newIndex < 0) {
-      return;
-    }
+  //   if (oldIndex < 0 || newIndex < 0) {
+  //     return;
+  //   }
 
-    const newOrder = arrayMove(orderedPlayerIds!, oldIndex, newIndex);
+  //   const newOrder = arrayMove(orderedPlayerIds!, oldIndex, newIndex);
 
-    onPlayerReorder?.(newOrder);
-  }
+  //   onPlayerReorder?.(newOrder);
+  // }
 
   return (
     <div className="flex flex-col gap-3">
@@ -146,7 +147,7 @@ export function PlayerList({
         items={orderedPlayers.map((p) => p.playerId)}
         strategy={verticalListSortingStrategy}
       > */}
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-2.5 ">
         {orderedPlayers.length === 0 ? (
           <p className="py-8 text-center text-sm italic text-(--color-text-muted)">
             {query ? `No players match "${query}"` : emptyMessage}
@@ -159,33 +160,34 @@ export function PlayerList({
                 : (selectedPlayerIds?.has(player.playerId) ?? true);
 
             return (
-              <SortablePlayerRow key={player.playerId} id={player.playerId}>
-                <PlayerCard
-                  player={player}
-                  mode={mode}
-                  adminId={adminId}
-                  onAdminChange={onAdminChange}
-                  isCaptain={captainId === player.playerId}
-                  isKeeper={keeperId === player.playerId}
-                  isSelected={isSelected}
-                  onCaptainToggle={() =>
-                    onCaptainChange(
-                      captainId === player.playerId ? null : player.playerId,
-                    )
-                  }
-                  onKeeperToggle={() =>
-                    onKeeperChange(
-                      keeperId === player.playerId ? null : player.playerId,
-                    )
-                  }
-                  onSelectionToggle={
-                    onSelectionChange
-                      ? () => onSelectionChange(player.playerId, !isSelected)
-                      : undefined
-                  }
-                  onDelete={onDelete}
-                />
-              </SortablePlayerRow>
+              // <SortablePlayerRow key={player.playerId} id={player.playerId}>
+              <PlayerCard
+                key={player.playerId}
+                player={player}
+                mode={mode}
+                adminId={adminId}
+                onAdminChange={onAdminChange}
+                isCaptain={captainId === player.playerId}
+                isKeeper={keeperId === player.playerId}
+                isSelected={isSelected}
+                onCaptainToggle={() =>
+                  onCaptainChange(
+                    captainId === player.playerId ? null : player.playerId,
+                  )
+                }
+                onKeeperToggle={() =>
+                  onKeeperChange(
+                    keeperId === player.playerId ? null : player.playerId,
+                  )
+                }
+                onSelectionToggle={
+                  onSelectionChange
+                    ? () => onSelectionChange(player.playerId, !isSelected)
+                    : undefined
+                }
+                onDelete={onDelete}
+              />
+              // </SortablePlayerRow>
             );
           })
         )}
