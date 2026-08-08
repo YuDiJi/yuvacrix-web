@@ -471,7 +471,7 @@ function CommitmentBanner() {
 function Hero() {
   return (
     <div
-      className="relative overflow-hidden px-5 pb-8 pt-10"
+      className="relative overflow-hidden px-5 pb-8 pt-20"
       style={{
         background:
           "linear-gradient(135deg, var(--color-navy) 0%, var(--color-brand) 100%)",
@@ -502,9 +502,9 @@ function Hero() {
           <Lock size={24} className="text-(--color-sky)" />
         </div>
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-(--color-sky)">
+          {/* <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-(--color-sky)">
             YuvaCrix
-          </span>
+          </span> */}
           <h1 className="mt-1 font-display text-[32px] font-black uppercase leading-none tracking-tight text-(--color-text-inverse)">
             Privacy
             <br />

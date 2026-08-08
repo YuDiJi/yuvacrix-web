@@ -9,6 +9,7 @@ import SquadTab from "./squad/Squadtab";
 import MvpTab from "./mvp/MvpTab";
 import SummaryTab from "./summary/SummaryTab";
 import InfoTab from "./Infotab";
+import { MatchLiveStreamSection } from "./_live-stream";
 
 const TABS = [
   "Info",
@@ -86,25 +87,38 @@ export default function ScorecardPage() {
   // });
 
   const match = scorecard?.match;
+  console.log(match?.isAdmin);
+
+  const canManageStream = match?.isAdmin === true;
 
   return (
     <div className="min-h-dvh bg-(--color-bg-base)">
       {/* ── Match title header ──────────────────────────── */}
       {match && (
-        <div className="safe-top sticky top-0 z-20 bg-(--color-navy) px-4 pb-3">
-          {/* <p className="font-display text-[11px] font-bold uppercase tracking-widest text-(--color-sky)">
+        <>
+          <div className="safe-top sticky top-0 z-20 bg-(--color-navy) px-4 pb-3">
+            {/* <p className="font-display text-[11px] font-bold uppercase tracking-widest text-(--color-sky)">
             {match.tournamentName ?? "League Matches"}
           </p> */}
-          <h1 className="font-display text-[17px] font-black uppercase tracking-wide leading-tight text-(--color-text-inverse) pt-3">
-            {match.teamA?.teamNameSnapshot ?? "Team A"} vs{" "}
-            {match.teamB?.teamNameSnapshot ?? "Team B"}
-          </h1>
-          {match.venue && (
-            <p className="mt-0.5 text-[11px] text-(--color-sky)">
-              {match.venue.groundName}, {match.venue.city}
-            </p>
-          )}
-        </div>
+            <h1 className="font-display text-[17px] font-black uppercase tracking-wide leading-tight text-(--color-text-inverse) pt-3">
+              {match.teamA?.teamNameSnapshot ?? "Team A"} vs{" "}
+              {match.teamB?.teamNameSnapshot ?? "Team B"}
+            </h1>
+            {match.venue && (
+              <p className="mt-0.5 text-[11px] text-(--color-sky)">
+                {match.venue.groundName}, {match.venue.city}
+              </p>
+            )}
+          </div>
+
+          <MatchLiveStreamSection
+            matchId={match.matchId}
+            matchStatus={match.status}
+            teamAName={match.teamA?.teamNameSnapshot ?? "Team A"}
+            teamBName={match.teamB?.teamNameSnapshot ?? "Team B"}
+            canManageStream={canManageStream}
+          />
+        </>
       )}
 
       {/* ── Tab bar ─────────────────────────────────────── */}

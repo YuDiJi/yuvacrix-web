@@ -64,6 +64,7 @@ export type CommentaryItem = {
 export type ScorecardMatch = {
   matchId: string;
   status: string;
+  isAdmin: boolean;
   matchType: string;
   teamA: MatchTeamSnapshot;
   teamB: MatchTeamSnapshot;

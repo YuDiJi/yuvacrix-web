@@ -57,6 +57,7 @@ export type MatchCardModel = {
   fixtureId?: string | null;
 
   status: MatchCardStatus;
+  isAdmin: boolean;
   primaryAction?: MatchCardPrimaryAction | null;
   matchType?: string | null;
   ballType?: string | null;
