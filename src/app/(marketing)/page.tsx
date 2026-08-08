@@ -1,959 +1,3 @@
-// "use client";
-
-// import { useEffect, useRef, useState } from "react";
-// import Link from "next/link";
-// import Image from "next/image";
-// import {
-//   Radio,
-//   Trophy,
-//   Users,
-//   BarChart3,
-//   Smartphone,
-//   Share2,
-//   ChevronRight,
-//   Check,
-//   Star,
-//   Play,
-//   ArrowRight,
-// } from "lucide-react";
-// import { cn } from "@/lib/cn";
-// // ─── UNSPLASH CRICKET IMAGES (free, no attribution required via Unsplash) ────
-// // All IDs are real Unsplash cricket/sports photos — swap any you like
-// const IMAGES = {
-//   heroGround:
-//     "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=1600&q=80&fit=crop", // cricket ground aerial
-//   playerBat:
-//     "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=900&q=80&fit=crop", // cricket bat swing
-//   turf: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=900&q=80&fit=crop", // green turf close
-//   stadium:
-//     "https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?w=900&q=80&fit=crop", // stadium lights
-//   ball: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&q=80&fit=crop", // cricket ball
-//   teamCelebrate:
-//     "https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=900&q=80&fit=crop", // team celebration
-// };
-
-// const GALLERY = [
-//   {
-//     src: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=700&q=80&fit=crop",
-//     label: "Live Match Scoring",
-//   },
-//   {
-//     src: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=700&q=80&fit=crop",
-//     label: "Player Tracking",
-//   },
-//   {
-//     src: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=700&q=80&fit=crop",
-//     label: "Tournament Management",
-//   },
-//   {
-//     src: "https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=700&q=80&fit=crop",
-//     label: "Team Celebrations",
-//   },
-// ];
-
-// const FEATURES = [
-//   {
-//     icon: Radio,
-//     color: "var(--color-live)",
-//     bg: "rgba(255,59,48,0.12)",
-//     title: "Live Ball-by-Ball",
-//     desc: "Score every delivery in real time — boundaries, wickets, extras with one tap.",
-//   },
-//   {
-//     icon: Trophy,
-//     color: "var(--color-six)",
-//     bg: "rgba(245,158,11,0.12)",
-//     title: "Tournament Engine",
-//     desc: "Run knockout, league, or custom formats. Auto-generate fixtures and standings.",
-//   },
-//   {
-//     icon: BarChart3,
-//     color: "var(--color-brand)",
-//     bg: "rgba(27,63,160,0.12)",
-//     title: "Deep Analytics",
-//     desc: "Batting averages, bowling economy, partnerships — every stat beautifully displayed.",
-//   },
-//   {
-//     icon: Users,
-//     color: "var(--color-four)",
-//     bg: "rgba(34,197,94,0.12)",
-//     title: "Team & Player Profiles",
-//     desc: "Build squad rosters, track career stats, and celebrate milestones across seasons.",
-//   },
-//   {
-//     icon: Share2,
-//     color: "var(--color-sky)",
-//     bg: "rgba(75,139,255,0.12)",
-//     title: "Instant Sharing",
-//     desc: "Share live scorecards, match summaries, and leaderboards with a single link.",
-//   },
-//   {
-//     icon: Smartphone,
-//     color: "var(--color-violet)",
-//     bg: "rgba(124,58,237,0.12)",
-//     title: "Mobile-First Design",
-//     desc: "Designed for the boundary rope. Fast, offline-ready, beautiful on any device.",
-//   },
-// ];
-
-// const STEPS = [
-//   {
-//     step: "01",
-//     title: "Create Your Match",
-//     desc: "Set up teams, pick the format, and add your squad in under 60 seconds.",
-//     img: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=600&q=80&fit=crop",
-//   },
-//   {
-//     step: "02",
-//     title: "Score Live",
-//     desc: "Tap to record every ball. Runs, extras, wickets — synced in real time.",
-//     img: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=600&q=80&fit=crop",
-//   },
-//   {
-//     step: "03",
-//     title: "Share & Celebrate",
-//     desc: "Instant scorecards and match reports your players and fans can follow live.",
-//     img: "https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=600&q=80&fit=crop",
-//   },
-// ];
-
-// const TESTIMONIALS = [
-//   {
-//     quote:
-//       "Finally a scoring app that doesn't feel like it was built in 2010. Our whole league runs on YuvaCrix now.",
-//     name: "Rohan Mehta",
-//     role: "League Coordinator, Mumbai",
-//     stars: 5,
-//   },
-//   {
-//     quote:
-//       "Set up a 16-team knockout in 10 minutes. The auto-fixture generation saved us hours of planning.",
-//     name: "Priya Sharma",
-//     role: "Cricket Academy Coach",
-//     stars: 5,
-//   },
-//   {
-//     quote:
-//       "Parents love the live link during school matches. The scorecards look incredibly professional.",
-//     name: "Anil Kumar",
-//     role: "School Sports Teacher",
-//     stars: 5,
-//   },
-// ];
-
-// // ─── ANIMATION HOOK ──────────────────────────────────────────────────────────
-// function useInView(threshold = 0.15) {
-//   const ref = useRef<HTMLDivElement>(null);
-//   const [visible, setVisible] = useState(false);
-//   useEffect(() => {
-//     const el = ref.current;
-//     if (!el) return;
-//     const obs = new IntersectionObserver(
-//       ([entry]) => {
-//         if (entry.isIntersecting) {
-//           setVisible(true);
-//           obs.disconnect();
-//         }
-//       },
-//       { threshold },
-//     );
-//     obs.observe(el);
-//     return () => obs.disconnect();
-//   }, [threshold]);
-//   return { ref, visible };
-// }
-
-// // ─── FLOATING CRICKET BALL ────────────────────────────────────────────────────
-// function FloatingBall({
-//   className,
-//   delay = 0,
-//   size = 12,
-// }: {
-//   className?: string;
-//   delay?: number;
-//   size?: number;
-// }) {
-//   return (
-//     <div
-//       className={cn(
-//         "absolute rounded-full opacity-20 pointer-events-none",
-//         className,
-//       )}
-//       style={{
-//         width: size,
-//         height: size,
-//         background: "radial-gradient(circle at 35% 35%, #ff6b6b, #cc2200)",
-//         boxShadow:
-//           "inset -2px -2px 4px rgba(0,0,0,0.4), 0 2px 8px rgba(255,59,48,0.3)",
-//         animation: `floatBall ${4 + delay}s ease-in-out infinite`,
-//         animationDelay: `${delay}s`,
-//       }}
-//     />
-//   );
-// }
-
-// // ─── REVEAL WRAPPER ──────────────────────────────────────────────────────────
-// function Reveal({
-//   children,
-//   delay = 0,
-//   direction = "up",
-//   className,
-// }: {
-//   children: React.ReactNode;
-//   delay?: number;
-//   direction?: "up" | "left" | "right" | "scale";
-//   className?: string;
-// }) {
-//   const { ref, visible } = useInView();
-//   const transforms: Record<string, string> = {
-//     up: "translateY(40px)",
-//     left: "translateX(-40px)",
-//     right: "translateX(40px)",
-//     scale: "scale(0.92)",
-//   };
-//   return (
-//     <div
-//       ref={ref}
-//       className={className}
-//       style={{
-//         opacity: visible ? 1 : 0,
-//         transform: visible ? "none" : transforms[direction],
-//         transition: `opacity 0.7s ease ${delay}ms, transform 0.7s cubic-bezier(0.22,1,0.36,1) ${delay}ms`,
-//       }}
-//     >
-//       {children}
-//     </div>
-//   );
-// }
-
-// // ─── PAGE ─────────────────────────────────────────────────────────────────────
-// export default function LandingPage() {
-//   const [heroLoaded, setHeroLoaded] = useState(false);
-
-//   useEffect(() => {
-//     const t = setTimeout(() => setHeroLoaded(true), 80);
-//     return () => clearTimeout(t);
-//   }, []);
-
-//   return (
-//     <>
-//       <style>{`
-//         @keyframes floatBall {
-//           0%, 100% { transform: translateY(0px) rotate(0deg); }
-//           50%       { transform: translateY(-18px) rotate(180deg); }
-//         }
-//         @keyframes spinSlow {
-//           to { transform: rotate(360deg); }
-//         }
-//         @keyframes shimmer {
-//           0%   { background-position: -200% center; }
-//           100% { background-position: 200% center; }
-//         }
-//         @keyframes pulse-ring {
-//           0%   { transform: scale(1);   opacity: 0.6; }
-//           100% { transform: scale(2.2); opacity: 0; }
-//         }
-//         @keyframes countUp {
-//           from { opacity: 0; transform: translateY(12px); }
-//           to   { opacity: 1; transform: translateY(0); }
-//         }
-//         @keyframes slideInLeft {
-//           from { opacity: 0; transform: translateX(-60px); }
-//           to   { opacity: 1; transform: translateX(0); }
-//         }
-//         @keyframes slideInRight {
-//           from { opacity: 0; transform: translateX(60px); }
-//           to   { opacity: 1; transform: translateX(0); }
-//         }
-//         @keyframes fadeUp {
-//           from { opacity: 0; transform: translateY(30px); }
-//           to   { opacity: 1; transform: translateY(0); }
-//         }
-//         @keyframes zoomIn {
-//           from { opacity: 0; transform: scale(1.06); }
-//           to   { opacity: 1; transform: scale(1); }
-//         }
-//         .hero-bg { animation: zoomIn 1.4s cubic-bezier(0.22,1,0.36,1) forwards; }
-//         .hero-headline { animation: slideInLeft 0.9s cubic-bezier(0.22,1,0.36,1) 0.2s both; }
-//         .hero-sub      { animation: fadeUp 0.8s ease 0.5s both; }
-//         .hero-ctas     { animation: fadeUp 0.8s ease 0.7s both; }
-//         .hero-proof    { animation: fadeUp 0.8s ease 0.9s both; }
-//         .hero-card     { animation: slideInRight 0.9s cubic-bezier(0.22,1,0.36,1) 0.4s both; }
-//         .shimmer-text {
-//           background: linear-gradient(90deg, #fff 0%, var(--color-sky) 40%, #fff 60%, var(--color-sky) 100%);
-//           background-size: 200% auto;
-//           -webkit-background-clip: text;
-//           -webkit-text-fill-color: transparent;
-//           background-clip: text;
-//           animation: shimmer 3s linear infinite;
-//         }
-//         .stat-card:hover { transform: translateY(-4px); }
-//         .feature-card:hover .feature-icon { transform: scale(1.15) rotate(-6deg); }
-//         .gallery-item:hover img { transform: scale(1.08); }
-//         .gallery-item:hover .gallery-overlay { opacity: 1; }
-//         .gallery-item img, .gallery-item .gallery-overlay { transition: all 0.4s cubic-bezier(0.22,1,0.36,1); }
-//       `}</style>
-
-//       <div className="overflow-x-hidden">
-//         {/* ═══════════════════════════════════════════════════════
-//             HERO
-//         ═══════════════════════════════════════════════════════ */}
-
-//         <section className="relative bg-[#070d1a] text-white overflow-hidden min-h-[96vh] flex items-center">
-//           {/* Hero background image */}
-//           <div className="absolute inset-0 overflow-hidden">
-//             <div className="hero-bg absolute inset-0">
-//               <Image
-//                 src={IMAGES.heroGround}
-//                 alt="Cricket ground"
-//                 fill
-//                 className="object-cover object-center"
-//                 priority
-//               />
-//             </div>
-//             {/* Multi-layer overlay for depth */}
-//             <div className="absolute inset-0 bg-linear-to-r from-[#070d1a] via-[#070d1a]/80 to-[#070d1a]/30" />
-//             <div className="absolute inset-0 bg-linear-to-t from-[#070d1a] via-transparent to-[#070d1a]/60" />
-//             {/* Brand tint */}
-//             <div className="absolute inset-0 bg-(--color-brand)/10 mix-blend-multiply" />
-//           </div>
-
-//           {/* Floating cricket balls */}
-//           <FloatingBall className="top-[20%] left-[8%]" delay={0} size={18} />
-//           <FloatingBall
-//             className="top-[60%] left-[12%]"
-//             delay={1.5}
-//             size={10}
-//           />
-//           <FloatingBall
-//             className="top-[40%] right-[6%]"
-//             delay={2.2}
-//             size={14}
-//           />
-//           <FloatingBall
-//             className="top-[75%] right-[15%]"
-//             delay={0.8}
-//             size={8}
-//           />
-
-//           {/* Grid overlay */}
-//           <div
-//             className="absolute inset-0 opacity-[0.03]"
-//             style={{
-//               backgroundImage: `linear-gradient(white 1px,transparent 1px),linear-gradient(90deg,white 1px,transparent 1px)`,
-//               backgroundSize: "60px 60px",
-//             }}
-//           />
-
-//           {/* Glow */}
-//           <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full bg-(--color-brand) opacity-15 blur-[140px] pointer-events-none" />
-
-//           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-28 lg:py-36 w-full">
-//             <div className="max-w-2xl xl:max-w-3xl">
-//               {/* Live badge */}
-//               <div className="hero-sub inline-flex items-center gap-2.5 bg-white/10 border border-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 mb-8">
-//                 <span className="relative flex h-2.5 w-2.5">
-//                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-(--color-live) opacity-75" />
-//                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-(--color-live)" />
-//                 </span>
-//                 <span className="text-xs font-semibold tracking-[0.12em] uppercase text-white/80">
-//                   Live scoring is here
-//                 </span>
-//               </div>
-
-//               {/* Headline */}
-//               <h1
-//                 className="hero-headline font-family-name:(--font-display) font-black uppercase leading-[0.92] tracking-[-0.01em] mb-6"
-//                 style={{
-//                   fontSize: "clamp(3.2rem, 8.5vw, 6rem)",
-//                   fontWeight: 900,
-//                 }}
-//               >
-//                 Cricket Scoring
-//                 <br />
-//                 <span className="shimmer-text">Built for</span>
-//                 <br />
-//                 Every Ground.
-//               </h1>
-
-//               <p className="hero-sub text-white/65 text-lg sm:text-xl leading-relaxed max-w-xl mb-10">
-//                 Ball-by-ball scoring, tournament management, and deep analytics
-//                 — all in one app designed for clubs, academies, and weekend
-//                 warriors.
-//               </p>
-
-//               {/* CTAs */}
-//               <div className="hero-ctas flex flex-wrap gap-4 mb-14">
-//                 <Link
-//                   href="/home"
-//                   className={cn(
-//                     "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
-//                     "group bg-[var(--color-brand)] text-white px-7 py-4 rounded-xl text-base",
-//                     "shadow-[var(--shadow-button)] hover:bg-[#2449b8] hover:shadow-[0_8px_28px_rgba(27,63,160,0.55)]",
-//                     "transition-all duration-200 active:scale-[0.97] flex items-center gap-2.5",
-//                   )}
-//                 >
-//                   Start Scoring Free
-//                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-//                 </Link>
-//                 <button
-//                   className={cn(
-//                     "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
-//                     "group border border-white/25 text-white px-7 py-4 rounded-xl text-base",
-//                     "hover:bg-white/10 hover:border-white/40 transition-all duration-200 active:scale-[0.97]",
-//                     "flex items-center gap-2.5 backdrop-blur-sm",
-//                   )}
-//                 >
-//                   <span className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center group-hover:border-white/60 transition-colors">
-//                     <Play className="w-3 h-3 fill-white ml-0.5" />
-//                   </span>
-//                   Watch Demo
-//                 </button>
-//               </div>
-
-//               {/* Social proof */}
-//               <div className="hero-proof flex flex-wrap items-center gap-6 text-sm text-white/45">
-//                 {[
-//                   "No credit card required",
-//                   "Free forever plan",
-//                   "10,000+ matches scored",
-//                 ].map((t) => (
-//                   <span key={t} className="flex items-center gap-1.5">
-//                     <Check className="w-3.5 h-3.5 text-[var(--color-four)]" />
-//                     {t}
-//                   </span>
-//                 ))}
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Floating scorecard widget */}
-//           <div className="hero-card hidden lg:block absolute right-8 xl:right-16 top-1/2 -translate-y-1/2">
-//             <div className="relative">
-//               {/* Glow ring */}
-//               <div className="absolute inset-0 rounded-3xl bg-[var(--color-brand)] blur-2xl opacity-40 scale-110" />
-//               <div className="relative bg-gradient-to-b from-[var(--color-brand)] to-[#0f2876] rounded-3xl p-5 w-[280px] shadow-[0_24px_64px_rgba(13,27,62,0.6)] border border-white/10">
-//                 {/* Match header */}
-//                 <div className="flex items-center justify-between mb-4">
-//                   <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">
-//                     <span className="w-1.5 h-1.5 rounded-full bg-(--color-live) animate-pulse" />
-//                     Live · T20
-//                   </span>
-//                   <span className="text-[10px] text-white/35">Over 14.3</span>
-//                 </div>
-//                 {/* Scores */}
-//                 <div className="space-y-2.5 mb-4 pb-4 border-b border-white/10">
-//                   <div className="flex items-center justify-between">
-//                     <span className="font-family-name:(--font-display) font-extrabold uppercase tracking-wide text-white text-[1.1rem]">
-//                       Mumbai XI
-//                     </span>
-//                     <div>
-//                       <span
-//                         className="font-family-name:(--font-display) font-black text-[2.2rem] text-white leading-none"
-//                         style={{ fontWeight: 900 }}
-//                       >
-//                         138
-//                       </span>
-//                       <span className="text-white/40 text-sm">/4</span>
-//                     </div>
-//                   </div>
-//                   <div className="flex items-center justify-between opacity-40">
-//                     <span className="font-family-name:(--font-display) font-extrabold uppercase tracking-wide text-white text-[1.1rem]">
-//                       Delhi SC
-//                     </span>
-//                     <span className="font-family-name:(--font-display) font-bold text-white text-sm">
-//                       Yet to bat
-//                     </span>
-//                   </div>
-//                 </div>
-//                 {/* This over */}
-//                 <div className="mb-4">
-//                   <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 mb-2">
-//                     This Over
-//                   </p>
-//                   <div className="flex gap-1.5">
-//                     {[
-//                       { v: "1", bg: "bg-white/15" },
-//                       { v: "4", bg: "bg-[var(--color-four)]" },
-//                       { v: "0", bg: "bg-white/8" },
-//                       { v: "6", bg: "bg-[var(--color-six)]" },
-//                       { v: "W", bg: "bg-[var(--color-live)]" },
-//                       { v: "2", bg: "bg-white/15" },
-//                     ].map((b, i) => (
-//                       <span
-//                         key={i}
-//                         className={cn(
-//                           b.bg,
-//                           "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white",
-//                         )}
-//                       >
-//                         {b.v}
-//                       </span>
-//                     ))}
-//                   </div>
-//                 </div>
-//                 {/* Current batters */}
-//                 <div className="bg-white/8 rounded-xl p-3">
-//                   <p className="text-[9px] uppercase tracking-[0.14em] text-white/35 mb-2">
-//                     Batting
-//                   </p>
-//                   <div className="space-y-1.5 text-xs">
-//                     <div className="flex justify-between">
-//                       <span className="text-white font-semibold">
-//                         R. Sharma ●
-//                       </span>
-//                       <span className="text-white/70">
-//                         <span className="text-white font-bold">68</span>(42)
-//                       </span>
-//                     </div>
-//                     <div className="flex justify-between">
-//                       <span className="text-white/55">V. Kohli</span>
-//                       <span className="text-white/45">
-//                         <span className="text-white/65">24</span>(18)
-//                       </span>
-//                     </div>
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Bottom wave */}
-//           <div className="absolute bottom-0 left-0 right-0">
-//             <svg
-//               viewBox="0 0 1440 60"
-//               fill="none"
-//               xmlns="http://www.w3.org/2000/svg"
-//               preserveAspectRatio="none"
-//               className="w-full h-12"
-//             >
-//               <path
-//                 d="M0 60L1440 60L1440 20C1200 55 960 5 720 30C480 55 240 5 0 20Z"
-//                 fill="var(--color-bg-base)"
-//               />
-//             </svg>
-//           </div>
-//         </section>
-
-//         {/* ═══════════════════════════════════════════════════════
-//             STATS STRIP
-//         ═══════════════════════════════════════════════════════ */}
-//         <section className="bg-[var(--color-bg-base)] py-14">
-//           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-//               {[
-//                 {
-//                   val: "10K+",
-//                   label: "Matches Scored",
-//                   color: "var(--color-brand)",
-//                 },
-//                 {
-//                   val: "1,200+",
-//                   label: "Teams Registered",
-//                   color: "var(--color-live)",
-//                 },
-//                 {
-//                   val: "340+",
-//                   label: "Tournaments Run",
-//                   color: "var(--color-six)",
-//                 },
-//                 { val: "99%", label: "Uptime", color: "var(--color-four)" },
-//               ].map((s, i) => (
-//                 <Reveal key={s.label} delay={i * 80} direction="up">
-//                   <div className="stat-card bg-[var(--color-bg-card)] rounded-2xl p-5 border border-[var(--color-bg-border)] shadow-[var(--shadow-card)] text-center transition-all duration-300 hover:shadow-[var(--shadow-hero)]">
-//                     <p
-//                       className="font-[family-name:var(--font-display)] font-black text-3xl sm:text-4xl mb-1"
-//                       style={{ color: s.color, fontWeight: 900 }}
-//                     >
-//                       {s.val}
-//                     </p>
-//                     <p className="text-section-label">{s.label}</p>
-//                   </div>
-//                 </Reveal>
-//               ))}
-//             </div>
-//           </div>
-//         </section>
-
-//         {/* ═══════════════════════════════════════════════════════
-//             FEATURES
-//         ═══════════════════════════════════════════════════════ */}
-//         <section
-//           id="features"
-//           className="py-20 lg:py-28 bg-[var(--color-bg-base)]"
-//         >
-//           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//             <Reveal className="text-center mb-14">
-//               <p className="text-section-label text-[var(--color-brand)] mb-3">
-//                 Everything you need
-//               </p>
-//               <h2 className="font-[family-name:var(--font-display)] font-extrabold uppercase text-4xl sm:text-5xl text-[var(--color-navy)] tracking-[0.02em]">
-//                 Built for the game.
-//               </h2>
-//               <p className="text-[var(--color-text-secondary)] mt-4 text-lg max-w-2xl mx-auto">
-//                 From gully cricket to inter-district tournaments — every tool
-//                 the modern cricket organizer needs.
-//               </p>
-//             </Reveal>
-
-//             {/* Feature image banner */}
-//             <Reveal className="mb-10 rounded-3xl overflow-hidden relative h-56 sm:h-72 lg:h-80 group">
-//               <Image
-//                 src={IMAGES.turf}
-//                 alt="Cricket turf"
-//                 fill
-//                 className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
-//               />
-//               <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-navy)]/80 to-transparent flex items-center px-8 lg:px-14">
-//                 <div>
-//                   <p className="text-section-label text-[var(--color-sky)] mb-2">
-//                     The platform
-//                   </p>
-//                   <h3
-//                     className="font-[family-name:var(--font-display)] font-black uppercase text-white text-3xl sm:text-5xl leading-tight"
-//                     style={{ fontWeight: 900 }}
-//                   >
-//                     Score faster.
-//                     <br />
-//                     Play harder.
-//                   </h3>
-//                 </div>
-//               </div>
-//             </Reveal>
-
-//             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-//               {FEATURES.map((f, i) => (
-//                 <Reveal key={f.title} delay={i * 70} direction="up">
-//                   <div className="feature-card bg-[var(--color-bg-card)] rounded-2xl p-6 border border-[var(--color-bg-border)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hero)] transition-all duration-300 h-full">
-//                     <span
-//                       className="feature-icon inline-flex items-center justify-center w-11 h-11 rounded-xl mb-4 transition-transform duration-300"
-//                       style={{ background: f.bg }}
-//                     >
-//                       <f.icon className="w-5 h-5" style={{ color: f.color }} />
-//                     </span>
-//                     <h3 className="font-[family-name:var(--font-display)] font-extrabold uppercase tracking-wide text-[var(--color-navy)] text-lg mb-2">
-//                       {f.title}
-//                     </h3>
-//                     <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
-//                       {f.desc}
-//                     </p>
-//                   </div>
-//                 </Reveal>
-//               ))}
-//             </div>
-//           </div>
-//         </section>
-
-//         {/* ═══════════════════════════════════════════════════════
-//             HOW IT WORKS — with images
-//         ═══════════════════════════════════════════════════════ */}
-//         <section
-//           id="how-it-works"
-//           className="py-20 lg:py-28 bg-[#070d1a] relative overflow-hidden"
-//         >
-//           {/* Background image with overlay */}
-//           <div className="absolute inset-0">
-//             <Image
-//               src={IMAGES.stadium}
-//               alt="Stadium"
-//               fill
-//               className="object-cover object-center opacity-20"
-//             />
-//             <div className="absolute inset-0 bg-gradient-to-b from-[#070d1a] via-[#070d1a]/80 to-[#070d1a]" />
-//           </div>
-
-//           {/* Floating balls bg */}
-//           <FloatingBall className="top-[10%] right-[5%]" delay={0} size={24} />
-//           <FloatingBall
-//             className="bottom-[15%] left-[4%]"
-//             delay={1.2}
-//             size={16}
-//           />
-
-//           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//             <Reveal className="text-center mb-16">
-//               <p className="text-section-label text-[var(--color-sky)] mb-3">
-//                 Simple as cricket
-//               </p>
-//               <h2
-//                 className="font-[family-name:var(--font-display)] font-black uppercase text-white text-4xl sm:text-5xl tracking-[0.02em]"
-//                 style={{ fontWeight: 900 }}
-//               >
-//                 Up and running
-//                 <br />
-//                 in minutes.
-//               </h2>
-//             </Reveal>
-
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-//               {STEPS.map((s, i) => (
-//                 <Reveal key={s.step} delay={i * 120} direction="up">
-//                   <div className="group relative">
-//                     {/* Image */}
-//                     <div className="relative h-48 rounded-2xl overflow-hidden mb-5 border border-white/10">
-//                       <Image
-//                         src={s.img}
-//                         alt={s.title}
-//                         fill
-//                         className="object-cover object-center group-hover:scale-105 transition-transform duration-600"
-//                       />
-//                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-//                       {/* Step number overlay */}
-//                       <div className="absolute top-4 left-4">
-//                         <span
-//                           className="font-[family-name:var(--font-display)] font-black text-5xl leading-none opacity-80"
-//                           style={{
-//                             fontWeight: 900,
-//                             color: "rgba(255,255,255,0.15)",
-//                             textShadow: "0 2px 12px rgba(0,0,0,0.5)",
-//                           }}
-//                         >
-//                           {s.step}
-//                         </span>
-//                       </div>
-//                       {/* Step badge */}
-//                       <div className="absolute bottom-4 left-4 right-4">
-//                         <span className="inline-block bg-[var(--color-brand)] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
-//                           Step {s.step}
-//                         </span>
-//                       </div>
-//                     </div>
-
-//                     <h3 className="font-[family-name:var(--font-display)] font-extrabold uppercase tracking-wide text-white text-xl mb-2">
-//                       {s.title}
-//                     </h3>
-//                     <p className="text-white/50 text-sm leading-relaxed">
-//                       {s.desc}
-//                     </p>
-//                   </div>
-//                 </Reveal>
-//               ))}
-//             </div>
-
-//             <Reveal className="mt-14 text-center">
-//               <Link
-//                 href="/home"
-//                 className={cn(
-//                   "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
-//                   "inline-flex items-center gap-2.5 group",
-//                   "bg-[var(--color-brand)] text-white px-8 py-4 rounded-xl text-base",
-//                   "shadow-[var(--shadow-button)] hover:bg-[#2449b8] hover:shadow-[0_8px_28px_rgba(27,63,160,0.55)]",
-//                   "transition-all duration-200 active:scale-[0.97]",
-//                 )}
-//               >
-//                 Create Your First Match
-//                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-//               </Link>
-//             </Reveal>
-//           </div>
-//         </section>
-
-//         {/* ═══════════════════════════════════════════════════════
-//             GALLERY
-//         ═══════════════════════════════════════════════════════ */}
-//         <section
-//           id="gallery"
-//           className="py-20 lg:py-28 bg-[var(--color-bg-base)]"
-//         >
-//           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//             <Reveal className="text-center mb-12">
-//               <p className="text-section-label text-[var(--color-brand)] mb-3">
-//                 The game, captured
-//               </p>
-//               <h2 className="font-[family-name:var(--font-display)] font-extrabold uppercase text-4xl sm:text-5xl text-[var(--color-navy)] tracking-[0.02em]">
-//                 Made for real cricket.
-//               </h2>
-//             </Reveal>
-
-//             {/* Asymmetric grid */}
-//             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[220px] md:auto-rows-[240px]">
-//               {/* Big card */}
-//               <Reveal
-//                 delay={0}
-//                 className="gallery-item col-span-2 row-span-2 rounded-3xl overflow-hidden relative cursor-pointer"
-//               >
-//                 <Image
-//                   src={GALLERY[0].src}
-//                   alt={GALLERY[0].label}
-//                   fill
-//                   className="object-cover"
-//                 />
-//                 <div className="gallery-overlay absolute inset-0 bg-[var(--color-navy)]/50 opacity-0 flex items-end p-6 transition-opacity duration-400">
-//                   <span className="font-[family-name:var(--font-display)] font-bold uppercase tracking-wide text-white text-xl">
-//                     {GALLERY[0].label}
-//                   </span>
-//                 </div>
-//                 <div className="absolute bottom-5 left-5 bg-[var(--color-brand)]/90 backdrop-blur-sm rounded-xl px-4 py-2">
-//                   <span className="font-[family-name:var(--font-display)] font-bold uppercase tracking-wide text-white text-sm">
-//                     {GALLERY[0].label}
-//                   </span>
-//                 </div>
-//               </Reveal>
-
-//               {/* Small cards */}
-//               {GALLERY.slice(1).map((g, i) => (
-//                 <Reveal
-//                   key={g.label}
-//                   delay={(i + 1) * 80}
-//                   className="gallery-item rounded-2xl overflow-hidden relative cursor-pointer"
-//                 >
-//                   <Image
-//                     src={g.src}
-//                     alt={g.label}
-//                     fill
-//                     className="object-cover"
-//                   />
-//                   <div className="gallery-overlay absolute inset-0 bg-[var(--color-navy)]/50 opacity-0 flex items-end p-4 transition-opacity duration-400">
-//                     <span className="font-[family-name:var(--font-display)] font-bold uppercase tracking-wide text-white text-sm">
-//                       {g.label}
-//                     </span>
-//                   </div>
-//                   <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm rounded-lg px-2.5 py-1">
-//                     <span className="font-[family-name:var(--font-display)] font-bold uppercase tracking-wide text-white text-xs">
-//                       {g.label}
-//                     </span>
-//                   </div>
-//                 </Reveal>
-//               ))}
-//             </div>
-//           </div>
-//         </section>
-
-//         {/* ═══════════════════════════════════════════════════════
-//             TESTIMONIALS
-//         ═══════════════════════════════════════════════════════ */}
-//         <section className="py-20 lg:py-28 bg-[var(--color-bg-base)]">
-//           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//             <Reveal className="text-center mb-12">
-//               <p className="text-section-label text-[var(--color-brand)] mb-3">
-//                 Loved by cricket fans
-//               </p>
-//               <h2 className="font-[family-name:var(--font-display)] font-extrabold uppercase text-4xl sm:text-5xl text-[var(--color-navy)] tracking-[0.02em]">
-//                 What players say.
-//               </h2>
-//             </Reveal>
-
-//             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-//               {TESTIMONIALS.map((t, i) => (
-//                 <Reveal key={t.name} delay={i * 90} direction="up">
-//                   <div className="fixture-bar bg-[var(--color-bg-card)] rounded-2xl p-6 border border-[var(--color-bg-border)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-hero)] transition-all duration-300 h-full flex flex-col">
-//                     <div className="flex gap-0.5 mb-4">
-//                       {Array.from({ length: t.stars }).map((_, j) => (
-//                         <Star
-//                           key={j}
-//                           className="w-4 h-4 fill-[var(--color-six)] text-[var(--color-six)]"
-//                         />
-//                       ))}
-//                     </div>
-//                     <p className="text-[var(--color-text-body)] text-sm leading-relaxed mb-5 italic flex-1">
-//                       &ldquo;{t.quote}&rdquo;
-//                     </p>
-//                     <div className="flex items-center gap-3">
-//                       <div className="w-9 h-9 rounded-full bg-[var(--color-bg-tint)] border border-[var(--color-bg-border)] flex items-center justify-center">
-//                         <span className="font-[family-name:var(--font-display)] font-bold text-[var(--color-brand)] text-sm">
-//                           {t.name[0]}
-//                         </span>
-//                       </div>
-//                       <div>
-//                         <p className="font-[family-name:var(--font-display)] font-bold uppercase tracking-wide text-[var(--color-navy)] text-sm">
-//                           {t.name}
-//                         </p>
-//                         <p className="text-meta">{t.role}</p>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </Reveal>
-//               ))}
-//             </div>
-//           </div>
-//         </section>
-
-//         {/* ═══════════════════════════════════════════════════════
-//             FINAL CTA BANNER — with bat+ball image
-//         ═══════════════════════════════════════════════════════ */}
-//         <section className="relative py-24 lg:py-32 overflow-hidden">
-//           {/* Background */}
-//           <div className="absolute inset-0">
-//             <Image
-//               src={IMAGES.playerBat}
-//               alt="Cricket player"
-//               fill
-//               className="object-cover object-center"
-//             />
-//             <div className="absolute inset-0 bg-[var(--color-navy)]/88" />
-//             <div className="absolute inset-0 bg-[var(--color-brand)]/30 mix-blend-multiply" />
-//           </div>
-
-//           {/* Floating balls */}
-//           <FloatingBall className="top-[15%] left-[5%]" delay={0} size={20} />
-//           <FloatingBall
-//             className="bottom-[20%] right-[6%]"
-//             delay={1.8}
-//             size={28}
-//           />
-
-//           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-//             <Reveal>
-//               {/* Live dot */}
-//               <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-8">
-//                 <span className="relative flex h-2 w-2">
-//                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-four)] opacity-75" />
-//                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-four)]" />
-//                 </span>
-//                 <span className="text-xs font-bold tracking-widest uppercase text-white/75">
-//                   Join the community
-//                 </span>
-//               </div>
-
-//               <h2
-//                 className="font-[family-name:var(--font-display)] font-black uppercase text-white leading-[0.95] tracking-[-0.01em] mb-5"
-//                 style={{
-//                   fontSize: "clamp(2.8rem, 6vw, 4.5rem)",
-//                   fontWeight: 900,
-//                 }}
-//               >
-//                 Ready to score your
-//                 <br />
-//                 next match?
-//               </h2>
-//               <p className="text-white/65 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-//                 Join thousands of cricket organizers already using YuvaCrix.
-//                 Free to start — no credit card needed.
-//               </p>
-
-//               <div className="flex flex-wrap justify-center gap-4">
-//                 <Link
-//                   href="/home"
-//                   className={cn(
-//                     "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
-//                     "group inline-flex items-center gap-2.5",
-//                     "bg-white text-[var(--color-brand)] px-8 py-4 rounded-xl text-base",
-//                     "shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]",
-//                     "hover:bg-[var(--color-bg-tint)] transition-all duration-200 active:scale-[0.97]",
-//                   )}
-//                 >
-//                   Start for Free
-//                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-//                 </Link>
-//                 <Link
-//                   href="#features"
-//                   className={cn(
-//                     "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
-//                     "border border-white/25 text-white px-8 py-4 rounded-xl text-base",
-//                     "hover:bg-white/10 hover:border-white/40 transition-all duration-200 active:scale-[0.97]",
-//                   )}
-//                 >
-//                   Learn More
-//                 </Link>
-//               </div>
-//             </Reveal>
-//           </div>
-//         </section>
-//       </div>
-//     </>
-//   );
-// }
-
 "use client";
 
 import Image from "next/image";
@@ -979,52 +23,92 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ScoreDemo from "./ScoreDemo";
+
+/* -------------------------------------------------------------------------- */
+/* Match Flow Steps with Exact Image Mappings                                 */
+/* -------------------------------------------------------------------------- */
 
 const matchFlow = [
   {
     number: "01",
+    tag: "Squad Selection",
     title: "Select teams",
-    image: "/landing/team-selection.png",
+    subtitle: "Pick or create competing squads & manage team rosters in seconds.",
+    image: "/yuvacrixlandingpage/select_team.png",
+    aspect: "aspect-[862/1598]",
   },
   {
     number: "02",
+    tag: "Match Setup",
     title: "Set match details",
-    image: "/landing/match-details.png",
+    subtitle: "Configure overs, pitch condition, ball type & ground location.",
+    image: "/yuvacrixlandingpage/startmatch.png",
+    aspect: "aspect-[862/1598]",
   },
   {
     number: "03",
+    tag: "Toss Decision",
     title: "Complete the toss",
-    image: "/landing/toss.png",
+    subtitle: "Record the toss winning team and choice to bat or bowl with 1 tap.",
+    image: "/yuvacrixlandingpage/toss.png",
+    aspect: "aspect-[862/1598]",
   },
   {
     number: "04",
+    tag: "Playing XI",
     title: "Choose the lineup",
-    image: "/landing/lineup.png",
+    subtitle: "Select Playing XI squad, captain, and wicketkeeper seamlessly.",
+    image: "/yuvacrixlandingpage/lineup.png",
+    aspect: "aspect-[870/1566]",
   },
   {
     number: "05",
+    tag: "Opening Pair",
+    title: "Pick opening pair",
+    subtitle: "Designate opening striker, non-striker & opening bowler.",
+    image: "/yuvacrixlandingpage/selectstriker.png",
+    aspect: "aspect-[870/1566]",
+  },
+  {
+    number: "06",
+    tag: "Live Engine",
     title: "Start scoring",
-    image: "/landing/scoring.png",
+    subtitle: "Tactile live keypad, batsman stats, extras & live sync.",
+    image: "/yuvacrixlandingpage/scoring.png",
+    aspect: "aspect-[870/1566]",
   },
 ];
 
+/* -------------------------------------------------------------------------- */
+/* Tournament Showcase Screens                                               */
+/* -------------------------------------------------------------------------- */
+
 const tournamentScreens = [
   {
-    label: "Tournament",
-    image: "/landing/tournament-home.png",
-    className: "lg:translate-y-10 lg:-rotate-[4deg]",
+    badge: "Brackets & Fixtures",
+    label: "Tournament Rounds",
+    subtitle: "Knockout brackets, groups & round-by-round scheduling.",
+    image: "/yuvacrixlandingpage/Tournament_round.png",
+    aspect: "aspect-[862/1598]",
+    className: "lg:translate-y-6 lg:-rotate-[2.5deg]",
   },
   {
-    label: "Fixtures",
-    image: "/landing/fixtures.png",
-    className: "relative z-20 lg:scale-105",
+    badge: "Match Central",
+    label: "Live Home & Fixtures",
+    subtitle: "Real-time match tracker, upcoming games & circuit standings.",
+    image: "/yuvacrixlandingpage/Homepage.png",
+    aspect: "aspect-[870/1566]",
+    className: "relative z-20 lg:scale-[1.03]",
   },
   {
-    label: "Points table",
-    image: "/landing/points-table.png",
-    className: "lg:translate-y-10 lg:rotate-[4deg]",
+    badge: "Digital Scorecard",
+    label: "Scoreboard Summary",
+    subtitle: "Ball-by-ball commentary, partnership stats & full scorecards.",
+    image: "/yuvacrixlandingpage/Screenshot 2026-08-08 at 9.21.03 AM.png",
+    aspect: "aspect-[870/1566]",
+    className: "lg:translate-y-6 lg:rotate-[2.5deg]",
   },
 ];
 
@@ -1037,14 +121,19 @@ const audienceItems = [
   "Local cricket leagues",
 ];
 
+/* -------------------------------------------------------------------------- */
+/* Main Landing Page Component                                                */
+/* -------------------------------------------------------------------------- */
+
 export default function LandingPage() {
   return (
-    <div className="landing-page bg-[#060B1F] text-white">
+    <div className="landing-page bg-[#060B1F] text-white selection:bg-[#4B8BFF]/30 selection:text-white">
       <HeroScene />
       <LiveScoringScene />
       <MatchJourneyScene />
       <TournamentScene />
       <PlayerScene />
+      <OnboardingPreviewScene />
       <AudienceTicker />
       <FinalCtaScene />
     </div>
@@ -1052,7 +141,32 @@ export default function LandingPage() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Hero                                                                       */
+/* Hero Static Responsive Headline Component                                  */
+/* -------------------------------------------------------------------------- */
+
+function HeroHeadline() {
+  return (
+    <div className="w-full select-none">
+      {/* Line 1: Cricket. */}
+      <h1 className="font-display text-[clamp(3.2rem,6.8vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-white">
+        Cricket.
+      </h1>
+
+      {/* Line 2: Scored */}
+      <div className="font-display text-[clamp(3.2rem,6.8vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-[#4B8BFF] my-1 sm:my-1.5">
+        Scored
+      </div>
+
+      {/* Line 3: Everyday. */}
+      <div className="font-display text-[clamp(3.2rem,6.8vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-stroke text-white drop-shadow-[0_4px_24px_rgba(0,214,255,0.2)]">
+        Everyday.
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Hero Scene                                                                 */
 /* -------------------------------------------------------------------------- */
 
 function HeroScene() {
@@ -1076,7 +190,7 @@ function HeroScene() {
     >
       <HeroBackground />
 
-      <div className="relative z-10 mx-auto grid min-h-[100svh] max-w-7xl items-center gap-16 px-5 pb-16 pt-28 sm:px-8 lg:grid-cols-[0.87fr_1.13fr] lg:px-10 lg:pb-20 lg:pt-28">
+      <div className="relative z-10 mx-auto grid min-h-[100svh] max-w-7xl items-center gap-12 px-5 pb-16 pt-28 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:px-10 lg:pb-20 lg:pt-28">
         <motion.div
           style={
             shouldReduceMotion
@@ -1104,49 +218,8 @@ function HeroScene() {
             </span>
           </motion.div>
 
-          <div className="overflow-hidden">
-            <motion.h1
-              initial={{ y: "105%" }}
-              animate={{ y: 0 }}
-              transition={{
-                duration: 0.85,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="font-display text-[clamp(4.6rem,12vw,8.3rem)] font-black uppercase leading-[0.77] tracking-[-0.035em]"
-            >
-              Cricket.
-            </motion.h1>
-          </div>
-
-          <div className="overflow-hidden pb-2">
-            <motion.h1
-              initial={{ y: "105%" }}
-              animate={{ y: 0 }}
-              transition={{
-                duration: 0.85,
-                delay: 0.12,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="font-display text-[clamp(4.6rem,12vw,8.3rem)] font-black uppercase leading-[0.77] tracking-[-0.035em] text-[#4B8BFF]"
-            >
-              Scored
-            </motion.h1>
-          </div>
-
-          <div className="overflow-hidden pb-2">
-            <motion.h1
-              initial={{ y: "105%" }}
-              animate={{ y: 0 }}
-              transition={{
-                duration: 0.85,
-                delay: 0.24,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="text-stroke font-display text-[clamp(4.6rem,12vw,8.3rem)] font-black uppercase leading-[0.77] tracking-[-0.035em]"
-            >
-              Differently.
-            </motion.h1>
-          </div>
+          {/* Static Perfectly Proportioned Headline */}
+          <HeroHeadline />
 
           <motion.p
             initial={{ opacity: 0, y: 22 }}
@@ -1261,7 +334,8 @@ function HeroBackground() {
 
 function HeroScreens() {
   return (
-    <div className="relative min-h-[600px] sm:min-h-[690px]">
+    <div className="relative min-h-[580px] sm:min-h-[640px] flex items-center justify-center">
+      {/* Left phone: Team Selection */}
       <motion.div
         initial={{ opacity: 0, y: 70, rotate: -8 }}
         animate={{ opacity: 1, y: 0, rotate: -5 }}
@@ -1270,19 +344,20 @@ function HeroScreens() {
           delay: 0.35,
           ease: [0.22, 1, 0.36, 1],
         }}
-        className="absolute left-[0%] top-[17%] z-10 hidden w-[34%] overflow-hidden rounded-[28px] border border-white/15 bg-[#101A37] p-2 shadow-[0_35px_80px_rgba(0,0,0,0.45)] sm:block"
+        className="absolute left-[2%] top-[14%] z-10 hidden w-[32%] max-w-[210px] overflow-hidden rounded-[26px] border-[3px] border-white/15 bg-[#101A37] p-1 shadow-[0_30px_70px_rgba(0,0,0,0.55)] sm:block"
       >
-        <div className="relative aspect-[9/16] overflow-hidden rounded-[22px]">
+        <div className="relative w-full aspect-[862/1598] overflow-hidden rounded-[20px] bg-[#0A0F24]">
           <Image
-            src="/landing/team-selection.png"
+            src="/yuvacrixlandingpage/select_team.png"
             alt="Select teams in YuvaCrix"
             fill
-            sizes="250px"
-            className="object-cover object-top"
+            sizes="210px"
+            className="object-contain object-top"
           />
         </div>
       </motion.div>
 
+      {/* Center main phone: Live Scoring Keypad */}
       <motion.div
         initial={{ opacity: 0, y: 90, scale: 0.92 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1291,20 +366,24 @@ function HeroScreens() {
           delay: 0.2,
           ease: [0.22, 1, 0.36, 1],
         }}
-        className="absolute left-1/2 top-[3%] z-20 w-[65%] max-w-[360px] -translate-x-1/2 overflow-hidden rounded-[42px] border border-white/20 bg-[#0B1023] p-2.5 shadow-[0_45px_110px_rgba(0,0,0,0.58),0_0_80px_rgba(75,139,255,0.16)]"
+        className="relative z-20 w-[62%] max-w-[290px] sm:max-w-[310px] overflow-hidden rounded-[38px] border-[4.5px] border-white/25 bg-[#0B1023] p-1.5 shadow-[0_45px_110px_rgba(0,0,0,0.65),0_0_80px_rgba(75,139,255,0.22)]"
       >
-        <div className="relative aspect-[9/18.5] overflow-hidden rounded-[34px] bg-[#10182F]">
+        {/* Dynamic Island Pill */}
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-black/80 rounded-full z-20 border border-white/10" />
+
+        <div className="relative w-full aspect-[870/1566] overflow-hidden rounded-[30px] bg-[#10182F]">
           <Image
-            src="/landing/scoring.png"
+            src="/yuvacrixlandingpage/scoring.png"
             alt="YuvaCrix live scoring screen"
             fill
             priority
-            sizes="360px"
-            className="object-cover object-top"
+            sizes="310px"
+            className="object-contain object-top"
           />
         </div>
       </motion.div>
 
+      {/* Right phone: Start Innings */}
       <motion.div
         initial={{ opacity: 0, y: 70, rotate: 8 }}
         animate={{ opacity: 1, y: 0, rotate: 5 }}
@@ -1313,35 +392,36 @@ function HeroScreens() {
           delay: 0.48,
           ease: [0.22, 1, 0.36, 1],
         }}
-        className="absolute right-[0%] top-[22%] z-10 hidden w-[34%] overflow-hidden rounded-[28px] border border-white/15 bg-[#101A37] p-2 shadow-[0_35px_80px_rgba(0,0,0,0.45)] sm:block"
+        className="absolute right-[2%] top-[18%] z-10 hidden w-[32%] max-w-[210px] overflow-hidden rounded-[26px] border-[3px] border-white/15 bg-[#101A37] p-1 shadow-[0_30px_70px_rgba(0,0,0,0.55)] sm:block"
       >
-        <div className="relative aspect-[9/16] overflow-hidden rounded-[22px]">
+        <div className="relative w-full aspect-[862/1598] overflow-hidden rounded-[20px] bg-[#0A0F24]">
           <Image
-            src="/landing/scorecard.png"
-            alt="YuvaCrix scorecard"
+            src="/yuvacrixlandingpage/startininings.png"
+            alt="YuvaCrix start innings"
             fill
-            sizes="250px"
-            className="object-cover object-top"
+            sizes="210px"
+            className="object-contain object-top"
           />
         </div>
       </motion.div>
 
+      {/* Live Badge */}
       <motion.div
-        animate={{ y: [0, -10, 0] }}
+        animate={{ y: [0, -8, 0] }}
         transition={{ duration: 4, repeat: Infinity }}
-        className="absolute right-[2%] top-[10%] z-30 rounded-2xl border border-white/15 bg-[#111A33]/90 px-4 py-3 shadow-2xl backdrop-blur-xl sm:right-[7%]"
+        className="absolute right-[0%] top-[8%] z-30 rounded-2xl border border-white/15 bg-[#111A33]/90 px-4 py-2.5 shadow-2xl backdrop-blur-xl sm:right-[4%]"
       >
-        <div className="flex items-center gap-3">
-          <span className="relative flex h-3 w-3">
+        <div className="flex items-center gap-2.5">
+          <span className="relative flex h-2.5 w-2.5">
             <span className="absolute h-full w-full animate-ping rounded-full bg-[#FF3B30] opacity-60" />
-            <span className="relative h-3 w-3 rounded-full bg-[#FF3B30]" />
+            <span className="relative h-2.5 w-2.5 rounded-full bg-[#FF3B30]" />
           </span>
 
           <div>
-            <p className="font-display text-xs font-bold uppercase tracking-[0.12em] text-white">
+            <p className="font-display text-[11px] font-bold uppercase tracking-[0.12em] text-white">
               Match live
             </p>
-            <p className="mt-0.5 text-[10px] font-medium text-white/40">
+            <p className="text-[10px] font-medium text-white/40">
               86/3 · 8.4 overs
             </p>
           </div>
@@ -1351,21 +431,21 @@ function HeroScreens() {
       <FloatingEvent
         label="FOUR"
         color="#22C55E"
-        className="left-[2%] top-[4%]"
+        className="left-[0%] top-[4%]"
         delay={0}
       />
 
       <FloatingEvent
         label="SIX"
         color="#F59E0B"
-        className="bottom-[7%] right-[3%]"
+        className="bottom-[6%] right-[1%]"
         delay={1.3}
       />
 
       <FloatingEvent
         label="WICKET"
         color="#FF3B30"
-        className="bottom-[13%] left-[3%]"
+        className="bottom-[10%] left-[2%]"
         delay={2.2}
       />
 
@@ -1388,7 +468,7 @@ function FloatingEvent({
   return (
     <motion.div
       animate={{
-        y: [0, -10, 0],
+        y: [0, -8, 0],
         rotate: [-2, 2, -2],
       }}
       transition={{
@@ -1396,7 +476,7 @@ function FloatingEvent({
         repeat: Infinity,
         delay,
       }}
-      className={`absolute z-30 hidden rounded-xl border px-4 py-2 font-display text-sm font-black uppercase tracking-[0.08em] shadow-xl sm:block ${className}`}
+      className={`absolute z-30 hidden rounded-xl border px-3.5 py-1.5 font-display text-xs font-black uppercase tracking-[0.08em] shadow-xl sm:block ${className}`}
       style={{
         color,
         borderColor: `${color}55`,
@@ -1410,7 +490,7 @@ function FloatingEvent({
 }
 
 /* -------------------------------------------------------------------------- */
-/* Live scoring                                                               */
+/* Live Scoring Scene                                                         */
 /* -------------------------------------------------------------------------- */
 
 function LiveScoringScene() {
@@ -1551,7 +631,7 @@ function ScoringStat({ value, label }: { value: string; label: string }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Match journey                                                              */
+/* Match Journey Scene (Proper Card Grid with Framed Mobile Mockups)          */
 /* -------------------------------------------------------------------------- */
 
 function MatchJourneyScene() {
@@ -1571,7 +651,7 @@ function MatchJourneyScene() {
       <div className="absolute right-[-10%] top-[45%] h-96 w-96 rounded-full bg-[#7C3AED]/8 blur-[100px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-        <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
+        <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:items-end mb-16">
           <div>
             <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-[#1B3FA0]/60">
               03 — Match journey
@@ -1589,80 +669,51 @@ function MatchJourneyScene() {
           </p>
         </div>
 
-        <div className="mt-16 hidden items-start justify-between gap-4 lg:flex">
+        {/* 6-Step Card Grid: Proper Card Design with Fitted Mockups */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {matchFlow.map((step, index) => (
             <motion.div
               key={step.number}
-              initial={{ opacity: 0, y: 60 }}
+              initial={{ opacity: 0, y: 50 }}
               animate={isInView ? { opacity: 1, y: 0 } : undefined}
               transition={{
                 duration: 0.65,
-                delay: index * 0.12,
+                delay: index * 0.1,
               }}
-              className="relative flex flex-1 items-start"
+              className="group relative flex flex-col justify-between rounded-[28px] border border-[#DDE4EE] bg-white p-5 shadow-[0_14px_40px_rgba(13,27,62,0.06)] hover:shadow-[0_24px_65px_rgba(13,27,62,0.12)] hover:-translate-y-1.5 transition-all duration-300"
             >
-              <div className="w-full">
-                <div className="group relative overflow-hidden rounded-[28px] border border-[#DDE4EE] bg-white p-2 shadow-[0_28px_70px_rgba(13,27,62,0.10)] transition duration-500 hover:-translate-y-3 hover:shadow-[0_34px_90px_rgba(13,27,62,0.16)]">
-                  <div className="relative aspect-[9/16] overflow-hidden rounded-[22px] bg-[#E7EBF2]">
+              {/* Card Header */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex h-7 px-3 items-center justify-center rounded-full bg-[#1B3FA0] font-display text-xs font-black text-white">
+                    Step {step.number}
+                  </span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#1B3FA0]/70">
+                    {step.tag}
+                  </span>
+                </div>
+
+                <h3 className="mt-3 font-display text-lg font-extrabold uppercase tracking-wide text-[#0D1B3E]">
+                  {step.title}
+                </h3>
+                <p className="mt-1 text-xs text-[#667085] font-body leading-relaxed">
+                  {step.subtitle}
+                </p>
+              </div>
+
+              {/* Phone Mockup Frame - Perfectly Fitted without Overstretching */}
+              <div className="mt-2 flex-1 flex items-center justify-center p-3 rounded-[22px] bg-[#F7F9FD] border border-[#E9EEF5]">
+                <div className={`relative w-full max-w-[210px] sm:max-w-[220px] ${step.aspect} mx-auto rounded-[24px] border-[3.5px] border-[#CBD5E1] bg-[#0A0F24] p-1 shadow-[0_12px_32px_rgba(0,0,0,0.14)] overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}>
+                  {/* Notch */}
+                  <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-11 h-1.5 bg-black/60 rounded-full z-20" />
+
+                  <div className="relative w-full h-full rounded-[18px] overflow-hidden bg-[#0A0F24]">
                     <Image
                       src={step.image}
                       alt={step.title}
                       fill
                       sizes="220px"
-                      className="object-cover object-top transition duration-700 group-hover:scale-[1.035]"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-5 flex items-center gap-3">
-                  <span className="font-display text-xs font-black text-[#1B3FA0]">
-                    {step.number}
-                  </span>
-                  <span className="font-display text-sm font-bold uppercase tracking-[0.06em]">
-                    {step.title}
-                  </span>
-                </div>
-              </div>
-
-              {index < matchFlow.length - 1 && (
-                <ChevronRight className="mt-[45%] h-5 w-5 shrink-0 text-[#AAB5C6]" />
-              )}
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="mt-14 space-y-7 lg:hidden">
-          {matchFlow.map((step, index) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, y: 35 }}
-              animate={isInView ? { opacity: 1, y: 0 } : undefined}
-              transition={{ delay: index * 0.1 }}
-              className="grid grid-cols-[70px_1fr] gap-4"
-            >
-              <div className="flex flex-col items-center">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1B3FA0] font-display text-sm font-black text-white">
-                  {step.number}
-                </span>
-
-                {index < matchFlow.length - 1 && (
-                  <div className="mt-3 h-full w-px bg-[#CAD3E1]" />
-                )}
-              </div>
-
-              <div className="pb-7">
-                <p className="mb-4 font-display text-lg font-black uppercase">
-                  {step.title}
-                </p>
-
-                <div className="max-w-[270px] overflow-hidden rounded-[28px] border border-[#DDE4EE] bg-white p-2 shadow-xl">
-                  <div className="relative aspect-[9/16] overflow-hidden rounded-[22px]">
-                    <Image
-                      src={step.image}
-                      alt={step.title}
-                      fill
-                      sizes="270px"
-                      className="object-cover object-top"
+                      className="object-contain object-top"
                     />
                   </div>
                 </div>
@@ -1676,7 +727,7 @@ function MatchJourneyScene() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Tournament                                                                 */
+/* Tournament Scene (3 Card Showcase with Proper Frame Mockups)               */
 /* -------------------------------------------------------------------------- */
 
 function TournamentScene() {
@@ -1690,11 +741,11 @@ function TournamentScene() {
     <section
       ref={sectionRef}
       id="tournaments"
-      className="relative overflow-hidden bg-[#0A1025] py-24 lg:py-32"
+      className="relative overflow-hidden bg-[#0A1025] py-24 lg:py-32 text-white"
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(75,139,255,0.15),transparent_38%)]" />
 
-      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-16 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:px-10">
+      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-16 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:px-10">
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={isInView ? { opacity: 1, x: 0 } : undefined}
@@ -1718,8 +769,8 @@ function TournamentScene() {
             {[
               "Manual and automatic fixtures",
               "Tournament rounds and groups",
-              "Match scheduling",
-              "Points tables and standings",
+              "Match scheduling and venues",
+              "Points tables and NRR calculation",
             ].map((item, index) => (
               <motion.div
                 key={item}
@@ -1737,14 +788,15 @@ function TournamentScene() {
           </div>
         </motion.div>
 
+        {/* 3 Tournament Cards with Fitted Device Mockups */}
         <div className="relative">
           <div className="absolute left-1/2 top-1/2 h-[70%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#4B8BFF]/15 blur-[90px]" />
 
-          <div className="relative grid grid-cols-3 items-center gap-2 sm:gap-4">
+          <div className="relative grid grid-cols-1 sm:grid-cols-3 items-center gap-5 sm:gap-4">
             {tournamentScreens.map((screen, index) => (
               <motion.div
                 key={screen.label}
-                initial={{ opacity: 0, y: 70, rotate: index === 0 ? -8 : 8 }}
+                initial={{ opacity: 0, y: 70, rotate: index === 0 ? -6 : index === 2 ? 6 : 0 }}
                 animate={
                   isInView
                     ? {
@@ -1759,16 +811,34 @@ function TournamentScene() {
                   delay: index * 0.15,
                   ease: [0.22, 1, 0.36, 1],
                 }}
-                className={`overflow-hidden rounded-[20px] border border-white/15 bg-[#11182F] p-1.5 shadow-[0_35px_75px_rgba(0,0,0,0.5)] sm:rounded-[28px] sm:p-2 ${screen.className}`}
+                className={`group rounded-[26px] border border-white/15 bg-[#11182F]/90 backdrop-blur-xl p-4 shadow-[0_25px_65px_rgba(0,0,0,0.55)] hover:border-[#4B8BFF]/40 transition-all duration-300 ${screen.className}`}
               >
-                <div className="relative aspect-[9/16] overflow-hidden rounded-[15px] bg-[#E8ECF2] sm:rounded-[22px]">
-                  <Image
-                    src={screen.image}
-                    alt={screen.label}
-                    fill
-                    sizes="250px"
-                    className="object-cover object-top"
-                  />
+                <div className="mb-3 px-1">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#00D6FF]">
+                    {screen.badge}
+                  </span>
+                  <h3 className="font-display text-sm font-bold uppercase text-white tracking-wide mt-0.5">
+                    {screen.label}
+                  </h3>
+                  <p className="text-[11px] text-white/50 font-body leading-tight mt-0.5">
+                    {screen.subtitle}
+                  </p>
+                </div>
+
+                {/* Phone Device Mockup Frame */}
+                <div className={`relative w-full max-w-[210px] sm:max-w-[220px] mx-auto ${screen.aspect} rounded-[22px] border-[3px] border-white/20 bg-[#080D1F] p-1 shadow-xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}>
+                  {/* Notch */}
+                  <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1.5 bg-black/70 rounded-full z-20" />
+
+                  <div className="relative w-full h-full rounded-[16px] overflow-hidden bg-[#080D1F]">
+                    <Image
+                      src={screen.image}
+                      alt={screen.label}
+                      fill
+                      sizes="220px"
+                      className="object-contain object-top"
+                    />
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -1782,7 +852,7 @@ function TournamentScene() {
             <div className="flex items-center gap-3">
               <Trophy className="h-5 w-5 text-[#F59E0B]" />
               <div>
-                <p className="font-display text-xs font-bold uppercase tracking-[0.08em]">
+                <p className="font-display text-xs font-bold uppercase tracking-[0.08em] text-white">
                   Tournament ready
                 </p>
                 <p className="mt-0.5 text-[10px] text-white/40">
@@ -1798,7 +868,7 @@ function TournamentScene() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Players                                                                    */
+/* 05 — Player Performance Scene with myperformance.png                       */
 /* -------------------------------------------------------------------------- */
 
 function PlayerScene() {
@@ -1818,6 +888,7 @@ function PlayerScene() {
         <div className="relative mx-auto w-full max-w-[620px]">
           <div className="absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#1B3FA0]/10 blur-[90px]" />
 
+          {/* Proper Card Frame around Player Performance Screen */}
           <motion.div
             initial={{ opacity: 0, y: 55, rotate: -3 }}
             animate={
@@ -1830,15 +901,18 @@ function PlayerScene() {
                 : undefined
             }
             transition={{ duration: 0.85 }}
-            className="relative mx-auto max-w-[370px] overflow-hidden rounded-[36px] border border-[#D7DFEA] bg-white p-2.5 shadow-[0_35px_90px_rgba(13,27,62,0.16)]"
+            className="relative mx-auto w-full max-w-[280px] sm:max-w-[310px] rounded-[36px] border-[4.5px] border-[#CBD5E1] bg-white p-1.5 shadow-[0_30px_80px_rgba(13,27,62,0.16)] overflow-hidden"
           >
-            <div className="relative aspect-[9/17] overflow-hidden rounded-[29px]">
+            {/* Notch */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-black/70 rounded-full z-20" />
+
+            <div className="relative w-full aspect-[862/1598] rounded-[28px] overflow-hidden bg-[#0A0F24]">
               <Image
-                src="/landing/player-profile.png"
-                alt="YuvaCrix player profile"
+                src="/yuvacrixlandingpage/myperformance.png"
+                alt="YuvaCrix player performance, stats and match awards"
                 fill
-                sizes="370px"
-                className="object-cover object-top"
+                sizes="310px"
+                className="object-contain object-top"
               />
             </div>
           </motion.div>
@@ -1968,7 +1042,98 @@ function PerformanceStat({
 }
 
 /* -------------------------------------------------------------------------- */
-/* Audience ticker                                                            */
+/* Onboarding & Instant Access Preview Scene                                  */
+/* -------------------------------------------------------------------------- */
+
+function OnboardingPreviewScene() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, {
+    once: true,
+    amount: 0.2,
+  });
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden bg-[#0A1025] py-24 text-white lg:py-32 border-t border-white/10"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(0,214,255,0.12),transparent_45%)]" />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+        <div className="grid gap-12 lg:grid-cols-12 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={isInView ? { opacity: 1, x: 0 } : undefined}
+            transition={{ duration: 0.8 }}
+            className="lg:col-span-6 space-y-6"
+          >
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 backdrop-blur-xl">
+              <Sparkles className="w-3.5 h-3.5 text-[#00D6FF]" />
+              <span className="font-body text-xs font-bold uppercase tracking-[0.18em] text-white/80">
+                Frictionless Onboarding
+              </span>
+            </div>
+
+            <h2 className="font-display text-[clamp(3.5rem,7vw,5.5rem)] font-black uppercase leading-[0.85] tracking-[-0.03em]">
+              Instant access. <span className="text-[#00D6FF]">Zero barrier.</span>
+            </h2>
+
+            <p className="font-body text-base text-white/60 leading-relaxed max-w-lg">
+              Sign in with your phone or email and start scoring matches right away. Manage squads, sync scorecards across devices, and organize local circuits with ease.
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
+                <div className="text-2xl font-display font-black text-[#00D6FF]">100% Free</div>
+                <div className="text-xs text-white/50 font-body mt-1">For grassroots & club matches</div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
+                <div className="text-2xl font-display font-black text-[#22C55E]">&lt; 10 Sec</div>
+                <div className="text-xs text-white/50 font-body mt-1">Quick match start time</div>
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#0050FF] to-[#00D6FF] text-white font-display font-bold text-sm uppercase tracking-wider shadow-[0_15px_40px_rgba(0,214,255,0.35)] hover:scale-105 active:scale-95 transition-all"
+              >
+                Sign In to YuvaCrix
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </motion.div>
+
+          {/* Device Mockup with login.png */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={isInView ? { opacity: 1, scale: 1 } : undefined}
+            transition={{ duration: 0.85, delay: 0.2 }}
+            className="lg:col-span-6 flex justify-center"
+          >
+            <div className="relative w-full max-w-[280px] sm:max-w-[310px] rounded-[36px] border-[4.5px] border-white/20 bg-[#10182F] p-1.5 shadow-[0_35px_90px_rgba(0,0,0,0.65)] overflow-hidden">
+              {/* Notch */}
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-black/80 rounded-full z-20" />
+
+              <div className="relative w-full aspect-[870/1566] rounded-[28px] overflow-hidden bg-[#0A0F24]">
+                <Image
+                  src="/yuvacrixlandingpage/login.png"
+                  alt="YuvaCrix login and onboarding interface"
+                  fill
+                  sizes="310px"
+                  className="object-contain object-top"
+                />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Audience Ticker                                                            */
 /* -------------------------------------------------------------------------- */
 
 function AudienceTicker() {
@@ -2003,7 +1168,7 @@ function AudienceTicker() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Final CTA                                                                  */
+/* Final CTA Scene                                                            */
 /* -------------------------------------------------------------------------- */
 
 function FinalCtaScene() {
@@ -2046,7 +1211,7 @@ function FinalCtaScene() {
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : undefined}
           transition={{ duration: 0.8 }}
-          className="font-display text-[clamp(4.2rem,10vw,8rem)] font-black uppercase leading-[0.8] tracking-[-0.04em]"
+          className="font-display text-[clamp(4.2rem,10vw,8rem)] font-black uppercase leading-[0.8] tracking-[-0.03em]"
         >
           Your next match
           <span className="block text-[#4B8BFF]">starts here.</span>

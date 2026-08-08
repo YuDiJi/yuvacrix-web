@@ -15,7 +15,7 @@ Source: `src/app/layout.tsx` metadata — _"Modern Cricket Scoring & Tournament 
 | `/` (marketing)                                | Implemented | Landing page with feature marketing     |
 | `/login`                                       | Implemented | Mobile OTP login                        |
 | `/on-boarding`, `/on-boarding/profile-picture` | Implemented | Post-login profile setup                |
-| `/home`                                        | **Stub**    | Placeholder `<div>page</div>`           |
+| `/home`                                        | Implemented | Dashboard with quick actions, live matches, activity, tournaments, and pulse content |
 | `/my-cricket`                                  | Implemented | Match list, filters, resume/start flows |
 | `/start-match`                                 | Implemented | Team selection → match details wizard   |
 | `/start-match/select-team`                     | Implemented | Pick teams A/B                          |
@@ -26,6 +26,7 @@ Source: `src/app/layout.tsx` metadata — _"Modern Cricket Scoring & Tournament 
 | `/start-match/toss`                            | Implemented | Toss decision                           |
 | `/start-match/start-innings`                   | Implemented | Open innings (striker/bowler/style)     |
 | `/scoring`                                     | Implemented | Live ball-by-ball scoring UI            |
+| `/matches/[matchId]/scorecard`                  | Implemented | Match scorecard, summary, commentary, squads, and MVP tabs |
 | `/add-tournaments-series`                      | **Stub**    | Placeholder content                     |
 
 Navigation is defined in `src/components/app-shell/constant.ts` and `src/components/app-shell/config/routeConfig.ts`.
@@ -55,6 +56,7 @@ src/
 | Teams / players | `src/store/api/teamApi.ts`, `src/store/api/playerApi.ts`, `src/types/team.ts`, `src/types/player.ts`, `src/components/Players/` |
 | Match creation  | `src/store/startMatch/`, `src/store/api/matchApi.ts`, `src/types/match.ts`, `src/app/(app)/start-match/`                        |
 | Live scoring    | `src/store/scoring/`, `src/store/api/scoringApi.ts`, `src/types/scoring.ts`, `src/types/innings.ts`, `src/app/(app)/scoring/`   |
+| Scorecards      | `src/store/api/scorecardApi.ts`, `src/types/scorecard.ts`, `src/app/(app)/matches/[matchId]/scorecard/` |
 | App chrome      | `src/components/app-shell/`, `src/providers/HeaderProvider.tsx`                                                                 |
 
 ## Backend Relationship
@@ -63,6 +65,6 @@ This repo is a **frontend-only** Next.js client. All persistence and business lo
 
 ## Known Inconsistencies
 
-- `dashboard` and `add-tournaments-series` routes exist but are unimplemented stubs.
+- `add-tournaments-series` is an unimplemented stub. The dashboard is the implemented `/home` route.
 - README does not describe the product; rely on this doc set and route inspection.
 - Duplicate file `src/components/Players/PlayerPickerSheet copy.tsx` — likely accidental; prefer `PlayerPickerSheet.tsx`.

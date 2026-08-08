@@ -288,30 +288,30 @@ export default function MyMatches() {
 
         teamACaptain: match.teamA.captainId
           ? {
-              id: match.teamA.captainId,
-              name: "",
-            }
+            id: match.teamA.captainId,
+            name: "",
+          }
           : null,
 
         teamAKeeper: match.teamA.wicketKeeperId
           ? {
-              id: match.teamA.wicketKeeperId,
-              name: "",
-            }
+            id: match.teamA.wicketKeeperId,
+            name: "",
+          }
           : null,
 
         teamBCaptain: match.teamB.captainId
           ? {
-              id: match.teamB.captainId,
-              name: "",
-            }
+            id: match.teamB.captainId,
+            name: "",
+          }
           : null,
 
         teamBKeeper: match.teamB.wicketKeeperId
           ? {
-              id: match.teamB.wicketKeeperId,
-              name: "",
-            }
+            id: match.teamB.wicketKeeperId,
+            name: "",
+          }
           : null,
       }),
     );
@@ -518,6 +518,14 @@ export default function MyMatches() {
             )}
           </div>
         )}
+
+        {isFetching && matches.length > 0 && (
+          <div className="flex justify-center py-4">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--color-bg-border) border-t-(--color-brand)" />
+          </div>
+        )}
+
+        {hasMore && <div ref={loadMoreRef} aria-hidden="true" className="h-10" />}
       </div>
 
       {/* ── Live match options ──────────────────────────────────────────── */}

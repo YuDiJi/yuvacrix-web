@@ -22,8 +22,6 @@ export type TournamentStatus =
 
 export type TournamentBallType = "TENNIS" | "LEATHER" | "OTHER";
 
-export type TournamentOverviewFilter = "YOUR" | "PARTICIPATE" | "ALL"; /////// | "NETWORK"
-
 export type TournamentLocation = {
   city: string;
   groundName?: string;
@@ -150,6 +148,19 @@ export type CreateTournamentRequest = {
 
 export type UpdateTournamentRequest = Partial<CreateTournamentRequest>;
 
+export type GetOwnedTournamentsQuery = {
+  status?: TournamentStatus;
+  format?: TournamentFormat;
+  page?: number;
+  limit?: number;
+};
+
+export type TournamentOverviewFilter = "YOUR" | "PARTICIPATE" | "NETWORK" | "ALL";
+export type GetTournamentOverviewResponse = {
+  items: Tournament[];
+  pagination: { skip: number; limit: number; total: number; hasMore: boolean };
+};
+
 export type SearchTournamentsQuery = {
   q?: string;
   page?: number;
@@ -260,7 +271,14 @@ export const tournamentApi = baseApi.injectEndpoints({
           limit,
         },
       }),
+      providesTags: ["Tournament"],
+    }),
 
+    getMyTournamentOverview: builder.query<
+      GetTournamentOverviewResponse,
+      { filter: TournamentOverviewFilter; skip: number; limit: number }
+    >({
+      query: (params) => ({ url: "/tournaments/me/overview", method: "GET", params }),
       providesTags: ["Tournament"],
     }),
 

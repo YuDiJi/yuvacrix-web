@@ -88,6 +88,7 @@ State the conflict, cite the existing pattern and file path, and propose an appr
 |---------|------|
 | Store setup | `src/store/index.ts` |
 | API base + 401 | `src/store/api/baseApi.ts` |
+| Scorecard API | `src/store/api/scorecardApi.ts` |
 | Typed Redux hooks | `src/store/hooks.ts` |
 | Auth bootstrap | `src/components/AuthInitializer.tsx` |
 | App shell | `src/components/app-shell/AppShell.tsx` |
