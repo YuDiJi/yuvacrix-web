@@ -106,7 +106,7 @@ const tournamentScreens = [
     badge: "Digital Scorecard",
     label: "Scoreboard Summary",
     subtitle: "Ball-by-ball commentary, partnership stats & full scorecards.",
-    image: "/yuvacrixlandingpage/Screenshot 2026-08-08 at 9.21.03 AM.png",
+    image: "/yuvacrixlandingpage/scorecard.png",
     aspect: "aspect-[870/1566]",
     className: "lg:translate-y-6 lg:rotate-[2.5deg]",
   },
@@ -357,7 +357,7 @@ function HeroScreens() {
         </div>
       </motion.div>
 
-      {/* Center main phone: Live Scoring Keypad */}
+      {/* Center main phone: MVP & Match Highlights */}
       <motion.div
         initial={{ opacity: 0, y: 90, scale: 0.92 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -373,8 +373,8 @@ function HeroScreens() {
 
         <div className="relative w-full aspect-[870/1566] overflow-hidden rounded-[30px] bg-[#10182F]">
           <Image
-            src="/yuvacrixlandingpage/scoring.png"
-            alt="YuvaCrix live scoring screen"
+            src="/yuvacrixlandingpage/mvp.png"
+            alt="YuvaCrix MVP awards and match heroes"
             fill
             priority
             sizes="310px"
@@ -383,7 +383,7 @@ function HeroScreens() {
         </div>
       </motion.div>
 
-      {/* Right phone: Start Innings */}
+      {/* Right phone: Ball-by-Ball Commentary */}
       <motion.div
         initial={{ opacity: 0, y: 70, rotate: 8 }}
         animate={{ opacity: 1, y: 0, rotate: 5 }}
@@ -394,10 +394,10 @@ function HeroScreens() {
         }}
         className="absolute right-[2%] top-[18%] z-10 hidden w-[32%] max-w-[210px] overflow-hidden rounded-[26px] border-[3px] border-white/15 bg-[#101A37] p-1 shadow-[0_30px_70px_rgba(0,0,0,0.55)] sm:block"
       >
-        <div className="relative w-full aspect-[862/1598] overflow-hidden rounded-[20px] bg-[#0A0F24]">
+        <div className="relative w-full aspect-[870/1566] overflow-hidden rounded-[20px] bg-[#0A0F24]">
           <Image
-            src="/yuvacrixlandingpage/startininings.png"
-            alt="YuvaCrix start innings"
+            src="/yuvacrixlandingpage/commentary.png"
+            alt="YuvaCrix ball-by-ball commentary"
             fill
             sizes="210px"
             className="object-contain object-top"
