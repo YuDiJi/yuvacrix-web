@@ -41,6 +41,7 @@ export type TournamentCounters = {
 
 export type Tournament = {
   id: string;
+  isAdmin: boolean;
   ownerUserId: string;
   name: string;
   nameLower?: string;
@@ -155,7 +156,11 @@ export type GetOwnedTournamentsQuery = {
   limit?: number;
 };
 
-export type TournamentOverviewFilter = "YOUR" | "PARTICIPATE" | "NETWORK" | "ALL";
+export type TournamentOverviewFilter =
+  | "YOUR"
+  | "PARTICIPATE"
+  | "NETWORK"
+  | "ALL";
 export type GetTournamentOverviewResponse = {
   items: Tournament[];
   pagination: { skip: number; limit: number; total: number; hasMore: boolean };
@@ -278,7 +283,11 @@ export const tournamentApi = baseApi.injectEndpoints({
       GetTournamentOverviewResponse,
       { filter: TournamentOverviewFilter; skip: number; limit: number }
     >({
-      query: (params) => ({ url: "/tournaments/me/overview", method: "GET", params }),
+      query: (params) => ({
+        url: "/tournaments/me/overview",
+        method: "GET",
+        params,
+      }),
       providesTags: ["Tournament"],
     }),
 

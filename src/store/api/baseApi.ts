@@ -76,6 +76,7 @@ export const baseApi = createApi({
     "CricketProfileTrophies",
     "CricketProfileBadges",
     "CricketProfileTeams",
+    "MatchLiveStream",
   ],
 
   endpoints: () => ({}),

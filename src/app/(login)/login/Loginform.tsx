@@ -14,6 +14,7 @@ import {
 import { useAppDispatch } from "@/store/hooks";
 import { setCredentials } from "@/store/auth/authSlice";
 import { selectIsAuthenticated } from "@/store/auth/authSelectors";
+import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -252,10 +253,12 @@ export function LoginForm() {
 
             <p className="text-center text-xs text-(--color-text-muted)">
               By continuing, you agree to our{" "}
-              <span className="font-semibold text-(--color-brand)">Terms</span>{" "}
+              <span className="font-semibold text-(--color-brand)">
+                <Link href={"/terms-of-service"}>Terms of service</Link>
+              </span>{" "}
               and{" "}
               <span className="font-semibold text-(--color-brand)">
-                Privacy Policy
+                <Link href={"/privacy-policy"}>Privacy Policy</Link>
               </span>
             </p>
           </div>

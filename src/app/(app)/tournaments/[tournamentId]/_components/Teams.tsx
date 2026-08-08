@@ -13,7 +13,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 
-const Teams = () => {
+const Teams = ({ isAdmin }: { isAdmin: boolean }) => {
   const router = useRouter();
   const params = useParams();
   const tournamentId = params.tournamentId as string;
@@ -95,11 +95,14 @@ const Teams = () => {
           </h2>
 
           {/* Description */}
-          <p className="mt-2 text-sm leading-6 text-(--color-text-secondary)">
-            This tournament doesn&apos;t have any teams yet.
-            <br />
-            Add your first team to start creating rounds, fixtures and matches.
-          </p>
+          {isAdmin && (
+            <p className="mt-2 text-sm leading-6 text-(--color-text-secondary)">
+              This tournament doesn&apos;t have any teams yet.
+              <br />
+              Add your first team to start creating rounds, fixtures and
+              matches.
+            </p>
+          )}
 
           {/* Info */}
           {/* <div className="mt-6 rounded-2xl bg-(--color-bg-tint) p-4">
@@ -113,16 +116,18 @@ const Teams = () => {
           </div> */}
 
           {/* CTA */}
-          <button
-            type="button"
-            onClick={() =>
-              router.push(`/tournaments/${tournamentId}/add-teams`)
-            }
-            className="mt-7 flex w-full items-center justify-center gap-2 rounded-2xl bg-(--color-brand) py-4 font-(family-name:--font-display) text-sm font-black uppercase tracking-[0.06em] text-white transition-all active:scale-[0.98]"
-          >
-            Add Teams
-            <ChevronRight size={16} />
-          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() =>
+                router.push(`/tournaments/${tournamentId}/add-teams`)
+              }
+              className="mt-7 flex w-full items-center justify-center gap-2 rounded-2xl bg-(--color-brand) py-4 font-(family-name:--font-display) text-sm font-black uppercase tracking-[0.06em] text-white transition-all active:scale-[0.98]"
+            >
+              Add Teams
+              <ChevronRight size={16} />
+            </button>
+          )}
         </div>
       </div>
     );
@@ -160,19 +165,23 @@ const Teams = () => {
             <SlidersHorizontal size={15} />
           </button>
         </div>
-        <button
-          onClick={() => router.push(`/tournaments/${tournamentId}/add-teams`)}
-          className={cn(
-            "",
-            "flex h-14 w-14 items-center justify-center rounded-2xl",
-            "bg-(--color-brand) text-white",
-            "shadow-[0_8px_24px_rgba(27,63,160,0.40)]",
-            "transition-all duration-200 active:scale-90 hover:bg-[#2449b8]",
-          )}
-          aria-label="Create new team"
-        >
-          <Plus size={26} strokeWidth={2.5} />
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() =>
+              router.push(`/tournaments/${tournamentId}/add-teams`)
+            }
+            className={cn(
+              "",
+              "flex h-14 w-14 items-center justify-center rounded-2xl",
+              "bg-(--color-brand) text-white",
+              "shadow-[0_8px_24px_rgba(27,63,160,0.40)]",
+              "transition-all duration-200 active:scale-90 hover:bg-[#2449b8]",
+            )}
+            aria-label="Create new team"
+          >
+            <Plus size={26} strokeWidth={2.5} />
+          </button>
+        )}
       </div>
       <div className="flex flex-col gap-3">
         {filteredTeams.map((team) => (

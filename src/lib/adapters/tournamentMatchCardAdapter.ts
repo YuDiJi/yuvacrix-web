@@ -10,6 +10,7 @@ export function tournamentMatchToMatchCard(
     matchId: match.matchId,
     fixtureId: match.fixtureId,
 
+    isAdmin: match.isAdmin,
     status: match.status,
     primaryAction: match.primaryAction,
 

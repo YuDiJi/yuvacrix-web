@@ -180,8 +180,8 @@ export default function TournamentDetailsPage() {
         {/* Tab content */}
         <div className="min-h-full">
           {activeTab === "About" && <About />}
-          {activeTab === "Matches" && <Matches />}
-          {activeTab === "Teams" && <Teams />}
+          {activeTab === "Matches" && <Matches isAdmin={tournament.isAdmin} />}
+          {activeTab === "Teams" && <Teams isAdmin={tournament.isAdmin} />}
           {activeTab === "Rounds & Groups" && <RoundsGroups />}
           {activeTab === "Points Table" && <PointsTable />}
 

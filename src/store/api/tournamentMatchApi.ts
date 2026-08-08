@@ -76,6 +76,7 @@ export type TournamentMatchListItem = {
   matchId: string;
   fixtureId: string;
 
+  isAdmin: boolean;
   status: TournamentMatchStatus;
   scoringStatus: TournamentMatchScoringStatus;
   primaryAction: TournamentMatchPrimaryAction;
