@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { skipToken } from "@reduxjs/toolkit/query";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Pencil, UserPlus, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -31,6 +32,7 @@ import {
   useSubmitTeamLineupMutation,
 } from "@/store/api/matchApi";
 import { SubmitLineupDto } from "@/types/match";
+import { useGetTeamsRoleSummaryQuery } from "@/store/api/tournamentTeamApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -292,6 +294,15 @@ export default function LineupPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
+  const params = useParams();
+
+  const tournamentId =
+    typeof params.tournamentId === "string"
+      ? params.tournamentId
+      : (searchParams.get("tournamentId") ?? undefined);
+
+  const isTournamentFlow =
+    searchParams.get("from") === "tournament" && Boolean(tournamentId);
 
   //   const mode = searchParams.get("mode");
   //   const matchId = searchParams.get("matchId");
@@ -322,6 +333,26 @@ export default function LineupPage() {
 
   const [markReadyForToss, { isLoading: isReadyForToss }] =
     useMarkReadyForTossMutation();
+
+  const { data: teamARole, isFetching: isFetchingTeamARole } =
+    useGetTeamsRoleSummaryQuery(
+      isTournamentFlow && tournamentId && teamA?.id
+        ? {
+            tournamentId,
+            teamId: teamA.id,
+          }
+        : skipToken,
+    );
+
+  const { data: teamBRole, isFetching: isFetchingTeamBRole } =
+    useGetTeamsRoleSummaryQuery(
+      isTournamentFlow && tournamentId && teamB?.id
+        ? {
+            tournamentId,
+            teamId: teamB.id,
+          }
+        : skipToken,
+    );
 
   // Local UI state
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -361,6 +392,38 @@ export default function LineupPage() {
     setSelectedB(new Set(membersB.map((m) => m.playerId)));
     setOrderedPlayersB(membersB.map((m) => m.playerId));
   }, [membersB]);
+
+  useEffect(() => {
+    if (!isTournamentFlow || !teamARole) return;
+
+    const captainId = teamARole.captain?.playerId ?? null;
+
+    const keeperId = teamARole.wicketKeeper?.playerId ?? null;
+
+    if (captainId) {
+      setCaptainA((current) => current ?? captainId);
+    }
+
+    if (keeperId) {
+      setKeeperA((current) => current ?? keeperId);
+    }
+  }, [isTournamentFlow, teamARole]);
+
+  useEffect(() => {
+    if (!isTournamentFlow || !teamBRole) return;
+
+    const captainId = teamBRole.captain?.playerId ?? null;
+
+    const keeperId = teamBRole.wicketKeeper?.playerId ?? null;
+
+    if (captainId) {
+      setCaptainB((current) => current ?? captainId);
+    }
+
+    if (keeperId) {
+      setKeeperB((current) => current ?? keeperId);
+    }
+  }, [isTournamentFlow, teamBRole]);
 
   // Map API TeamMember → PlayerListItem
   const playersA: PlayerListItem[] = useMemo(

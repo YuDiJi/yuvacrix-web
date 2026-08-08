@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
@@ -239,14 +239,17 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
   const {
     control,
     handleSubmit,
+    setValue,
+    watch,
     getValues,
+
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       matchType: "LIMITED_OVERS",
-      oversLimit: 20,
-      oversPerBowler: 4,
+      oversLimit: 0,
+      oversPerBowler: 0,
       ballType: "TENNIS",
       city: "",
       groundName: "",
@@ -255,6 +258,32 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
       scheduledAt: undefined,
     },
   });
+
+  function calculateOversPerBowler(totalOvers: number): number {
+    if (!Number.isFinite(totalOvers) || totalOvers <= 0) {
+      return 0;
+    }
+
+    if (totalOvers <= 5) return 1;
+    if (totalOvers <= 9) return 2;
+    if (totalOvers <= 17) return 3;
+
+    // 18–22 → 4, 23–27 → 5, 28–32 → 6, and so on
+    return 4 + Math.floor((totalOvers - 18) / 5);
+  }
+
+  const oversLimit = watch("oversLimit");
+
+  useEffect(() => {
+    const calculatedOversPerBowler = calculateOversPerBowler(
+      Number(oversLimit),
+    );
+
+    setValue("oversPerBowler", calculatedOversPerBowler, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [oversLimit, setValue]);
 
   // ── Build payload ─────────────────────────────────────────────────────────
 

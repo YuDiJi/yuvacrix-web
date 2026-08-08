@@ -1,7 +1,15 @@
 "use client";
 
 // import { useHeader } from "@/providers/HeaderProvider";
-import { Search, SlidersHorizontal, Plus, ChevronRight } from "lucide-react";
+import {
+  Search,
+  SlidersHorizontal,
+  Plus,
+  ChevronRight,
+  RefreshCw,
+  WifiOff,
+  AlertTriangle,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGetOwnedTeamQuery } from "@/store/api/teamApi";
 import { cn } from "@/lib/cn";
@@ -14,6 +22,113 @@ import {
 } from "@/store/startMatch/startMatchSlice";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 import { TeamCard } from "@/components/team/TeamCard";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+
+function getErrorMessage(error: unknown): string {
+  if (!error) {
+    return "Something went wrong while loading your teams.";
+  }
+
+  if ("status" in (error as FetchBaseQueryError)) {
+    const apiError = error as FetchBaseQueryError;
+
+    if (apiError.status === "FETCH_ERROR") {
+      return "Unable to connect to the server. Check your internet connection and try again.";
+    }
+
+    if (apiError.status === "TIMEOUT_ERROR") {
+      return "The request took too long. Please try again.";
+    }
+
+    if (apiError.status === 401) {
+      return "Your session has expired. Please log in again.";
+    }
+
+    if (apiError.status === 403) {
+      return "You do not have permission to view these teams.";
+    }
+
+    if (apiError.status === 404) {
+      return "The teams service could not be found.";
+    }
+
+    if (typeof apiError.status === "number" && apiError.status >= 500) {
+      return "The server is currently unavailable. Please try again shortly.";
+    }
+
+    if (
+      typeof apiError.data === "object" &&
+      apiError.data !== null &&
+      "message" in apiError.data &&
+      typeof apiError.data.message === "string"
+    ) {
+      return apiError.data.message;
+    }
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+
+  return "Something went wrong while loading your teams.";
+}
+
+function TeamCardSkeleton() {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between",
+        "rounded-2xl border border-(--color-bg-border)",
+        "bg-(--color-bg-card) p-3.5 shadow-(--shadow-card)",
+      )}
+    >
+      <div className="flex items-center gap-3.5">
+        <div className="h-14 w-14 shrink-0 animate-pulse rounded-xl bg-(--color-bg-border)" />
+
+        <div className="space-y-2">
+          <div className="h-4 w-32 animate-pulse rounded-md bg-(--color-bg-border)" />
+          <div className="h-3 w-20 animate-pulse rounded-md bg-(--color-bg-border)" />
+        </div>
+      </div>
+
+      <div className="h-5 w-5 animate-pulse rounded-md bg-(--color-bg-border)" />
+    </div>
+  );
+}
+
+function SelectTeamSkeleton() {
+  return (
+    <div className="relative min-h-full bg-(--color-bg-base) p-4 pb-24">
+      {/* Search skeleton */}
+      <div
+        className={cn(
+          "mb-5 flex items-center gap-3 rounded-2xl border-2",
+          "border-(--color-bg-border) bg-(--color-bg-card)",
+          "px-4 py-3 shadow-(--shadow-card)",
+        )}
+      >
+        <div className="h-5 w-5 animate-pulse rounded-md bg-(--color-bg-border)" />
+        <div className="h-4 flex-1 animate-pulse rounded-md bg-(--color-bg-border)" />
+        <div className="h-7 w-7 animate-pulse rounded-lg bg-(--color-bg-border)" />
+      </div>
+
+      {/* Section label skeleton */}
+      <div className="mb-3 h-3 w-20 animate-pulse rounded-md bg-(--color-bg-border)" />
+
+      {/* Team card skeletons */}
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <TeamCardSkeleton key={index} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function SelectTeamPage() {
   const dispatch = useAppDispatch();
@@ -25,7 +140,14 @@ export default function SelectTeamPage() {
   const teamA = useAppSelector(selectTeamA);
   const teamB = useAppSelector(selectTeamB);
 
-  const { data: teams, isSuccess, isError } = useGetOwnedTeamQuery();
+  const {
+    data: teams,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useGetOwnedTeamQuery();
 
   const filteredTeams =
     teams?.filter((team) => {
@@ -46,15 +168,80 @@ export default function SelectTeamPage() {
       return matchesSearch;
     }) ?? [];
 
+  // Initial loading state
+  if (isLoading) {
+    return <SelectTeamSkeleton />;
+  }
+
+  // Error state
+  if (isError) {
+    const isNetworkError =
+      typeof error === "object" &&
+      error !== null &&
+      "status" in error &&
+      error.status === "FETCH_ERROR";
+
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 py-16 text-center">
+        <div className="relative mb-6">
+          <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-red-50 shadow-[0_8px_32px_rgba(239,68,68,0.12)]">
+            {isNetworkError ? (
+              <WifiOff size={42} className="text-red-500" strokeWidth={1.7} />
+            ) : (
+              <AlertTriangle
+                size={42}
+                className="text-red-500"
+                strokeWidth={1.7}
+              />
+            )}
+          </div>
+
+          <div className="absolute inset-0 scale-110 rounded-3xl border-2 border-red-500/10" />
+        </div>
+
+        <h3
+          className="font-(family-name:--font-display) text-2xl font-black uppercase text-(--color-text-primary)"
+          style={{ letterSpacing: "0.04em" }}
+        >
+          Unable To Load Teams
+        </h3>
+
+        <p className="mt-2 max-w-72 text-sm leading-relaxed text-(--color-text-secondary)">
+          {getErrorMessage(error)}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className={cn(
+            "mt-6 flex min-w-36 items-center justify-center gap-2 rounded-xl",
+            "bg-(--color-brand) px-5 py-3 text-sm font-bold text-white",
+            "shadow-[0_6px_18px_rgba(27,63,160,0.25)]",
+            "transition-all duration-150 hover:bg-[#2449b8]",
+            "active:scale-[0.97]",
+            "disabled:cursor-not-allowed disabled:opacity-60",
+          )}
+        >
+          <RefreshCw size={17} className={cn(isFetching && "animate-spin")} />
+
+          {isFetching ? "Retrying..." : "Try Again"}
+        </button>
+      </div>
+    );
+  }
+
+  // Empty team state
   if (teams?.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-        {/* Icon */}
-        <div
+        <button
+          type="button"
           onClick={() =>
-            router.push("/start-match/create-team?team=" + teamType)
+            router.push(`/start-match/create-team?team=${teamType ?? "A"}`)
           }
           className="relative mb-6"
+          aria-label="Create your first team"
         >
           <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-(--color-navy) shadow-[0_8px_32px_rgba(13,27,62,0.18)]">
             <svg
@@ -69,36 +256,23 @@ export default function SelectTeamPage() {
               strokeLinejoin="round"
               aria-hidden="true"
             >
-              {/* <title xmlns="">add-team-02</title> */}
-              <g
-                width="44"
-                height="44"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="rgba(255,255,255,0.85)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M3 20v-2.03c0-1.242.56-2.46 1.69-2.975C6.068 14.366 7.722 14 9.5 14c1.245 0 2.429.18 3.5.503" />
-                <circle cx="9.5" cy="7.5" r="3.5" />
-                <path d="M14.5 4.145a3.502 3.502 0 0 1 0 6.71M18 14v6m-3-3h6" />
-              </g>
+              <path d="M3 20v-2.03c0-1.242.56-2.46 1.69-2.975C6.068 14.366 7.722 14 9.5 14c1.245 0 2.429.18 3.5.503" />
+              <circle cx="9.5" cy="7.5" r="3.5" />
+              <path d="M14.5 4.145a3.502 3.502 0 0 1 0 6.71M18 14v6m-3-3h6" />
             </svg>
           </div>
-          {/* Decorative ring */}
-          <div className="absolute inset-0 rounded-3xl border-2 border-(--color-brand)/20 scale-110" />
-        </div>
 
-        {/* Text */}
+          <div className="absolute inset-0 scale-110 rounded-3xl border-2 border-(--color-brand)/20" />
+        </button>
+
         <h3
           className="font-(family-name:--font-display) text-2xl font-black uppercase text-(--color-text-primary)"
           style={{ letterSpacing: "0.04em" }}
         >
           No Teams Yet
         </h3>
-        <p className="mt-2 text-sm text-(--color-text-secondary) leading-relaxed max-w-55">
+
+        <p className="mt-2 max-w-55 text-sm leading-relaxed text-(--color-text-secondary)">
           Create your first team and start scoring matches with your squad.
         </p>
       </div>

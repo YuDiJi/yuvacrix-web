@@ -38,6 +38,8 @@ export type PrimaryAction =
   | "START_SCORING" // /start-match/start-innings
   | "COMPLETE_SETUP";
 
+export type MatchOverviewFilter = "YOUR" | "PLAYED" | "ALL"; /////| "NETWORK"
+
 // /start-match - draft
 
 export interface Venue {
@@ -210,16 +212,22 @@ export interface Match {
   updatedAt: string;
 }
 
-export type MyMatchOverviewFilter = "YOUR" | "PLAYED" | "NETWORK" | "ALL";
+export interface GetMyMatchesOverviewParams {
+  filter: MatchOverviewFilter;
+  skip: number;
+  limit: number;
+}
 
-export interface GetMyMatchesResponse {
+export interface MatchesOverviewPagination {
+  skip: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface GetMyMatchesOverviewResponse {
   items: Match[];
-  pagination: {
-    skip: number;
-    limit: number;
-    total: number;
-    hasMore: boolean;
-  };
+  pagination: MatchesOverviewPagination;
 }
 
 export type MatchSide = "TEAM_A" | "TEAM_B";

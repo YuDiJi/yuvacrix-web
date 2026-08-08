@@ -37,6 +37,14 @@ export const routeConfig: Record<string, RouteConfig> = {
     showBackButton: false,
   },
 
+  "/my-cricket/[teamId]/players": {
+    title: "Players",
+    showBackButton: true,
+    back: {
+      type: "history",
+    },
+  },
+
   "/my-performance": {
     title: "My Performance",
     showBackButton: false,

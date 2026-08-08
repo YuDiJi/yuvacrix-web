@@ -76,3 +76,23 @@ export type GetMyCricketProfileTeamsQuery = {
   limit?: number;
   currentOnly?: boolean;
 };
+
+export type TeamOverviewFilter = "YOUR" | "PARTICIPATE" | "ALL"; ////// | "NETWORK"
+
+export interface GetMyTeamsOverviewParams {
+  filter: TeamOverviewFilter;
+  skip: number;
+  limit: number;
+}
+
+export interface TeamsOverviewPagination {
+  skip: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+}
+
+export interface GetMyTeamsOverviewResponse {
+  items: Team[];
+  pagination: TeamsOverviewPagination;
+}
