@@ -471,7 +471,7 @@ function CommitmentBanner() {
 function Hero() {
   return (
     <div
-      className="relative overflow-hidden px-5 pb-8 pt-20"
+      className="relative overflow-hidden px-5 pb-8 pt-10"
       style={{
         background:
           "linear-gradient(135deg, var(--color-navy) 0%, var(--color-brand) 100%)",

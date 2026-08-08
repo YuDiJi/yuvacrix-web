@@ -183,6 +183,7 @@ export interface MatchResult {
 
 export interface Match {
   matchId: string;
+  isAdmin: boolean;
   status: MatchStatus;
   primaryAction: PrimaryAction;
 
