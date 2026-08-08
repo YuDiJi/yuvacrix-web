@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YuvaCrix Web
 
-## Getting Started
+Mobile-first Next.js 14 client for YuvaCrix cricket scoring, match setup, teams, and player workflows. It uses the App Router, React 18, Redux Toolkit, RTK Query, Tailwind CSS v4, and TypeScript.
 
-First, run the development server:
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). The client expects the backend base URL in `NEXT_PUBLIC_API_URL`, for example `http://localhost:3006/api/v1`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run lint
+npm run build
+npx tsc --noEmit
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+There is no automated test runner configured yet.
 
-## Learn More
+## Architecture rules
 
-To learn more about Next.js, take a look at the following resources:
+- Use RTK Query modules in `src/store/api/` for all server communication.
+- Do not add raw `fetch`, axios calls, React Query, SWR, Next.js route handlers, or a direct database client.
+- Keep remote data in RTK Query; reserve Redux slices for client workflow state.
+- Authenticated routes use the mobile AppShell; use the established Tailwind and `cn()` patterns.
+- Do not place environment secrets in source control. Only the public API URL is consumed by this client.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Main areas
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Marketing and OTP onboarding
+- Teams and player management
+- Match creation: teams, squads, roles, lineup, toss, and innings setup
+- Live ball-by-ball scoring and scorecard views
+- Redux-persisted auth and match-setup workflow state
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The maintained contributor reference is [docs/ai-context/00-START-HERE.md](./docs/ai-context/00-START-HERE.md). It documents the current routes, state ownership, API layer, and development workflow.
