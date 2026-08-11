@@ -261,6 +261,16 @@ const NextBatterSheet = ({
           </>
         )}
       </div>
+      {state && (
+        <div className="overflow-hidden px-5 py-1">
+          <div className="whitespace-nowrap animate-marquee">
+            <span className="text-sm font-bold">
+              Target: {state.score} in {state.oversText} ({state.runRateSummary}
+              )
+            </span>
+          </div>
+        </div>
+      )}
     </DialogBottom>
   );
 };

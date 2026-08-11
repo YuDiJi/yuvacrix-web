@@ -634,7 +634,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
           </div>
 
           {/* Match Officials */}
-          <div className="fixture-bar rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+          {/* <div className="fixture-bar rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
             <p className="text-section-label mb-4">Match Officials</p>
             <div className="flex items-center justify-around">
               {[
@@ -655,7 +655,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Submit error */}
