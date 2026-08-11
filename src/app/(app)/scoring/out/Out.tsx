@@ -239,7 +239,7 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
           <ArrowLeft size={20} />
         </button>
       )}
-      <div className="max-h-[75vh] flex flex-col min-h-0">
+      <div className="max-h-[75vh] flex flex-col min-h-0 overflow-y-auto scrollbar-none">
         {step === "SELECT_WICKET_TYPE" && (
           <WicketTypeSelector onSelect={handleWicketTypeSelect} />
         )}
@@ -315,6 +315,16 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
           />
         )}
       </div>
+      {state && (
+        <div className="overflow-hidden px-5 py-1">
+          <div className="whitespace-nowrap animate-marquee">
+            <span className="text-sm font-bold">
+              Target: {state.score} in {state.oversText} ({state.runRateSummary}
+              )
+            </span>
+          </div>
+        </div>
+      )}
     </DialogBottom>
   );
 }

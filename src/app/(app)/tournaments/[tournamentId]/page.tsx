@@ -17,18 +17,6 @@ import LeaderboardPage from "./_components/leaderboard/LeaderboardPage";
 import StatsPage from "./_components/stats/StatsPage";
 import HeroesPage from "./_components/heroes/HeroesPage";
 
-const TABS = [
-  "About",
-  "Matches",
-  "Teams",
-  "Rounds & Groups",
-  "Points Table",
-  "Leaderboard",
-  "Heroes",
-  "Stats",
-  // "Sponsors",
-];
-
 function formatDate(date?: string | null) {
   if (!date) return "TBA";
 
@@ -92,6 +80,18 @@ export default function TournamentDetailsPage() {
       </div>
     );
   }
+
+  const TABS = [
+    "About",
+    "Matches",
+    "Teams",
+    ...(tournament.isAdmin ? ["Rounds & Groups"] : []),
+    "Points Table",
+    "Leaderboard",
+    "Heroes",
+    "Stats",
+    // "Sponsors",
+  ];
 
   const startDate = formatDate(tournament.startDate);
   const endDate = formatDate(tournament.endDate);
@@ -180,10 +180,16 @@ export default function TournamentDetailsPage() {
         {/* Tab content */}
         <div className="min-h-full">
           {activeTab === "About" && <About />}
+
           {activeTab === "Matches" && <Matches isAdmin={tournament.isAdmin} />}
+
           {activeTab === "Teams" && <Teams isAdmin={tournament.isAdmin} />}
+
           {activeTab === "Rounds & Groups" && <RoundsGroups />}
-          {activeTab === "Points Table" && <PointsTable />}
+
+          {activeTab === "Points Table" && (
+            <PointsTable isAdmin={tournament.isAdmin} />
+          )}
 
           {activeTab === "Leaderboard" && (
             <LeaderboardPage tournamentId={tournamentId} />

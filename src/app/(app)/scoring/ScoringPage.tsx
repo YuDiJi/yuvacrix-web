@@ -848,6 +848,7 @@ export default function ScoringPage() {
           inningsId={state?.inningsId}
           bowlingTeamId={state?.bowlingTeamId}
           currentBowlerId={state?.currentBowlerId}
+          state={state}
         />
 
         <NextBatterSheet

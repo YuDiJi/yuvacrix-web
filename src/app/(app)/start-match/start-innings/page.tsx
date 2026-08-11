@@ -606,6 +606,16 @@ export default function StartInningsPage() {
 
   return (
     <div className="relative flex min-h-full flex-col bg-(--color-bg-base)">
+      {isSecondInnings && state && (
+        <div className="overflow-hidden bg-(--color-navy)/90 px-5 py-2 shadow-[0_8px_32px_rgba(27,63,160,0.30)]">
+          <div className="whitespace-nowrap animate-marquee">
+            <span className="text-sm font-medium text-(--color-text-inverse)">
+              Target: {state.score} in {state.oversText} ({state.runRateSummary}
+              )
+            </span>
+          </div>
+        </div>
+      )}
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto pb-24">
         <div className="flex flex-col gap-5 p-4">

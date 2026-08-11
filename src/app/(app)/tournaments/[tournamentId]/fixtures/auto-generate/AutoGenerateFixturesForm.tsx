@@ -1276,7 +1276,7 @@ export default function AutoGenerateFixturesForm({
           </div>
 
           {/* Match officials */}
-          <div className="fixture-bar rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+          {/* <div className="fixture-bar rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
             <p className="text-section-label mb-4">Match Officials</p>
 
             <div className="flex items-center justify-around">
@@ -1311,7 +1311,7 @@ export default function AutoGenerateFixturesForm({
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {submitError && (

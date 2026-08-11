@@ -64,7 +64,7 @@ export const metadata: Metadata = {
       "Score cricket matches live, manage tournaments, view scorecards and track player performance with YuvaCrix.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "YuvaCrix Cricket Scoring and Tournament Management",
