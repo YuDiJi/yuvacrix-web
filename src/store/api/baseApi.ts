@@ -60,6 +60,7 @@ export const baseApi = createApi({
     "Members",
     "Team",
     "Matches",
+    "MatchRules",
     "ScoringState",
     "Scorecard",
     "Home",

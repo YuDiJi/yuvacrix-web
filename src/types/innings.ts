@@ -203,6 +203,24 @@ export interface ScoringState {
 
   isFreeHitNextBall: boolean;
 
+  activeSpecialOver: {
+    ruleType: "BOWLING_TARGET_POWERPLAY";
+    overNumber: number;
+    targetRuns: number;
+    rawRuns: number;
+  } | null;
+  powerplay: {
+    enabled: boolean;
+    canDeclare: boolean;
+    currentOverNumber: number;
+    bowlingCaptainPlayerId: string | null;
+    rule: {
+      targetRuns: number;
+      successBonusRuns: number;
+      endOverWhenTargetReached: boolean;
+    } | null;
+  };
+
   overCompleted: boolean;
   inningsCompleted: boolean;
 

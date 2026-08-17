@@ -30,12 +30,29 @@ export type WicketType =
 
 export type DismissalEnd = "STRIKER" | "NON_STRIKER";
 
+export type FieldZone =
+  | "THIRD_MAN"
+  | "DEEP_FINE_LEG"
+  | "FINE_LEG"
+  | "SQUARE_LEG"
+  | "DEEP_SQUARE_LEG"
+  | "MID_WICKET"
+  | "DEEP_MID_WICKET"
+  | "LONG_ON"
+  | "LONG_OFF"
+  | "COVER"
+  | "DEEP_COVER"
+  | "POINT"
+  | "DEEP_POINT";
+
 export interface RecordBallRequest {
   matchId: string;
 
   inningsId: string;
 
   clientEventId: string;
+
+  baseInningsVersion?: number;
 
   runs: {
     batRuns: number;
@@ -51,6 +68,12 @@ export interface RecordBallRequest {
     dismissedPlayerId: string;
     fielderIds?: string[];
     dismissalEnd?: DismissalEnd;
+  };
+
+  wagonWheel?: {
+    fieldZone: FieldZone;
+    x?: number;
+    y?: number;
   };
 }
 
