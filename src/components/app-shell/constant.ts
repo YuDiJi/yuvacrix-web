@@ -109,15 +109,15 @@ export const drawerSections: DrawerSection[] = [
   {
     title: "More",
     items: [
-      { label: "FAQ", icon: HelpCircle, href: "/faq" },
-      { label: "Share App", icon: Share2, href: "/shareapp" },
+      // { label: "FAQ", icon: HelpCircle, href: "/faq" },
+      // { label: "Share App", icon: Share2, href: "/shareapp" },
       { label: "About Us", icon: Info, href: "/about-us" },
       { label: "Contact Us", icon: Contact, href: "/contact-us" },
-      {
-        label: "Paid Service Terms",
-        icon: FileText,
-        href: "/paidServiceTerms",
-      },
+      // {
+      //   label: "Paid Service Terms",
+      //   icon: FileText,
+      //   href: "/paidServiceTerms",
+      // },
       {
         label: "Terms of Service",
         icon: ScrollText,

@@ -24,7 +24,7 @@ function AccordionSection({ section }: { section: Section }) {
       >
         <div className="flex items-center gap-3">
           <span
-            className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
               open
                 ? "bg-white/20 text-(--color-text-inverse)"
                 : "bg-(--color-bg-base) text-(--color-text-secondary)"
@@ -422,13 +422,13 @@ function Hero() {
       />
 
       <div className="relative flex items-start gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
           <FileText size={24} className="text-(--color-sky)" />
         </div>
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-(--color-sky)">
+          {/* <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-(--color-sky)">
             YuvaCrix
-          </span>
+          </span> */}
           <h1 className="mt-1 font-display text-[32px] font-black uppercase leading-tight tracking-tight text-(--color-text-inverse)">
             Terms of
             <br />

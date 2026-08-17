@@ -35,7 +35,8 @@ const matchFlow = [
     number: "01",
     tag: "Squad Selection",
     title: "Select teams",
-    subtitle: "Pick or create competing squads & manage team rosters in seconds.",
+    subtitle:
+      "Pick or create competing squads & manage team rosters in seconds.",
     image: "/yuvacrixlandingpage/select_team.png",
     aspect: "aspect-[862/1598]",
   },
@@ -51,7 +52,8 @@ const matchFlow = [
     number: "03",
     tag: "Toss Decision",
     title: "Complete the toss",
-    subtitle: "Record the toss winning team and choice to bat or bowl with 1 tap.",
+    subtitle:
+      "Record the toss winning team and choice to bat or bowl with 1 tap.",
     image: "/yuvacrixlandingpage/toss.png",
     aspect: "aspect-[862/1598]",
   },
@@ -238,7 +240,7 @@ function HeroScene() {
             className="mt-9 flex flex-col gap-3 sm:flex-row"
           >
             <Link
-              href="/login?redirect=/start-match"
+              href="/home"
               className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-[#1B3FA0] px-7 py-4 font-display text-sm font-bold uppercase tracking-[0.08em] text-white shadow-[0_18px_50px_rgba(27,63,160,0.42)] transition duration-300 hover:-translate-y-1 hover:bg-[#254EC0]"
             >
               Start scoring
@@ -703,7 +705,9 @@ function MatchJourneyScene() {
 
               {/* Phone Mockup Frame - Perfectly Fitted without Overstretching */}
               <div className="mt-2 flex-1 flex items-center justify-center p-3 rounded-[22px] bg-[#F7F9FD] border border-[#E9EEF5]">
-                <div className={`relative w-full max-w-[210px] sm:max-w-[220px] ${step.aspect} mx-auto rounded-[24px] border-[3.5px] border-[#CBD5E1] bg-[#0A0F24] p-1 shadow-[0_12px_32px_rgba(0,0,0,0.14)] overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}>
+                <div
+                  className={`relative w-full max-w-[210px] sm:max-w-[220px] ${step.aspect} mx-auto rounded-[24px] border-[3.5px] border-[#CBD5E1] bg-[#0A0F24] p-1 shadow-[0_12px_32px_rgba(0,0,0,0.14)] overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}
+                >
                   {/* Notch */}
                   <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-11 h-1.5 bg-black/60 rounded-full z-20" />
 
@@ -796,7 +800,11 @@ function TournamentScene() {
             {tournamentScreens.map((screen, index) => (
               <motion.div
                 key={screen.label}
-                initial={{ opacity: 0, y: 70, rotate: index === 0 ? -6 : index === 2 ? 6 : 0 }}
+                initial={{
+                  opacity: 0,
+                  y: 70,
+                  rotate: index === 0 ? -6 : index === 2 ? 6 : 0,
+                }}
                 animate={
                   isInView
                     ? {
@@ -826,7 +834,9 @@ function TournamentScene() {
                 </div>
 
                 {/* Phone Device Mockup Frame */}
-                <div className={`relative w-full max-w-[210px] sm:max-w-[220px] mx-auto ${screen.aspect} rounded-[22px] border-[3px] border-white/20 bg-[#080D1F] p-1 shadow-xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}>
+                <div
+                  className={`relative w-full max-w-[210px] sm:max-w-[220px] mx-auto ${screen.aspect} rounded-[22px] border-[3px] border-white/20 bg-[#080D1F] p-1 shadow-xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}
+                >
                   {/* Notch */}
                   <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1.5 bg-black/70 rounded-full z-20" />
 
@@ -901,7 +911,7 @@ function PlayerScene() {
                 : undefined
             }
             transition={{ duration: 0.85 }}
-            className="relative mx-auto w-full max-w-[280px] sm:max-w-[310px] rounded-[36px] border-[4.5px] border-[#CBD5E1] bg-white p-1.5 shadow-[0_30px_80px_rgba(13,27,62,0.16)] overflow-hidden"
+            className="relative mx-auto w-full max-w-70 sm:max-w-[310px] rounded-[36px] border-[4.5px] border-[#CBD5E1] bg-white p-1.5 shadow-[0_30px_80px_rgba(13,27,62,0.16)] overflow-hidden"
           >
             {/* Notch */}
             <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-black/70 rounded-full z-20" />
@@ -1075,27 +1085,38 @@ function OnboardingPreviewScene() {
             </div>
 
             <h2 className="font-display text-[clamp(3.5rem,7vw,5.5rem)] font-black uppercase leading-[0.85] tracking-[-0.03em]">
-              Instant access. <span className="text-[#00D6FF]">Zero barrier.</span>
+              Instant access.{" "}
+              <span className="text-[#00D6FF]">Zero barrier.</span>
             </h2>
 
             <p className="font-body text-base text-white/60 leading-relaxed max-w-lg">
-              Sign in with your phone or email and start scoring matches right away. Manage squads, sync scorecards across devices, and organize local circuits with ease.
+              Sign in with your phone or email and start scoring matches right
+              away. Manage squads, sync scorecards across devices, and organize
+              local circuits with ease.
             </p>
 
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
-                <div className="text-2xl font-display font-black text-[#00D6FF]">100% Free</div>
-                <div className="text-xs text-white/50 font-body mt-1">For grassroots & club matches</div>
+                <div className="text-2xl font-display font-black text-[#00D6FF]">
+                  100% Free
+                </div>
+                <div className="text-xs text-white/50 font-body mt-1">
+                  For grassroots & club matches
+                </div>
               </div>
               <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
-                <div className="text-2xl font-display font-black text-[#22C55E]">&lt; 10 Sec</div>
-                <div className="text-xs text-white/50 font-body mt-1">Quick match start time</div>
+                <div className="text-2xl font-display font-black text-[#22C55E]">
+                  &lt; 10 Sec
+                </div>
+                <div className="text-xs text-white/50 font-body mt-1">
+                  Quick match start time
+                </div>
               </div>
             </div>
 
             <div className="pt-4">
               <Link
-                href="/login"
+                href="/home"
                 className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#0050FF] to-[#00D6FF] text-white font-display font-bold text-sm uppercase tracking-wider shadow-[0_15px_40px_rgba(0,214,255,0.35)] hover:scale-105 active:scale-95 transition-all"
               >
                 Sign In to YuvaCrix
@@ -1111,7 +1132,7 @@ function OnboardingPreviewScene() {
             transition={{ duration: 0.85, delay: 0.2 }}
             className="lg:col-span-6 flex justify-center"
           >
-            <div className="relative w-full max-w-[280px] sm:max-w-[310px] rounded-[36px] border-[4.5px] border-white/20 bg-[#10182F] p-1.5 shadow-[0_35px_90px_rgba(0,0,0,0.65)] overflow-hidden">
+            <div className="relative w-full max-w-70 sm:max-w-[310px] rounded-[36px] border-[4.5px] border-white/20 bg-[#10182F] p-1.5 shadow-[0_35px_90px_rgba(0,0,0,0.65)] overflow-hidden">
               {/* Notch */}
               <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-black/80 rounded-full z-20" />
 
@@ -1188,13 +1209,13 @@ function FinalCtaScene() {
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 32, repeat: Infinity, ease: "linear" }}
-        className="absolute left-1/2 top-1/2 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-white/10"
+        className="absolute left-1/2 top-1/2 h-115 w-115 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-white/10"
       />
 
       <motion.div
         animate={{ rotate: -360 }}
         transition={{ duration: 48, repeat: Infinity, ease: "linear" }}
-        className="absolute left-1/2 top-1/2 h-[610px] w-[610px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.04]"
+        className="absolute left-1/2 top-1/2 h-152.5 w-152.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.04]"
       />
 
       <div className="relative z-10 mx-auto max-w-4xl">
@@ -1233,7 +1254,7 @@ function FinalCtaScene() {
           transition={{ duration: 0.7, delay: 0.28 }}
         >
           <Link
-            href="/login?redirect=/start-match"
+            href="/home"
             className="group mt-10 inline-flex min-h-15 items-center justify-center gap-3 rounded-2xl bg-[#1B3FA0] px-9 py-4 font-display text-sm font-bold uppercase tracking-[0.1em] text-white shadow-[0_22px_60px_rgba(27,63,160,0.42)] transition duration-300 hover:-translate-y-1 hover:bg-[#254EC0]"
           >
             Start scoring free

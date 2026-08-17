@@ -183,7 +183,7 @@ export default function PlayersPage() {
     );
   }
 
-  if (players.length === 0) {
+  if (players.length === 0 && teamDetail?.isAdmin) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center bg-(--color-bg-base)">
         <div
@@ -209,11 +209,31 @@ export default function PlayersPage() {
           Add players to your squad and start scoring matches.
         </p>
         <button
-          onClick={() => router.push("/start-match/create-player")}
+          onClick={() =>
+            router.push(
+              `/tournaments/${tournamentId}/create-player?team=${currentTeamId}`,
+            )
+          }
           className="mt-6 flex items-center gap-2 rounded-2xl bg-(--color-brand) px-6 py-3.5 font-(family-name:--font-display) text-sm font-black uppercase tracking-[0.06em] text-white shadow-(--shadow-button) active:scale-95"
         >
           <UserPlus size={16} /> Add Players
         </button>
+      </div>
+    );
+  }
+
+  if (players.length === 0 && !teamDetail?.isAdmin) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center bg-(--color-bg-base)">
+        <h3
+          className="font-(family-name:--font-display) text-2xl font-black uppercase text-(--color-text-primary)"
+          style={{ letterSpacing: "0.04em" }}
+        >
+          No Players Yet
+        </h3>
+        <p className="mt-2 max-w-55 text-sm leading-relaxed text-(--color-text-secondary)">
+          Players will appear here once the organizer adds them.
+        </p>
       </div>
     );
   }
@@ -307,7 +327,7 @@ export default function PlayersPage() {
         {/* ── PlayerList in team-management mode ── */}
         <PlayerList
           players={players}
-          mode="team-management-tournament"
+          mode={teamDetail?.isAdmin ? "team-management-tournament" : "my-teams"}
           adminId={adminId}
           captainId={captainId}
           keeperId={keeperId}
@@ -328,34 +348,36 @@ export default function PlayersPage() {
             </p>
           </div>
         )}
-        <div className="flex items-center gap-3 py-1">
-          <Button
-            fullWidth
-            disabled={!canConfirm || isAssigningRoles}
-            loading={isAssigningRoles}
-            onClick={handleConfirm}
-            rightIcon={<ChevronRight size={18} />}
-            className={cn(
-              (!canConfirm || isAssigningRoles) &&
-                "opacity-50 cursor-not-allowed mb-1",
-            )}
-          >
-            Confirm
-          </Button>
+        {teamDetail?.isAdmin && (
+          <div className="flex items-center gap-3 py-1">
+            <Button
+              fullWidth
+              disabled={!canConfirm || isAssigningRoles}
+              loading={isAssigningRoles}
+              onClick={handleConfirm}
+              rightIcon={<ChevronRight size={18} />}
+              className={cn(
+                (!canConfirm || isAssigningRoles) &&
+                  "opacity-50 cursor-not-allowed mb-1",
+              )}
+            >
+              Confirm
+            </Button>
 
-          <button
-            // fullWidth
-            onClick={() =>
-              router.push(
-                `/tournaments/${tournamentId}/create-player?team=${currentTeamId}`,
-              )
-            }
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-2 border-(--color-bg-border) bg-(--color-bg-base) text-(--color-text-secondary) transition-all active:scale-90 hover:border-(--color-sky)/40 hover:bg-(--color-bg-tint) hover:text-(--color-brand)"
-            aria-label="Add player"
-          >
-            <UserPlus size={22} />
-          </button>
-        </div>
+            <button
+              // fullWidth
+              onClick={() =>
+                router.push(
+                  `/tournaments/${tournamentId}/create-player?team=${currentTeamId}`,
+                )
+              }
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-2 border-(--color-bg-border) bg-(--color-bg-base) text-(--color-text-secondary) transition-all active:scale-90 hover:border-(--color-sky)/40 hover:bg-(--color-bg-tint) hover:text-(--color-brand)"
+              aria-label="Add player"
+            >
+              <UserPlus size={22} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

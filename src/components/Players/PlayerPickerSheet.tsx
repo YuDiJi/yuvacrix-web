@@ -102,7 +102,7 @@ export function PlayerPickerSheet({
   }, [players, query]);
 
   return (
-    <div className="flex flex-col min-h-0  max-h-[70vh]">
+    <div className="flex flex-col min-h-0  max-h-[68vh]">
       {/* Title */}
       <div className="shrink-0 flex items-center justify-between border-b border-(--color-bg-border) pb-2">
         <div>

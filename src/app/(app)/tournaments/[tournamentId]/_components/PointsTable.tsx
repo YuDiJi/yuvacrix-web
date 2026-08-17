@@ -306,7 +306,11 @@ function StandingsTable({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function TournamentPointsTable() {
+export default function TournamentPointsTable({
+  isAdmin,
+}: {
+  isAdmin: boolean;
+}) {
   const router = useRouter();
   const params = useParams();
 
@@ -551,15 +555,15 @@ export default function TournamentPointsTable() {
   return (
     <div className="flex min-h-full flex-col bg-(--color-bg-base)">
       {/* Top action link */}
-      <div className="flex justify-end px-4 pt-3 pb-1">
+      {/* <div className="flex justify-end px-4 pt-3 pb-1">
         <button className="flex items-center gap-1.5 text-xs font-bold text-(--color-brand) hover:opacity-80 active:scale-95 transition-all">
           How is NRR calculated?
           <HelpCircle size={14} />
         </button>
-      </div>
+      </div> */}
 
       {/* ── Round selector ──────────────────────────────────────────────── */}
-      <section className="px-4 pb-4">
+      <section className="px-4 pb-4 pt-4">
         <div className="relative">
           <button
             type="button"
@@ -788,6 +792,7 @@ export default function TournamentPointsTable() {
       </section>
 
       {selectedRoundId &&
+        isAdmin &&
         !isGroupsLoading &&
         !isGroupsError &&
         groups.length === 0 && (
@@ -844,7 +849,7 @@ export default function TournamentPointsTable() {
       </div>
 
       {/* ── Bottom Promo / Tools ────────────────────────────────────────────── */}
-      <div className="mt-8 mb-10 px-4 flex flex-col items-center text-center">
+      {/* <div className="mt-8 mb-10 px-4 flex flex-col items-center text-center">
         <h4 className="text-lg font-medium text-(--color-navy)">
           Can your team make it to the next round?
         </h4>
@@ -865,7 +870,7 @@ export default function TournamentPointsTable() {
             Show more
           </button>
         </p>
-      </div>
+      </div> */}
       {groupToDelete && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
           <div className="w-full max-w-md rounded-3xl bg-(--color-bg-card) p-5 shadow-[0_20px_60px_rgba(13,27,62,0.30)]">

@@ -167,7 +167,7 @@ export const routeConfig: Record<string, RouteConfig> = {
   // },
 
   "/matches/[matchId]/scorecard": {
-    title: "League Matches",
+    title: "Matches",
     showBackButton: true,
     back: {
       type: "route",
@@ -273,6 +273,8 @@ export const routeConfig: Record<string, RouteConfig> = {
     showBackButton: true,
     back: {
       type: "history",
+      //  type: "route",
+      // href: "/tournaments/[tournamentId]"
     },
   },
 

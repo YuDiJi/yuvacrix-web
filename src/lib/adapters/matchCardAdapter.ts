@@ -8,6 +8,7 @@ export function matchToMatchCard(match: Match): MatchCardModel {
     matchId: match.matchId,
     fixtureId: null,
 
+    isAdmin: match.isAdmin,
     status: match.status,
     primaryAction: match.primaryAction ?? null,
     lineupMode: match.lineupMode,

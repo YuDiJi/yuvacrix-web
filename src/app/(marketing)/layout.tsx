@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { Footer } from "./_component/Footer";
 
 const NAV_LINKS = [
   { label: "Live Scoring", href: "#live-scoring" },
@@ -89,7 +90,7 @@ export default function MarketingLayout({
                   className="text-white/65 hover:text-white text-sm font-medium transition-colors duration-150 tracking-wide relative group"
                 >
                   {l.label}
-                  <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-[var(--color-sky)] group-hover:w-full transition-all duration-300" />
+                  <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-(--color-sky) group-hover:w-full transition-all duration-300" />
                 </Link>
               </li>
             ))}
@@ -97,12 +98,12 @@ export default function MarketingLayout({
 
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/login"
+            {/* <Link
+              href="/home"
               className="text-white/65 hover:text-white text-sm font-medium transition-colors"
             >
               Sign in
-            </Link>
+            </Link> */}
             <Link
               href="/home"
               className={cn(
@@ -184,7 +185,7 @@ export default function MarketingLayout({
         {/* Drawer CTAs */}
         <div className="px-4 pb-10 pt-4 flex flex-col gap-3 border-t border-white/10">
           <Link
-            href="/login"
+            href="/home"
             onClick={() => setMobileOpen(false)}
             className={cn(
               "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
@@ -212,62 +213,7 @@ export default function MarketingLayout({
       <main className="flex-1">{children}</main>
 
       {/* ─── FOOTER ──────────────────────────────────────────────── */}
-      <footer className="bg-[#070d1a] text-white/50 border-t border-white/8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
-            <div className="col-span-2 md:col-span-1">
-              <span
-                className="block font-[family-name:var(--font-display)] font-black uppercase tracking-[0.05em] text-lg text-white mb-3"
-                style={{ fontWeight: 900 }}
-              >
-                Yuva<span className="text-[var(--color-sky)]">Crix</span>
-              </span>
-              <p className="text-sm leading-relaxed">
-                Modern cricket scoring & tournament management for everyone.
-              </p>
-            </div>
-            {[
-              {
-                head: "Product",
-                links: ["Features", "Changelog", "Roadmap", "API"],
-              },
-              {
-                head: "Company",
-                links: ["About", "Blog", "Careers", "Contact"],
-              },
-              { head: "Legal", links: ["Privacy", "Terms", "Cookies"] },
-            ].map((col) => (
-              <div key={col.head}>
-                <p className="text-section-label text-white/30 mb-3">
-                  {col.head}
-                </p>
-                <ul className="space-y-2 text-sm">
-                  {col.links.map((t) => (
-                    <li key={t}>
-                      <Link
-                        href="#"
-                        className="hover:text-white transition-colors duration-150"
-                      >
-                        {t}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-white/8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <span>
-              © {new Date().getFullYear()} YuvaCrix. All rights reserved.
-            </span>
-            <span className="flex items-center gap-1">
-              Made with{" "}
-              <span className="text-[var(--color-live)] mx-0.5">♥</span> for
-              cricket
-            </span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

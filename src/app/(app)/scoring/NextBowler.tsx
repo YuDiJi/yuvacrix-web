@@ -3,6 +3,7 @@ import { DialogBottom } from "@/components/common/DialogBottom";
 import { PlayerPickerSheet } from "@/components/Players/PlayerPickerSheet";
 import { cn } from "@/lib/cn";
 import { useStartNextOverMutation } from "@/store/api/scoringApi";
+import { ScoringState } from "@/types/innings";
 import { MatchDetailsPlayer } from "@/types/match";
 import { useEffect, useState } from "react";
 
@@ -15,6 +16,7 @@ export function NextBowlerSheet({
   inningsId,
   bowlingTeamId,
   currentBowlerId,
+  state,
 }: {
   open: boolean;
   players: MatchDetailsPlayer[] | undefined;
@@ -24,6 +26,7 @@ export function NextBowlerSheet({
   inningsId: string | undefined;
   bowlingTeamId: string | undefined;
   currentBowlerId: string | undefined;
+  state: ScoringState | undefined;
 }) {
   const [selectedBowler, setSelectedBowler] =
     useState<MatchDetailsPlayer | null>(null);
@@ -85,6 +88,16 @@ export function NextBowlerSheet({
       >
         Continue Scoring
       </Button>
+      {state && (
+        <div className="overflow-hidden px-5 py-1">
+          <div className="whitespace-nowrap animate-marquee">
+            <span className="text-sm font-bold">
+              Target: {state.score} in {state.oversText} ({state.runRateSummary}
+              )
+            </span>
+          </div>
+        </div>
+      )}
     </DialogBottom>
   );
 }

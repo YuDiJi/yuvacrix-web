@@ -502,9 +502,9 @@ function Hero() {
           <Lock size={24} className="text-(--color-sky)" />
         </div>
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-(--color-sky)">
+          {/* <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-(--color-sky)">
             YuvaCrix
-          </span>
+          </span> */}
           <h1 className="mt-1 font-display text-[32px] font-black uppercase leading-none tracking-tight text-(--color-text-inverse)">
             Privacy
             <br />

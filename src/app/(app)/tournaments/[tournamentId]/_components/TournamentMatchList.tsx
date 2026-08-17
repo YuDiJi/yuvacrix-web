@@ -155,6 +155,10 @@ export default function TournamentMatchList() {
   function handleMatchClick(match: MatchCardModel) {
     setSelectedMatchContext(match);
 
+    if (!match.isAdmin) {
+      return router.push(`/matches/${match.matchId}/scorecard`);
+    }
+
     if (match.status === "LIVE") {
       setSelectedMatch(match);
       setShowLiveOptions(true);

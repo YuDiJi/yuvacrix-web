@@ -5,6 +5,7 @@ export interface Team {
   description?: string;
   sportType: string;
   memberCount?: number;
+  isAdmin?: boolean;
 }
 
 export interface CreateTeamDto {
