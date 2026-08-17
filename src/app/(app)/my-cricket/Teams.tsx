@@ -25,7 +25,7 @@ const TEAM_FILTERS: TeamOverviewFilter[] = [
 
 const TEAM_FILTER_LABELS: Record<TeamOverviewFilter, string> = {
   YOUR: "Your",
-  PARTICIPATE: "Participate",
+  PARTICIPATE: "Played",
   //   NETWORK: "Network",
   ALL: "All",
 };

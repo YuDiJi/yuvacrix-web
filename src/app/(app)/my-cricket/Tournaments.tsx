@@ -29,7 +29,7 @@ const TOURNAMENT_FILTERS: TournamentOverviewFilter[] = [
 
 const TOURNAMENT_FILTER_LABELS: Record<TournamentOverviewFilter, string> = {
   YOUR: "Your",
-  PARTICIPATE: "Participate",
+  PARTICIPATE: "Played",
   NETWORK: "Network",
   ALL: "All",
 };
