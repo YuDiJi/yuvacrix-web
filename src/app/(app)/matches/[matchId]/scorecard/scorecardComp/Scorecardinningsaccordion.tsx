@@ -98,6 +98,28 @@ export default function ScorecardInningsAccordion({
             />
           )}
 
+          {innings.scoreAdjustments?.length > 0 && (
+            <div className="px-3 py-3">
+              <div className="text-section-label mb-2">Rule adjustments</div>
+              <div className="space-y-1.5">
+                {innings.scoreAdjustments.map((adjustment) => (
+                  <div
+                    key={adjustment.id}
+                    className="flex justify-between text-xs text-(--color-text-secondary)"
+                  >
+                    <span>
+                      Bowling target powerplay · Over {adjustment.overNumber + 1}
+                      {` (${adjustment.rawOverRuns}/${adjustment.targetRuns})`}
+                    </span>
+                    <span className="font-bold text-(--color-navy)">
+                      {adjustment.runs > 0 ? "+" : ""}{adjustment.runs} runs
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Yet to bat */}
           {innings.toBat && innings.toBat.length > 0 && (
             <YetToBat players={innings.toBat} />

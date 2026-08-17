@@ -739,7 +739,7 @@ export default function StartInningsPage() {
       <div className="safe-bottom shrink-0 flex border-t border-(--color-bg-border) bg-(--color-bg-card)">
         <button
           onClick={() =>
-            router.push(`/start-match/match-rules?matchId=${matchId}`)
+            router.push(`/matches/${matchId}/rules`)
           }
           className="flex flex-1 items-center justify-center gap-2 py-4 font-(family-name:--font-display) text-xs font-black uppercase tracking-[0.06em] text-(--color-text-secondary) transition-colors hover:text-(--color-text-primary)"
         >

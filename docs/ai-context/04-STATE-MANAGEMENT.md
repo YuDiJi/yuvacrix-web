@@ -31,6 +31,8 @@ combineReducers({
 
 **redux-persist** whitelist: `["auth", "startMatch"]` only. Scoring state and RTK Query cache are **not** persisted.
 
+Match Rules and scoring remain server-authoritative. The editor holds only unsaved typed overrides locally. Record Ball sends a stable `clientEventId` and displayed `baseInningsVersion`; conflicts refresh `ScoringState` instead of applying a client-calculated score.
+
 Middleware: default RTK middleware with `serializableCheck: false` + `baseApi.middleware`.
 
 ## Slice Responsibilities
@@ -66,6 +68,7 @@ All inject into `baseApi` (`src/store/api/baseApi.ts`):
 | `teamApi.ts` | Teams CRUD, owned teams |
 | `playerApi.ts` | Player search/create |
 | `matchApi.ts` | Create match, lineup, toss, match list |
+| `matchRulesApi.ts` | Rule presets; match, tournament, and round rule reads/validation/mutations |
 | `scoringApi.ts` | Innings start, record ball, undo, bowler/batter changes |
 | `scorecardApi.ts` | Scorecard, summary, commentary, squads, and MVP reads |
 

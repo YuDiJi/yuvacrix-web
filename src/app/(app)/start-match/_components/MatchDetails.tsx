@@ -305,7 +305,7 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
       }),
       scoringSettings: {
         wagonWheelEnabled: values.wagonWheel,
-        wagonWheelForRuns: values.wagonWheel ? [1, 2, 3] : [],
+        wagonWheelForRuns: values.wagonWheel ? [4, 6] : [],
       },
     };
   }

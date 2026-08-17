@@ -1,5 +1,6 @@
 import { baseApi } from "./baseApi";
 import { TournamentFormat } from "./tournamentApi";
+import { MatchRulesConfiguration } from "@/types/matchRules";
 
 export type TournamentRoundType =
   | "LEAGUE"
@@ -25,6 +26,7 @@ export type TournamentRound = {
   roundType: TournamentRoundType;
   sequenceNumber: number;
   status: TournamentRoundStatus;
+  matchRulesConfiguration?: MatchRulesConfiguration | null;
   createdAt?: string;
   updatedAt?: string;
 };

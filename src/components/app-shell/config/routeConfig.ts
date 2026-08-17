@@ -176,6 +176,12 @@ export const routeConfig: Record<string, RouteConfig> = {
     },
   },
 
+  "/matches/[matchId]/rules": {
+    title: "Match Rules",
+    showBackButton: true,
+    back: { type: "history" },
+  },
+
   "/add-tournaments-series": {
     title: "Add Tournament / Series",
     showBackButton: false,
@@ -206,6 +212,12 @@ export const routeConfig: Record<string, RouteConfig> = {
     back: {
       type: "history",
     },
+  },
+
+  "/tournaments/[tournamentId]/rules": {
+    title: "Match Rules",
+    showBackButton: true,
+    back: { type: "history" },
   },
 
   "/tournaments/[tournamentId]/add-teams": {

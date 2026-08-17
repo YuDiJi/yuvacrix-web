@@ -9,6 +9,7 @@ import {
   Map,
   HelpCircle,
   AlertCircle,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useGetAboutQuery } from "@/store/api/tournamentApi";
 import { useParams, useRouter } from "next/navigation";
@@ -184,6 +185,23 @@ const About = () => {
         </div>
 
         <div className="p-5 flex flex-col gap-6">
+          {about.actions.canEdit && (
+            <button
+              type="button"
+              onClick={() => router.push(`/tournaments/${tournamentId}/rules`)}
+              className="flex items-center justify-between rounded-xl border border-(--color-brand)/20 bg-(--color-bg-tint) px-4 py-3 text-left"
+            >
+              <div>
+                <p className="text-sm font-bold text-(--color-navy)">
+                  Match rules
+                </p>
+                <p className="mt-0.5 text-xs text-(--color-text-muted)">
+                  Set rules inherited by tournament matches
+                </p>
+              </div>
+              <SlidersHorizontal size={18} className="text-(--color-brand)" />
+            </button>
+          )}
           {/* Row 1 */}
           <div className="flex justify-between items-start">
             <div>
