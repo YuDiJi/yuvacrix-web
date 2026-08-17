@@ -32,6 +32,7 @@ Extend `baseApi` with `injectEndpoints`:
 | `teamApi.ts` | Team listing, detail, create |
 | `playerApi.ts` | Player search, create |
 | `matchApi.ts` | `POST /matches`, lineup, toss, `GET` my matches |
+| `matchRulesApi.ts` | `/match-rule-presets` plus match/tournament/round rule configuration |
 | `scoringApi.ts` | `/match/{id}/scoring/*` — innings, balls, undo, bowler/strike changes |
 | `scorecardApi.ts` | `/matchescored/{id}/scorecard/*` — scorecard, summary, commentary, squads, MVP |
 
@@ -48,6 +49,7 @@ Domain types live in `src/types/`:
 | `team.ts` | `Team`, team requests |
 | `player.ts` | Player entities |
 | `match.ts` | Match creation, lineup, status enums |
+| `matchRules.ts` | Versioned rule presets, snapshots, overrides, validation, and propagation results |
 | `innings.ts` | `ScoringState`, innings start/complete |
 | `scoring.ts` | Ball recording, wicket flow, undo |
 | `scorecard.ts` | Scorecard views and derived match summaries |
@@ -131,6 +133,14 @@ providesTags: ["Auth"]
 ```
 
 Next.js `fetch` cache options are **not used** — all data fetching is client-side RTK Query.
+
+## Match Rules and scoring contracts
+
+- `matchRulesApi` reads presets/configurations, validates edits, and confirms the pre-toss lock.
+- `scoringApi` declares bowling-target powerplay and invalidates `ScoringState`/`Scorecard` after mutations.
+- Required boundary wagon-wheel direction is collected before Record Ball and sent as `wagonWheel.fieldZone`.
+- Record Ball sends `clientEventId` and `baseInningsVersion`. `SCORING_VERSION_CONFLICT` triggers an authoritative refetch.
+- Scorecard innings include `scoreAdjustments` for bonus/deduction display.
 
 ## Error Boundaries
 

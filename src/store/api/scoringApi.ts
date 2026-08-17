@@ -130,6 +130,24 @@ export const scoringApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["ScoringState", "Matches", "Scorecard"],
     }),
+
+    declareBowlingPowerplay: builder.mutation<
+      { activeSpecialOver: ScoringState["activeSpecialOver"]; state: ScoringState },
+      {
+        matchId: string;
+        inningsId: string;
+        overNumber: number;
+        declaredByPlayerId: string;
+        expectedInningsVersion: number;
+      }
+    >({
+      query: ({ matchId, overNumber, ...body }) => ({
+        url: `/match/${matchId}/scoring/overs/${overNumber}/powerplay`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["ScoringState", "Scorecard"],
+    }),
   }),
 });
 
@@ -142,6 +160,7 @@ export const {
   useStartNextOverMutation,
   useContinueCurrentOverMutation,
   useChangeStrikeManuallyMutation,
+  useDeclareBowlingPowerplayMutation,
   // useCompleteInningsMutation,
   // useGetInningsStateQuery,
 } = scoringApi;

@@ -114,6 +114,17 @@ export type InningsScorecard = {
   fallOfWickets: FallOfWicket[];
   toBat: ToBatPlayer[];
   overSummaries: OverSummary[];
+  scoreAdjustments: ScoreAdjustment[];
+};
+
+export type ScoreAdjustment = {
+  id: string;
+  overNumber: number;
+  type: "POWERPLAY_BONUS" | "POWERPLAY_FAILURE_DEDUCTION";
+  runs: number;
+  rawOverRuns: number;
+  officialOverContribution: number;
+  targetRuns: number;
 };
 
 export type BatterScore = {

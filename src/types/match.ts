@@ -51,6 +51,11 @@ export interface Venue {
 export interface ScoringSettings {
   wagonWheelEnabled: boolean;
   wagonWheelForRuns: number[];
+  countWideAsLegalDelivery?: boolean;
+  wideRunValue?: number;
+  countNoBallAsLegalDelivery?: boolean;
+  noBallRunValue?: number;
+  freeHitEnabled?: boolean;
 }
 
 export interface MatchOfficials {
@@ -146,6 +151,7 @@ export interface MatchRules {
   matchType: MatchType;
   oversLimit: number;
   oversPerBowler: number;
+  ballsPerOver?: number;
   lineupMode: LineupMode;
 }
 
@@ -193,6 +199,8 @@ export interface Match {
 
   oversLimit: number;
   oversPerBowler: number;
+  rules?: MatchRules;
+  scoringSettings?: ScoringSettings;
 
   scheduledAt: string | null;
   startedAt: string | null;

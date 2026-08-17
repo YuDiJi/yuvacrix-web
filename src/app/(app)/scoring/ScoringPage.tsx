@@ -7,9 +7,10 @@ import {
   useChangeStrikeManuallyMutation,
   useGetScoringStateQuery,
   useRecordBallMutation,
+  useDeclareBowlingPowerplayMutation,
 } from "@/store/api/scoringApi";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { ExtraType } from "@/types/scoring";
+import { ExtraType, FieldZone } from "@/types/scoring";
 import { useEffect, useState } from "react";
 import { WideBallSheet } from "./WideBall";
 import { NoBallSheet } from "./NoBall";
@@ -27,6 +28,7 @@ import { cn } from "@/lib/cn";
 import { BallChip } from "./BallChip";
 import { ScoringState } from "@/types/innings";
 import NextBatterSheet from "./NextBatter";
+import { WagonWheelDirectionSheet } from "./WagonWheelDirectionSheet";
 
 import { useRouter } from "next/navigation";
 import { SyncStatus, SyncStatusToast } from "./SyncStatusToast";
@@ -85,11 +87,14 @@ export default function ScoringPage() {
     data: state,
     isLoading: loadingState,
     isFetching: isFetchingState,
+    refetch: refetchScoringState,
   } = useGetScoringStateQuery(matchId ?? skipToken, {
     refetchOnMountOrArgChange: true,
   });
 
   const [recordBall, { isLoading: isRecording }] = useRecordBallMutation();
+  const [declareBowlingPowerplay, { isLoading: isDeclaringPowerplay }] =
+    useDeclareBowlingPowerplayMutation();
   const [changeStrikeManually, { isLoading: isChangingStrike }] =
     useChangeStrikeManuallyMutation();
 
@@ -97,6 +102,9 @@ export default function ScoringPage() {
   const [syncMessage, setSyncMessage] = useState("Synced");
 
   const [showStrikeConfirm, setShowStrikeConfirm] = useState(false);
+  const [pendingWagonWheelRuns, setPendingWagonWheelRuns] = useState<
+    number | null
+  >(null);
 
   const [openDialog, setOpenDialog] = useState<null | DialogType>(null);
   const [flow, setFlow] = useState<ScoringFlow>("IDLE");
@@ -164,7 +172,7 @@ export default function ScoringPage() {
     }
   };
 
-  async function handleRuns(batRuns: number) {
+  async function recordRuns(batRuns: number, fieldZone?: FieldZone) {
     if (!state || !matchId || isRecording) return;
 
     setSyncStatus("saving");
@@ -174,9 +182,11 @@ export default function ScoringPage() {
         matchId,
         inningsId: state.inningsId,
         clientEventId: Date.now().toString(),
+        baseInningsVersion: state.version,
         runs: {
           batRuns,
         },
+        ...(fieldZone && { wagonWheel: { fieldZone } }),
       }).unwrap();
 
       setSyncStatus("refreshing");
@@ -200,10 +210,34 @@ export default function ScoringPage() {
       }
 
       setOpenDialog(null);
+      setPendingWagonWheelRuns(null);
     } catch (error) {
       console.error(error);
-      setSyncStatus("error");
+      const message = (error as { data?: { message?: string } })?.data?.message;
+      if (message === "SCORING_VERSION_CONFLICT") {
+        setSyncMessage("Score changed elsewhere. Refreshed latest score.");
+        setSyncStatus("refreshing");
+        await refetchScoringState();
+        setSyncStatus("synced");
+      } else {
+        setSyncMessage("Ball could not be saved. Please retry.");
+        setSyncStatus("error");
+      }
     }
+  }
+
+  function handleRuns(batRuns: number) {
+    const settings = matchData?.match.scoringSettings;
+    const requiresWagonWheel =
+      settings?.wagonWheelEnabled === true &&
+      settings.wagonWheelForRuns.includes(batRuns);
+
+    if (requiresWagonWheel) {
+      setPendingWagonWheelRuns(batRuns);
+      return;
+    }
+
+    void recordRuns(batRuns);
   }
 
   const handleExtra = async (type: ExtraType, additionalRuns: number) => {
@@ -331,6 +365,41 @@ export default function ScoringPage() {
     setCompletedOverSnapshot(null);
   };
 
+  const handleDeclarePowerplay = async () => {
+    const powerplay = state?.powerplay;
+    if (
+      !matchId ||
+      !state ||
+      !powerplay?.canDeclare ||
+      !powerplay.bowlingCaptainPlayerId ||
+      isDeclaringPowerplay
+    ) return;
+
+    setSyncStatus("saving");
+    try {
+      await declareBowlingPowerplay({
+        matchId,
+        inningsId: state.inningsId,
+        overNumber: powerplay.currentOverNumber,
+        declaredByPlayerId: powerplay.bowlingCaptainPlayerId,
+        expectedInningsVersion: state.version,
+      }).unwrap();
+      setSyncMessage("Bowling powerplay declared");
+      setSyncStatus("synced");
+    } catch (error) {
+      console.error("Failed to declare bowling powerplay:", error);
+      const message = (error as { data?: { message?: string } })?.data?.message;
+      if (message === "SCORING_VERSION_CONFLICT") {
+        setSyncMessage("Score changed elsewhere. Refreshed latest score.");
+        setSyncStatus("refreshing");
+        await refetchScoringState();
+        setSyncStatus("synced");
+      } else {
+        setSyncStatus("error");
+      }
+    }
+  };
+
   return (
     // 'absolute inset-x-0 bottom-0 top-14' strictly forces the layout to fit
     // exactly within the screen under the global header, preventing any scrolling.
@@ -375,6 +444,22 @@ export default function ScoringPage() {
               (displayState?.runRateSummary ?? "—")
             )}
           </p>
+
+          {displayState?.activeSpecialOver ? (
+            <div className="mt-2 rounded-full bg-amber-400/15 px-3 py-1 text-[10px] font-bold text-amber-200">
+              Bowling powerplay: {displayState.activeSpecialOver.rawRuns}/
+              {displayState.activeSpecialOver.targetRuns} runs
+            </div>
+          ) : displayState?.powerplay?.canDeclare ? (
+            <button
+              type="button"
+              disabled={isDeclaringPowerplay}
+              onClick={handleDeclarePowerplay}
+              className="mt-2 rounded-full bg-[#4DFFDE] px-3 py-1 text-[10px] font-black uppercase text-(--color-navy) disabled:opacity-50"
+            >
+              {isDeclaringPowerplay ? "Declaring…" : "Declare bowling powerplay"}
+            </button>
+          ) : null}
 
           {/* <div className="mt-2 flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-md">
             <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest font-display">
@@ -859,6 +944,19 @@ export default function ScoringPage() {
       </div>
 
       <SyncStatusToast status={syncStatus} successMessage={syncMessage} />
+      <WagonWheelDirectionSheet
+        open={pendingWagonWheelRuns !== null}
+        batRuns={pendingWagonWheelRuns}
+        isRecording={isRecording}
+        onClose={() => {
+          if (!isRecording) setPendingWagonWheelRuns(null);
+        }}
+        onSelect={(fieldZone) => {
+          if (pendingWagonWheelRuns !== null) {
+            void recordRuns(pendingWagonWheelRuns, fieldZone);
+          }
+        }}
+      />
       {/* 4. BOTTOM ACTION SHEET TRIGGER */}
       <button className="h-6 shrink-0 bg-(--color-navy) flex items-center justify-center gap-2 w-full active:bg-[#0a1532] transition-colors safe-bottom pt-0">
         <span className="font-display text-xs font-bold text-white uppercase tracking-widest">

@@ -24,6 +24,8 @@ export function UndoSheet({
 }) {
   const [undoLastBall, { isLoading: isUndoing, error }] =
     useUndoLastBallMutation();
+  const errorMessage = (error as { data?: { message?: string } } | undefined)
+    ?.data?.message;
 
   async function handleUndo() {
     if (!matchId || !inningsId) return;
@@ -52,6 +54,13 @@ export function UndoSheet({
           Undo?
         </h3>
         <p>Undo last ball?</p>
+        {errorMessage && (
+          <p className="text-center text-sm font-semibold text-red-600">
+            {errorMessage === "SCORING_VERSION_CONFLICT"
+              ? "Score changed elsewhere. Close this message and try again with the refreshed score."
+              : "The last ball could not be undone. Please try again."}
+          </p>
+        )}
       </div>
 
       <div className="flex gap-6 mt-6">

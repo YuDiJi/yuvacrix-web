@@ -27,10 +27,7 @@ import {
   setTeamBRoles,
 } from "@/store/startMatch/startMatchSlice";
 import { Button } from "@/components/common/Button";
-import {
-  useMarkReadyForTossMutation,
-  useSubmitTeamLineupMutation,
-} from "@/store/api/matchApi";
+import { useSubmitTeamLineupMutation } from "@/store/api/matchApi";
 import { SubmitLineupDto } from "@/types/match";
 import { useGetTeamsRoleSummaryQuery } from "@/store/api/tournamentTeamApi";
 
@@ -331,9 +328,6 @@ export default function LineupPage() {
   const [submitTeamLineup, { isLoading: isSubmitting }] =
     useSubmitTeamLineupMutation();
 
-  const [markReadyForToss, { isLoading: isReadyForToss }] =
-    useMarkReadyForTossMutation();
-
   const { data: teamARole, isFetching: isFetchingTeamARole } =
     useGetTeamsRoleSummaryQuery(
       isTournamentFlow && tournamentId && teamA?.id
@@ -623,9 +617,7 @@ export default function LineupPage() {
           ),
         }).unwrap(),
       ]);
-      await markReadyForToss({ matchId }).unwrap();
-
-      router.push("/start-match/toss");
+      router.push(`/matches/${matchId}/rules`);
     } catch (err: any) {
       setError(
         err?.data?.message ?? "Failed to submit lineup. Please try again.",
@@ -770,7 +762,7 @@ export default function LineupPage() {
       <div className="safe-bottom sticky bottom-0 shrink-0 bg-(--color-bg-base) px-4 pb-4 pt-2">
         <Button
           onClick={handleContinue}
-          disabled={!canContinue || isSubmitting || isReadyForToss}
+          disabled={!canContinue || isSubmitting}
           loading={isSubmitting}
           fullWidth
         >

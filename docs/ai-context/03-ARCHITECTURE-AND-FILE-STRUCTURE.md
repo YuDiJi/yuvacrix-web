@@ -135,6 +135,15 @@ Based on git history (`feature/out` → `ecb221d`) and file structure in `src/ap
 
 9. **No new dependencies** unless escalated — out flow used existing RTK Query + local `useState` only.
 
+### Match Rules flow
+
+- `src/components/match-rules/MatchRulesEditor.tsx` is the shared mobile editor for match, tournament-default, and round scopes.
+- `/matches/[matchId]/rules` validates and confirms resolved rules before calling the ready-for-toss transition.
+- `/tournaments/[tournamentId]/rules` edits tournament defaults or a selected round override.
+- Server state remains in `matchRulesApi`; only temporary form overrides and review state are local component state.
+- Match and tournament routes share the typed editor; no generic formula builder exists.
+- Scoring owns wagon-wheel direction and bowling-powerplay declaration/progress UI. Scorecards render server-returned rule adjustments separately from raw deliveries.
+
 ## Import Alias
 
 Always use `@/` for imports from `src/`:
