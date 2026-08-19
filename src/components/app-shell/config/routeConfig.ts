@@ -176,7 +176,7 @@ export const routeConfig: Record<string, RouteConfig> = {
     },
   },
 
-  "/matches/[matchId]/rules": {
+  "/start-match/rules": {
     title: "Match Rules",
     showBackButton: true,
     back: { type: "history" },
