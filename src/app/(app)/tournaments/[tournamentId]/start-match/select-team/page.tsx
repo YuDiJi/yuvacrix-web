@@ -12,7 +12,7 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { cn } from "@/lib/cn";
-import { TeamCard } from "@/components/team/TeamCard";
+import { TeamCard } from "@/components/cricket/team/TeamCard";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
@@ -29,10 +29,10 @@ import {
   selectTournamentGroupId,
 } from "@/store/startMatch/selectors";
 
-import { useGetTournamentTeamsQuery } from "@/store/api/tournamentTeamApi";
-import { useGetTournamentGroupDetailQuery } from "@/store/api/tournamentGroupApi";
+import { useGetTournamentTeamsQuery } from "@/store/api/cricket/tournamentTeamApi";
+import { useGetTournamentGroupDetailQuery } from "@/store/api/cricket/tournamentGroupApi";
 
-import type { Team } from "@/types/team";
+import type { Team } from "@/types/cricket/team";
 
 export default function SelectTournamentTeamPage() {
   const dispatch = useAppDispatch();

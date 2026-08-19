@@ -15,14 +15,14 @@ import {
 import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/cn";
-import { useGetMyCricketProfileBadgesQuery } from "@/store/api/cricketProfileApi";
+import { useGetMyCricketProfileBadgesQuery } from "@/store/api/cricket/cricketProfileApi";
 
 import type {
   CricketProfileBadgeCategory,
   CricketProfileBadgeGroup,
   CricketProfileBadgeItem,
   CricketProfileBadgeSection,
-} from "@/types/cricketProfile";
+} from "@/types/cricket/cricketProfile";
 
 type BadgeCategoryTab = {
   label: string;

@@ -1,4 +1,4 @@
-import type { BattingOverallStats } from "@/types/performance";
+import type { BattingOverallStats } from "@/types/cricket/performance";
 
 import PerformanceSection from "../components/PerformanceSection";
 

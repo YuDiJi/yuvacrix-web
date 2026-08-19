@@ -1,5 +1,5 @@
-import type { Match } from "@/types/match";
-import type { MatchCardModel } from "@/types/matchCard";
+import type { Match } from "@/types/cricket/match";
+import type { MatchCardModel } from "@/types/cricket/matchCard";
 
 export function matchToMatchCard(match: Match): MatchCardModel {
   return {

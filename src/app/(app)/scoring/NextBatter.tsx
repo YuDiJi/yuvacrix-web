@@ -1,13 +1,13 @@
 import { Button } from "@/components/common/Button";
 import { DialogBottom } from "@/components/common/DialogBottom";
-import { PlayerPickerSheet } from "@/components/Players/PlayerPickerSheet";
+import { PlayerPickerSheet } from "@/components/cricket/Players/PlayerPickerSheet";
 import { cn } from "@/lib/cn";
-import { ScoringState } from "@/types/innings";
-import { MatchDetailsPlayer } from "@/types/match";
+import { ScoringState } from "@/types/cricket/innings";
+import { MatchDetailsPlayer } from "@/types/cricket/match";
 import { ArrowLeft, Check, User } from "lucide-react";
 import React, { useState } from "react";
 import { WICKET_CONFIG } from "./out/constant";
-import { useChangeStrikeManuallyMutation } from "@/store/api/scoringApi";
+import { useChangeStrikeManuallyMutation } from "@/store/api/cricket/scoringApi";
 import { S3Image } from "@/components/common/S3Image";
 
 type NextBatterSheetProps = {

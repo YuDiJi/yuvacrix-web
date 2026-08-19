@@ -9,7 +9,7 @@ import {
   type CreateGroupFormValues,
   type CreateGroupRound,
   type CreateGroupTeam,
-} from "@/components/tournament/CreateGroupForm";
+} from "@/components/cricket/tournament/CreateGroupForm";
 
 import { Button } from "@/components/common/Button";
 
@@ -17,10 +17,10 @@ import {
   useGetTournamentGroupDetailQuery,
   useReplaceTournamentGroupTeamsMutation,
   useUpdateTournamentGroupMutation,
-} from "@/store/api/tournamentGroupApi";
+} from "@/store/api/cricket/tournamentGroupApi";
 
-import { useGetTournamentRoundsQuery } from "@/store/api/tournamentRoundApi";
-import { useGetTournamentTeamsQuery } from "@/store/api/tournamentTeamApi";
+import { useGetTournamentRoundsQuery } from "@/store/api/cricket/tournamentRoundApi";
+import { useGetTournamentTeamsQuery } from "@/store/api/cricket/tournamentTeamApi";
 
 function getApiErrorMessage(error: unknown, fallback: string): string {
   if (

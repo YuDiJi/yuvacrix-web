@@ -3,8 +3,8 @@
 import { AlertCircle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 
-import { useGetTournamentDetailsQuery } from "@/store/api/tournamentApi";
-import TournamentForm from "@/components/tournament/TournamentForm";
+import { useGetTournamentDetailsQuery } from "@/store/api/cricket/tournamentApi";
+import TournamentForm from "@/components/cricket/tournament/TournamentForm";
 
 export default function EditTournamentPage() {
   const router = useRouter();

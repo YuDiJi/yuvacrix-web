@@ -8,13 +8,13 @@ import { cn } from "@/lib/cn";
 import { useAppDispatch } from "@/store/hooks";
 import { resetMatch } from "@/store/startMatch/startMatchSlice";
 
-import { useGetMyTournamentsOverviewQuery } from "@/store/api/tournamentApi";
+import { useGetMyTournamentsOverviewQuery } from "@/store/api/cricket/tournamentApi";
 
 import type {
   TournamentOverviewFilter,
   Tournament,
   TournamentsOverviewPagination,
-} from "@/store/api/tournamentApi";
+} from "@/store/api/cricket/tournamentApi";
 
 import { TournamentCard } from "./TournamentCard";
 

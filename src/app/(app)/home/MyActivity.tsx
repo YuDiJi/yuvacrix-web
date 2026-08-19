@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { HomeActivityItem } from "@/types/home";
+import type { HomeActivityItem } from "@/types/cricket/home";
 import { getIcon } from "./iconMap";
 
 type Props = { items: HomeActivityItem[] };

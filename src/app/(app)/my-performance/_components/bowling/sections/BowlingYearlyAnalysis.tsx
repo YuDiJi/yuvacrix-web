@@ -1,4 +1,4 @@
-import type { BowlingYearlyStats } from "@/types/performance";
+import type { BowlingYearlyStats } from "@/types/cricket/performance";
 import BowlingYearlyChart from "../charts/BowlingYearlyChart";
 import PerformanceEmptyState from "../../batting/components/PerformanceEmptyState";
 import PerformanceInsight from "../../batting/components/PerformanceInsight";

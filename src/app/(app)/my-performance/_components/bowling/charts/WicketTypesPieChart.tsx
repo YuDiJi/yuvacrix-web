@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import type { BowlingWicketTypeItem } from "@/types/performance";
+import type { BowlingWicketTypeItem } from "@/types/cricket/performance";
 
 const COLORS = [
   "var(--color-brand)",
@@ -44,10 +44,7 @@ export default function WicketTypesPieChart({
             paddingAngle={2}
           >
             {data.map((item, index) => (
-              <Cell
-                key={item.name}
-                fill={COLORS[index % COLORS.length]}
-              />
+              <Cell key={item.name} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
           <Tooltip

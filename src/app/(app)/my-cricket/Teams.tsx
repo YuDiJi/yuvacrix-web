@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { Users } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { TeamCard } from "@/components/team/TeamCard";
-import { useGetMyTeamsOverviewQuery } from "@/store/api/teamApi";
+import { TeamCard } from "@/components/cricket/team/TeamCard";
+import { useGetMyTeamsOverviewQuery } from "@/store/api/cricket/teamApi";
 
 import type {
   Team,
   TeamOverviewFilter,
   TeamsOverviewPagination,
-} from "@/types/team";
+} from "@/types/cricket/team";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

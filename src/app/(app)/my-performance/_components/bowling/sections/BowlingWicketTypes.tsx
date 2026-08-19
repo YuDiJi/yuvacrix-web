@@ -1,4 +1,4 @@
-import type { BowlingWicketTypes as Data } from "@/types/performance";
+import type { BowlingWicketTypes as Data } from "@/types/cricket/performance";
 import WicketTypesPieChart from "../charts/WicketTypesPieChart";
 import PerformanceEmptyState from "../../batting/components/PerformanceEmptyState";
 import PerformanceInsight from "../../batting/components/PerformanceInsight";

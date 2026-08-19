@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import type { BowlingExtraItem } from "@/types/performance";
+import type { BowlingExtraItem } from "@/types/cricket/performance";
 
 export default function BowlingExtrasPieChart({
   items,
@@ -35,11 +35,7 @@ export default function BowlingExtrasPieChart({
             {data.map((item, index) => (
               <Cell
                 key={item.name}
-                fill={
-                  index === 0
-                    ? "var(--color-sky)"
-                    : "var(--color-live)"
-                }
+                fill={index === 0 ? "var(--color-sky)" : "var(--color-live)"}
               />
             ))}
           </Pie>

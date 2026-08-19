@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useGetTournamentOverallStatsQuery } from "@/store/api/tournamentAnalyticsApi";
+import { useGetTournamentOverallStatsQuery } from "@/store/api/cricket/tournamentAnalyticsApi";
 
 type Props = {
   tournamentId: string;

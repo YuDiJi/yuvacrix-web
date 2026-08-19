@@ -1,6 +1,6 @@
 // src/app/(app)/my-performance/_components/PerformanceTabs.tsx
 
-import type { PerformanceTabs as PerformanceTabsAvailability } from "@/types/performance";
+import type { PerformanceTabs as PerformanceTabsAvailability } from "@/types/cricket/performance";
 
 export type PerformanceTab = "BATTING" | "BOWLING";
 // | "COMPARE" | "FACE_OFF";

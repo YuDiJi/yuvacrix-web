@@ -4,25 +4,25 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/cn";
-import { MatchesList } from "@/components/match/MatchesList";
-import { LiveOptionsSheet } from "@/components/match/LiveOptionsSheet";
+import { MatchesList } from "@/components/cricket/match/MatchesList";
+import { LiveOptionsSheet } from "@/components/cricket/match/LiveOptionsSheet";
 
-import { useGetMyMatchesOverviewQuery } from "@/store/api/matchApi";
+import { useGetMyMatchesOverviewQuery } from "@/store/api/cricket/matchApi";
 import { useAppDispatch } from "@/store/hooks";
 import {
   resetMatch,
   setMatchContext,
 } from "@/store/startMatch/startMatchSlice";
 
-import type { Team } from "@/types/team";
+import type { Team } from "@/types/cricket/team";
 import type {
   MatchOverviewFilter,
   Match,
   MatchesOverviewPagination,
-} from "@/types/match";
+} from "@/types/cricket/match";
 
 import { matchToMatchCard } from "@/lib/adapters/matchCardAdapter";
-import type { MatchCardModel } from "@/types/matchCard";
+import type { MatchCardModel } from "@/types/cricket/matchCard";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -288,30 +288,30 @@ export default function MyMatches() {
 
         teamACaptain: match.teamA.captainId
           ? {
-            id: match.teamA.captainId,
-            name: "",
-          }
+              id: match.teamA.captainId,
+              name: "",
+            }
           : null,
 
         teamAKeeper: match.teamA.wicketKeeperId
           ? {
-            id: match.teamA.wicketKeeperId,
-            name: "",
-          }
+              id: match.teamA.wicketKeeperId,
+              name: "",
+            }
           : null,
 
         teamBCaptain: match.teamB.captainId
           ? {
-            id: match.teamB.captainId,
-            name: "",
-          }
+              id: match.teamB.captainId,
+              name: "",
+            }
           : null,
 
         teamBKeeper: match.teamB.wicketKeeperId
           ? {
-            id: match.teamB.wicketKeeperId,
-            name: "",
-          }
+              id: match.teamB.wicketKeeperId,
+              name: "",
+            }
           : null,
       }),
     );
@@ -529,7 +529,9 @@ export default function MyMatches() {
           </div>
         )}
 
-        {hasMore && <div ref={loadMoreRef} aria-hidden="true" className="h-10" />}
+        {hasMore && (
+          <div ref={loadMoreRef} aria-hidden="true" className="h-10" />
+        )}
       </div>
 
       {/* ── Live match options ──────────────────────────────────────────── */}

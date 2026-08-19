@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { HomeQuickAction } from "@/types/home";
+import type { HomeQuickAction } from "@/types/cricket/home";
 import { getIcon } from "./iconMap";
 
 type Props = { actions: HomeQuickAction[] };

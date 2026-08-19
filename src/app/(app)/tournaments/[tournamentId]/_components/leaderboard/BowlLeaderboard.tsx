@@ -6,11 +6,11 @@ import Image from "next/image";
 import { useState } from "react";
 import { SearchX } from "lucide-react";
 
-import { useGetTournamentBowlingLeaderboardQuery } from "@/store/api/tournamentAnalyticsApi";
+import { useGetTournamentBowlingLeaderboardQuery } from "@/store/api/cricket/tournamentAnalyticsApi";
 import {
   TournamentBowlingLeaderboardMetric,
   TournamentLeaderboardTeamOption,
-} from "@/types/tournamentAnalytics";
+} from "@/types/cricket/tournamentAnalytics";
 
 import { bowlingLeaderboardFilters } from "./leaderboardConfig";
 import { S3Image } from "@/components/common/S3Image";

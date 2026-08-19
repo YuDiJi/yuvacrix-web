@@ -1,6 +1,6 @@
 "use client";
 
-import { ScorecardResponse } from "@/types/scorecard";
+import { ScorecardResponse } from "@/types/cricket/scorecard";
 
 type Props = {
   matchId: string;

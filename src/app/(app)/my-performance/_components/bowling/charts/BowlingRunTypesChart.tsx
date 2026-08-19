@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { BowlingRunComposition } from "@/types/performance";
+import type { BowlingRunComposition } from "@/types/cricket/performance";
 
 const COLORS = [
   "var(--color-text-muted)",
@@ -70,10 +70,7 @@ export default function BowlingRunTypesChart({
           />
           <Bar dataKey="value" radius={[5, 5, 0, 0]}>
             {items.map((item, index) => (
-              <Cell
-                key={item.label}
-                fill={COLORS[index % COLORS.length]}
-              />
+              <Cell key={item.label} fill={COLORS[index % COLORS.length]} />
             ))}
           </Bar>
         </BarChart>

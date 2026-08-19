@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/common/Button";
 import { cn } from "@/lib/cn";
-import { useGetTournamentGroupsQuery } from "@/store/api/tournamentGroupApi";
-import { useGetTournamentRoundsQuery } from "@/store/api/tournamentRoundApi";
+import { useGetTournamentGroupsQuery } from "@/store/api/cricket/tournamentGroupApi";
+import { useGetTournamentRoundsQuery } from "@/store/api/cricket/tournamentRoundApi";
 import { useAppDispatch } from "@/store/hooks";
 import { setTournamentMatchContext } from "@/store/startMatch/startMatchSlice";
 import { skipToken } from "@reduxjs/toolkit/query";

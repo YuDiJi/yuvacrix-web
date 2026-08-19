@@ -1,7 +1,32 @@
-/* globals.css — YuvaCrix Design Tokens for Tailwind v4 
+/* globals.css — YuvaCrix Design Tokens for Tailwind v4
  * ========================================================
  * All custom tokens registered as CSS custom properties.
  * Tailwind v4 uses @theme instead of tailwind.config.js
+ *
+ * MULTI-SPORT THEME ARCHITECTURE
+ * ------------------------------
+ * - YuvaCrix global design tokens remain shared.
+ * - Cricket remains the DEFAULT theme.
+ * - Each sport overrides only sport identity tokens.
+ * - Existing components using:
+ *
+ *     --color-brand
+ *     --color-sky
+ *     --color-bg-tint
+ *     --shadow-button
+ *
+ *   continue working without any component changes.
+ *
+ * To switch sport:
+ *
+ *   <div data-sport="CRICKET">
+ *   <div data-sport="VOLLEYBALL">
+ *   <div data-sport="BADMINTON">
+ *   <div data-sport="FOOTBALL">
+ *
+ * Later:
+ *
+ *   <div data-sport={activeSport}>
  */
 
 /* ── Google Fonts ──────────────────────────────────────────── */
@@ -10,24 +35,99 @@
 @import "tailwindcss";
 
 :root {
+  /* =========================================================
+   * DEFAULT SPORT THEME — CRICKET
+   * =========================================================
+   *
+   * Cricket remains the default so the existing YuvaCrix
+   * application looks exactly the same even if data-sport
+   * has not yet been added to the application shell.
+   */
+
+  --sport-primary: #1b3fa0;
+  --sport-secondary: #4b8bff;
+  --sport-tint: #eef4ff;
+
+  /*
+   * RGB channel version of sport-primary.
+   * Required for rgba() usages such as button shadows.
+   */
+  --sport-primary-rgb: 27, 63, 160;
+
   /* ── Backgrounds ───────────────────────────────────────── */
+
+  /*
+   * Global YuvaCrix backgrounds.
+   * These remain consistent across all sports.
+   */
   --color-bg-base: #edf0f5;
   --color-bg-card: #ffffff;
-  --color-bg-tint: #eef4ff;
   --color-bg-border: #e8ecf2;
 
-  /* ── Brand ─────────────────────────────────────────────── */
+  /*
+   * Sport-aware tint.
+   *
+   * Cricket    → #eef4ff
+   * Volleyball → #fff7ed
+   * Badminton  → #f5f3ff
+   * Football   → #f0fdf4
+   */
+  --color-bg-tint: var(--sport-tint);
+
+  /* ── Brand / Sport Identity ────────────────────────────── */
+
+  /*
+   * Core YuvaCrix navy.
+   * This remains global and does NOT change by sport.
+   */
   --color-navy: #0d1b3e;
-  --color-brand: #1b3fa0;
-  --color-sky: #4b8bff;
+
+  /*
+   * Compatibility aliases.
+   *
+   * Existing Cricket components already use these variables,
+   * so they now resolve to the active sport theme.
+   *
+   * No component migration is required.
+   */
+  --color-brand: var(--sport-primary);
+  --color-sky: var(--sport-secondary);
+
+  /*
+   * Global accent.
+   * This is intentionally not sport-specific.
+   */
   --color-violet: #7c3aed;
 
-  /* ── Cricket States ────────────────────────────────────── */
+  /* ── Match / Semantic States ───────────────────────────── */
+
+  /*
+   * Semantic colors should NOT change when switching sports.
+   *
+   * These represent application/match meaning rather than
+   * sport identity.
+   */
   --color-live: #ff3b30;
+
+  /*
+   * Cricket-specific scoring colors.
+   *
+   * These are retained for backwards compatibility with the
+   * existing Cricket scoring experience.
+   *
+   * Volleyball/Badminton/Football should introduce their own
+   * sport-specific semantic tokens only when required.
+   */
   --color-four: #22c55e;
   --color-six: #f59e0b;
 
   /* ── Text ──────────────────────────────────────────────── */
+
+  /*
+   * Text colors remain global across all sports so that
+   * typography and readability stay consistent throughout
+   * YuvaCrix.
+   */
   --color-text-primary: #0d1b3e;
   --color-text-body: #374151;
   --color-text-secondary: #6b7280;
@@ -35,23 +135,123 @@
   --color-text-inverse: #ffffff;
 
   /* ── Fonts ─────────────────────────────────────────────── */
+
+  /*
+   * Fonts remain part of the YuvaCrix design identity and
+   * therefore do not change between sports.
+   */
   --font-display: "Barlow Condensed", sans-serif;
   --font-body: "Inter", sans-serif;
 
   /* ── Border Radius ─────────────────────────────────────── */
+
+  /*
+   * Shape language remains identical across every sport.
+   */
   --radius-sm: 0.5rem;
   --radius-md: 0.625rem;
   --radius-lg: 0.75rem;
   --radius-xl: 0.875rem;
 
   /* ── Shadows ───────────────────────────────────────────── */
+
+  /*
+   * Global card / hero / live shadows.
+   */
   --shadow-card: 0 1px 4px rgba(13, 27, 62, 0.06);
-  --shadow-button: 0 4px 16px rgba(27, 63, 160, 0.3);
+
+  /*
+   * Sport-aware CTA shadow.
+   *
+   * Cricket still resolves to the exact existing value:
+   *
+   * rgba(27, 63, 160, 0.3)
+   */
+  --shadow-button: 0 4px 16px rgba(var(--sport-primary-rgb), 0.3);
+
   --shadow-hero: 0 8px 32px rgba(13, 27, 62, 0.18);
   --shadow-live: 0 4px 12px rgba(255, 59, 48, 0.25);
 }
 
+/* ===========================================================
+ * SPORT THEMES
+ * ===========================================================
+ *
+ * Only SPORT IDENTITY belongs here.
+ *
+ * Do not duplicate:
+ * - typography
+ * - backgrounds
+ * - text colors
+ * - border radius
+ * - card styles
+ * - semantic error/success/live states
+ *
+ * Adding another sport later only requires another
+ * [data-sport="..."] block.
+ */
+
+/* ── Cricket ───────────────────────────────────────────────── */
+
+[data-sport="CRICKET"] {
+  /*
+   * Existing YuvaCrix Cricket theme.
+   *
+   * IMPORTANT:
+   * These values are exactly the same as the original app.
+   */
+  --sport-primary: #1b3fa0;
+  --sport-secondary: #4b8bff;
+  --sport-tint: #eef4ff;
+  --sport-primary-rgb: 27, 63, 160;
+}
+
+/* ── Volleyball ────────────────────────────────────────────── */
+
+[data-sport="VOLLEYBALL"] {
+  --sport-primary: #ea580c;
+  --sport-secondary: #f59e0b;
+  --sport-tint: #fff7ed;
+  --sport-primary-rgb: 234, 88, 12;
+}
+
+/* ── Badminton ─────────────────────────────────────────────── */
+
+[data-sport="BADMINTON"] {
+  --sport-primary: #7c3aed;
+  --sport-secondary: #a78bfa;
+  --sport-tint: #f5f3ff;
+  --sport-primary-rgb: 124, 58, 237;
+}
+
+/* ── Football ──────────────────────────────────────────────── */
+
+[data-sport="FOOTBALL"] {
+  --sport-primary: #15803d;
+  --sport-secondary: #22c55e;
+  --sport-tint: #f0fdf4;
+  --sport-primary-rgb: 21, 128, 61;
+}
+
+/*
+ * ===========================================================
+ * FUTURE SPORT EXAMPLE
+ * ===========================================================
+ *
+ * Adding another sport later is simply:
+ *
+ * [data-sport="KABADDI"] {
+ *   --sport-primary: #xxxxxx;
+ *   --sport-secondary: #xxxxxx;
+ *   --sport-tint: #xxxxxx;
+ *   --sport-primary-rgb: R, G, B;
+ * }
+ *
+ * No existing component should need to change.
+ */
+
 /* ── Base Global Styles ────────────────────────────────────── */
+
 @layer base {
   html {
     font-family: var(--font-body);
@@ -63,31 +263,38 @@
 
   body {
     min-height: 100dvh;
-  }
-
-  /* Mobile-first: max-width container centred on desktop */
-  body {
-    /* max-width: 430px; */
-    /* margin-inline: auto; */
-    min-height: 100dvh;
     background: var(--color-bg-base);
     position: relative;
   }
 
+  /*
+   * Mobile-first application.
+   *
+   * Uncomment these if you later want to constrain the app
+   * width on larger devices.
+   */
+  /* body { */
+  /* max-width: 430px; */
+  /* margin-inline: auto; */
+  /* } */
+
   @media (min-width: 768px) {
     body {
-      background: #c9d1df; /* Desktop chrome — darker to frame the app */
-    }
-
-    body {
+      /*
+       * Desktop chrome remains global rather than sport-aware.
+       * It frames the YuvaCrix application consistently.
+       */
+      background: #c9d1df;
       box-shadow: 0 0 80px rgba(13, 27, 62, 0.2);
     }
   }
 }
 
 /* ── Utility Layer ─────────────────────────────────────────── */
+
 @layer utilities {
-  /* Typography helpers */
+  /* ── Typography Helpers ────────────────────────────────── */
+
   .font-display {
     font-family: var(--font-display);
   }
@@ -140,12 +347,17 @@
     color: var(--color-text-muted);
   }
 
-  /* Fixture signature: 3px red left border — NEVER skip this */
+  /* ── Fixture Signature ─────────────────────────────────── */
+
+  /*
+   * Existing red fixture signature remains unchanged.
+   */
   .fixture-bar {
     border-left: 3px solid var(--color-live);
   }
 
-  /* Safe area padding for mobile notch/home bar */
+  /* ── Mobile Safe Areas ─────────────────────────────────── */
+
   .safe-top {
     padding-top: env(safe-area-inset-top, 0px);
   }
@@ -153,6 +365,8 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 16px);
   }
+
+  /* ── Scrollbar ─────────────────────────────────────────── */
 
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -164,7 +378,13 @@
   }
 }
 
-/* ── Landing Page Only ─────────────────────────────────────── */
+/* ===========================================================
+ * LANDING PAGE ONLY
+ * ===========================================================
+ *
+ * Landing page remains YuvaCrix branded and is intentionally
+ * independent of whichever sport is currently active.
+ */
 
 @layer utilities {
   .landing-page {
@@ -185,6 +405,8 @@
   }
 }
 
+/* ── Accessibility ─────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
   .landing-page *,
   .landing-page *::before,
@@ -194,6 +416,8 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Landing Marquee ───────────────────────────────────────── */
 
 @keyframes marquee {
   0% {

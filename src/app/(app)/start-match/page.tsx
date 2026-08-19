@@ -3,7 +3,7 @@
 import { useAppSelector } from "@/store/hooks";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 import MatchDetails from "./_components/MatchDetails";
-import TeamSelection from "@/components/match/TeamSelection";
+import TeamSelection from "@/components/cricket/match/TeamSelection";
 import { useRouter } from "next/navigation";
 
 export default function StartMatchPage() {

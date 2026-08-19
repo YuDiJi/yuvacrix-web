@@ -1,6 +1,6 @@
 "use client";
 
-import { FallOfWicket } from "@/types/scorecard";
+import { FallOfWicket } from "@/types/cricket/scorecard";
 
 type Props = {
   fallOfWickets: FallOfWicket[];

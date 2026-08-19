@@ -1,6 +1,6 @@
 "use client";
 
-import type { BowlingWagonWheelData } from "@/types/performance";
+import type { BowlingWagonWheelData } from "@/types/cricket/performance";
 
 const COLORS: Record<number, string> = {
   0: "var(--color-text-muted)",

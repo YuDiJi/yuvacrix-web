@@ -5,10 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { CalendarDays, Plus, Radio, Volleyball } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { MatchesList } from "@/components/match/MatchesList";
-import { LiveOptionsSheet } from "@/components/match/LiveOptionsSheet";
+import { MatchesList } from "@/components/cricket/match/MatchesList";
+import { LiveOptionsSheet } from "@/components/cricket/match/LiveOptionsSheet";
 
-import { useGetTournamentMatchesQuery } from "@/store/api/tournamentMatchApi";
+import { useGetTournamentMatchesQuery } from "@/store/api/cricket/tournamentMatchApi";
 import { useAppDispatch } from "@/store/hooks";
 import {
   resetMatch,
@@ -16,8 +16,8 @@ import {
   setTournamentMatchContext,
 } from "@/store/startMatch/startMatchSlice";
 
-import type { Team } from "@/types/team";
-import { MatchCardModel } from "@/types/matchCard";
+import type { Team } from "@/types/cricket/team";
+import { MatchCardModel } from "@/types/cricket/matchCard";
 import { tournamentMatchToMatchCard } from "@/lib/adapters/tournamentMatchCardAdapter";
 
 const TOURNAMENT_MATCH_TABS = ["LIVE", "UPCOMING", "PAST"] as const;

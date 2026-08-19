@@ -1,7 +1,7 @@
 import type {
   BowlingAnalysisResponse,
   BowlingWagonWheelData,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 import BowlingWagonWheelChart from "../charts/BowlingWagonWheelChart";
 import PerformanceEmptyState from "../../batting/components/PerformanceEmptyState";
 import PerformanceInsight from "../../batting/components/PerformanceInsight";

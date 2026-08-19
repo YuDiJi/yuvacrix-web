@@ -3,16 +3,16 @@
 // import { useHeader } from "@/providers/HeaderProvider";
 import { Search, SlidersHorizontal, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useGetOwnedTeamQuery } from "@/store/api/teamApi";
+import { useGetOwnedTeamQuery } from "@/store/api/cricket/teamApi";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 
-import { TeamCard } from "@/components/team/TeamCard";
+import { TeamCard } from "@/components/cricket/team/TeamCard";
 import { Button } from "@/components/common/Button";
 import {
   useAddTeamToTournamentMutation,
   useGetTournamentTeamsQuery,
-} from "@/store/api/tournamentTeamApi";
+} from "@/store/api/cricket/tournamentTeamApi";
 
 export default function AddTeamPage() {
   const router = useRouter();

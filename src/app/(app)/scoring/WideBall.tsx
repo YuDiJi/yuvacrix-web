@@ -1,7 +1,7 @@
 import { Settings } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { DialogBottom } from "@/components/common/DialogBottom"; // Adjust import path
-import { ExtraType } from "@/types/scoring";
+import { ExtraType } from "@/types/cricket/scoring";
 import { useState } from "react";
 import { Button } from "@/components/common/Button";
 

@@ -11,7 +11,7 @@ import {
   AlertCircle,
   SlidersHorizontal,
 } from "lucide-react";
-import { useGetAboutQuery } from "@/store/api/tournamentApi";
+import { useGetAboutQuery } from "@/store/api/cricket/tournamentApi";
 import { useParams, useRouter } from "next/navigation";
 import { S3Image } from "@/components/common/S3Image";
 

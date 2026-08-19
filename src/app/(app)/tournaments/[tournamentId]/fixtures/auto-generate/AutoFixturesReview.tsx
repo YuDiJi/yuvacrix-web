@@ -15,7 +15,7 @@ import { Button } from "@/components/common/Button";
 import type {
   PreviewAutoFixture,
   PreviewAutoFixturesResponse,
-} from "@/store/api/tournamentFixtureApi";
+} from "@/store/api/cricket/tournamentFixtureApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

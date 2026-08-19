@@ -7,7 +7,7 @@ import {
   type AutoGenerateFixturesRequest,
   type PreviewAutoFixturesResponse,
   useConfirmAutoFixturesMutation,
-} from "@/store/api/tournamentFixtureApi";
+} from "@/store/api/cricket/tournamentFixtureApi";
 
 import AutoGenerateFixturesForm from "./AutoGenerateFixturesForm";
 import AutoFixturesReview from "./AutoFixturesReview";

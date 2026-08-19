@@ -16,9 +16,9 @@ import {
   selectMatchId,
   selectLineUpMode,
 } from "@/store/startMatch/selectors";
-import { useGetTeamMembersQuery } from "@/store/api/teamApi";
-import { PlayerList } from "@/components/Players/Playerlist";
-import { PlayerListItem } from "@/components/Players/Types";
+import { useGetTeamMembersQuery } from "@/store/api/cricket/teamApi";
+import { PlayerList } from "@/components/cricket/Players/Playerlist";
+import { PlayerListItem } from "@/components/cricket/Players/Types";
 import {
   setActiveTeam,
   setTeamA,
@@ -30,9 +30,9 @@ import { Button } from "@/components/common/Button";
 import {
   useMarkReadyForTossMutation,
   useSubmitTeamLineupMutation,
-} from "@/store/api/matchApi";
-import { SubmitLineupDto } from "@/types/match";
-import { useGetTeamsRoleSummaryQuery } from "@/store/api/tournamentTeamApi";
+} from "@/store/api/cricket/matchApi";
+import { SubmitLineupDto } from "@/types/cricket/match";
+import { useGetTeamsRoleSummaryQuery } from "@/store/api/cricket/tournamentTeamApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

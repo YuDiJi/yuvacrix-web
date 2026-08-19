@@ -2,7 +2,7 @@ import {
   TournamentFixtureOfficials,
   TournamentFixtureRules,
   TournamentFixtureVenue,
-} from "@/store/api/tournamentFixtureApi";
+} from "@/store/api/cricket/tournamentFixtureApi";
 
 export type FixtureGenerationScope = "ALL" | "GROUP" | "SELECTED";
 

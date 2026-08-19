@@ -14,7 +14,7 @@ import { cn } from "@/lib/cn";
 import type {
   CricketProfile,
   CricketProfileHeader,
-} from "@/types/cricketProfile";
+} from "@/types/cricket/cricketProfile";
 
 type CricketProfileHeaderProps = {
   profile: CricketProfile;

@@ -6,12 +6,12 @@ import {
   useGetMyBattingPerformanceQuery,
   useLazyGetMyBattingAnalysisQuery,
   useLazyGetMyBattingPartnershipsQuery,
-} from "@/store/api/performanceApi";
+} from "@/store/api/cricket/performanceApi";
 
 import type {
   BattingAnalysisResponse,
   BattingAnalysisSection,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 
 import LazyPerformanceSection from "./components/LazyPerformanceSection";
 import PerformanceEmptyState from "./components/PerformanceEmptyState";

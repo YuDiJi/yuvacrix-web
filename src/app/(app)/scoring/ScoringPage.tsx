@@ -8,22 +8,22 @@ import {
   useGetScoringStateQuery,
   useRecordBallMutation,
   useDeclareBowlingPowerplayMutation,
-} from "@/store/api/scoringApi";
+} from "@/store/api/cricket/scoringApi";
 
 import {
   useGetMatchRulesQuery,
   useUpdateMatchRulesMutation,
-} from "@/store/api/matchRulesApi";
+} from "@/store/api/cricket/matchRulesApi";
 
 import { skipToken } from "@reduxjs/toolkit/query";
-import { ExtraType, FieldZone } from "@/types/scoring";
+import { ExtraType, FieldZone } from "@/types/cricket/scoring";
 import { useEffect, useState } from "react";
 import { WideBallSheet } from "./WideBall";
 import { NoBallSheet } from "./NoBall";
 import { ByeSheet } from "./Bye";
 import { LegByeSheet } from "./LegBye";
 import { RunningSheet } from "./Running";
-import { useGetMatchByIdQuery } from "@/store/api/matchApi";
+import { useGetMatchByIdQuery } from "@/store/api/cricket/matchApi";
 import { useMemo } from "react";
 import { UndoSheet } from "./Undo";
 import { OutSheet } from "./out/Out";
@@ -32,7 +32,7 @@ import { NextBowlerSheet } from "./NextBowler";
 import { Button } from "@/components/common/Button";
 import { cn } from "@/lib/cn";
 import { BallChip } from "./BallChip";
-import { ScoringState } from "@/types/innings";
+import { ScoringState } from "@/types/cricket/innings";
 import NextBatterSheet from "./NextBatter";
 import { WagonWheelDirectionSheet } from "./WagonWheelDirectionSheet";
 
@@ -43,7 +43,7 @@ import { S3Image } from "@/components/common/S3Image";
 import { ScoringShortcutsSheet } from "./scoringShortcuts/ScoringShortcutsSheet";
 import { MatchOversSheet } from "./scoringShortcuts/MatchOversSheet";
 import { WagonWheelSettingsSheet } from "./scoringShortcuts/WagonWheelSettingsSheet";
-import MatchRules from "@/components/match-rules/MatchRules";
+import MatchRules from "@/components/cricket/match-rules/MatchRules";
 
 export type DialogType =
   | "WIDE"

@@ -1,5 +1,5 @@
 // src/store/scoring/scoringSlice.ts
-import { ScoringState } from "@/types/innings";
+import { ScoringState } from "@/types/cricket/innings";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface ScoringSliceState {

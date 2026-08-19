@@ -9,7 +9,7 @@ import { DialogBottom } from "@/components/common/DialogBottom";
 import {
   MatchRulesConfiguration,
   UpdateMatchRulesRequest,
-} from "@/types/matchRules";
+} from "@/types/cricket/matchRules";
 
 type MatchOversSheetProps = {
   open: boolean;

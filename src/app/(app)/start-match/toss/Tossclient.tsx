@@ -11,7 +11,7 @@ import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 import {
   useSubmitTossMutation,
   useStartMatchMutation,
-} from "@/store/api/matchApi";
+} from "@/store/api/cricket/matchApi";
 import { Button } from "@/components/common/Button";
 import { S3Image } from "@/components/common/S3Image";
 

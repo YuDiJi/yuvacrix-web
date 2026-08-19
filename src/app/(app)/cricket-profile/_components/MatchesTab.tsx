@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { MatchesList } from "@/components/match/MatchesList";
+import { MatchesList } from "@/components/cricket/match/MatchesList";
 import { matchToMatchCard } from "@/lib/adapters/matchCardAdapter";
-import { useGetMyCricketProfileMatchesQuery } from "@/store/api/cricketProfileApi";
+import { useGetMyCricketProfileMatchesQuery } from "@/store/api/cricket/cricketProfileApi";
 
-import type { Match } from "@/types/match";
-import type { MatchCardModel } from "@/types/matchCard";
+import type { Match } from "@/types/cricket/match";
+import type { MatchCardModel } from "@/types/cricket/matchCard";
 
 const PAGE_LIMIT = 20;
 

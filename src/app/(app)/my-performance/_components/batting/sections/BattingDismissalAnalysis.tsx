@@ -1,4 +1,4 @@
-import type { BattingDismissals } from "@/types/performance";
+import type { BattingDismissals } from "@/types/cricket/performance";
 
 import DismissalPieChart from "../charts/DismissalPieChart";
 import PerformanceEmptyState from "../components/PerformanceEmptyState";

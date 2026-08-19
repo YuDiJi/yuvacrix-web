@@ -1,7 +1,7 @@
 import type {
   BowlingCurrentForm as BowlingCurrentFormData,
   BowlingRecentInnings,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 
 import PerformanceEmptyState from "../../batting/components/PerformanceEmptyState";
 import PerformanceInsight from "../../batting/components/PerformanceInsight";

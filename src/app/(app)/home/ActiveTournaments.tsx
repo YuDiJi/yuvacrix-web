@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import type { HomeTournament, HomeTournamentTeam } from "@/types/home";
+import type { HomeTournament, HomeTournamentTeam } from "@/types/cricket/home";
 import { S3Image } from "@/components/common/S3Image";
 
 type Props = { tournaments: HomeTournament[] };

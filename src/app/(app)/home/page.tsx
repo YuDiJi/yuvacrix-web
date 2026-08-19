@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { RefreshCw } from "lucide-react";
-import { useGetHomeQuery } from "@/store/api/home";
+import { useGetHomeQuery } from "@/store/api/cricket/home";
 import QuickActions from "./QuickActions";
 import LiveMatches from "./LiveMatches";
 import MyActivity from "./MyActivity";

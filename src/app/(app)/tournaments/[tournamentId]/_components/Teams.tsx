@@ -1,7 +1,7 @@
-import { TeamCard } from "@/components/team/TeamCard";
+import { TeamCard } from "@/components/cricket/team/TeamCard";
 import { cn } from "@/lib/cn";
-import { useGetTournamentTeamsQuery } from "@/store/api/tournamentTeamApi";
-import { Team } from "@/types/team";
+import { useGetTournamentTeamsQuery } from "@/store/api/cricket/tournamentTeamApi";
+import { Team } from "@/types/cricket/team";
 import {
   AlertCircle,
   ChevronRight,

@@ -1,4 +1,4 @@
-import type { BattingRunComposition } from "@/types/performance";
+import type { BattingRunComposition } from "@/types/cricket/performance";
 
 import RunTypesBarChart from "../charts/RunTypesBarChart";
 import PerformanceInsight from "../components/PerformanceInsight";

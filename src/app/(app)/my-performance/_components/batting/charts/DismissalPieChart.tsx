@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 
-import type { BattingDismissalItem } from "@/types/performance";
+import type { BattingDismissalItem } from "@/types/cricket/performance";
 
 type DismissalPieChartProps = {
   items: BattingDismissalItem[];
@@ -33,9 +33,7 @@ function formatEnum(value: string) {
     .join(" ");
 }
 
-export default function DismissalPieChart({
-  items,
-}: DismissalPieChartProps) {
+export default function DismissalPieChart({ items }: DismissalPieChartProps) {
   const chartData = items.map((item) => ({
     name: formatEnum(item.dismissalType),
     value: item.dismissals,
@@ -73,10 +71,7 @@ export default function DismissalPieChart({
             }}
           />
 
-          <Legend
-            verticalAlign="bottom"
-            wrapperStyle={{ fontSize: 10 }}
-          />
+          <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 10 }} />
         </PieChart>
       </ResponsiveContainer>
     </div>

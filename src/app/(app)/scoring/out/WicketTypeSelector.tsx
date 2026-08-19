@@ -16,7 +16,7 @@ import {
   Clock,
   DoorOpen,
 } from "lucide-react";
-import { WicketType } from "@/types/scoring";
+import { WicketType } from "@/types/cricket/scoring";
 
 const OUT_OPTIONS: {
   id: WicketType;

@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 
-import { useGetMyPerformanceQuery } from "@/store/api/performanceApi";
+import { useGetMyPerformanceQuery } from "@/store/api/cricket/performanceApi";
 
 import PerformanceHeader from "./PerformanceHeader";
 import PerformanceTabs, { type PerformanceTab } from "./PerformanceTabs";

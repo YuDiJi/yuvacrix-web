@@ -1,6 +1,6 @@
 import { DialogBottom } from "@/components/common/DialogBottom"; // Adjust import path
 import { Button } from "@/components/common/Button";
-import { useUndoLastBallMutation } from "@/store/api/scoringApi";
+import { useUndoLastBallMutation } from "@/store/api/cricket/scoringApi";
 import { Info } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import { DialogType } from "./ScoringPage";

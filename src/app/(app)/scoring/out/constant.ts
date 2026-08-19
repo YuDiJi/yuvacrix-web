@@ -1,4 +1,4 @@
-import { ExtraType, WicketType } from "@/types/scoring";
+import { ExtraType, WicketType } from "@/types/cricket/scoring";
 
 export type OutFlowStep =
   | "SELECT_WICKET_TYPE"

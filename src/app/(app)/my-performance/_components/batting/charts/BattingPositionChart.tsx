@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
-import type { BattingByPosition } from "@/types/performance";
+import type { BattingByPosition } from "@/types/cricket/performance";
 
 type Props = {
   items: BattingByPosition[];

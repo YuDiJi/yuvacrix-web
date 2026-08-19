@@ -1,5 +1,5 @@
-import type { TournamentMatchListItem } from "@/store/api/tournamentMatchApi";
-import type { MatchCardModel } from "@/types/matchCard";
+import type { TournamentMatchListItem } from "@/store/api/cricket/tournamentMatchApi";
+import type { MatchCardModel } from "@/types/cricket/matchCard";
 
 export function tournamentMatchToMatchCard(
   match: TournamentMatchListItem,

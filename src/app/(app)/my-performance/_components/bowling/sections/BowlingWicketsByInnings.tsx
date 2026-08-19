@@ -3,7 +3,7 @@
 import type {
   BowlingWicketsByInningsData,
   BowlingWicketsByInningsItem,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 
 import WicketsByInningsChart from "../charts/WicketsByInningsChart";
 

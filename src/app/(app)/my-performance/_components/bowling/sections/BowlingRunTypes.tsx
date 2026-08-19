@@ -1,4 +1,4 @@
-import type { BowlingRunComposition } from "@/types/performance";
+import type { BowlingRunComposition } from "@/types/cricket/performance";
 import BowlingRunTypesChart from "../charts/BowlingRunTypesChart";
 import PerformanceInsight from "../../batting/components/PerformanceInsight";
 import PerformanceSection from "../../batting/components/PerformanceSection";

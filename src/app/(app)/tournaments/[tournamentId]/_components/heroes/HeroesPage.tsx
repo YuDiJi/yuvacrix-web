@@ -12,8 +12,8 @@ import {
 import { useState } from "react";
 
 import { cn } from "@/lib/cn";
-import { useGetTournamentHeroesQuery } from "@/store/api/tournamentAnalyticsApi";
-import { useGetTournamentTeamsQuery } from "@/store/api/tournamentTeamApi";
+import { useGetTournamentHeroesQuery } from "@/store/api/cricket/tournamentAnalyticsApi";
+import { useGetTournamentTeamsQuery } from "@/store/api/cricket/tournamentTeamApi";
 
 import HeroCard from "./HeroCard";
 

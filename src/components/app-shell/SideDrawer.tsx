@@ -9,7 +9,7 @@ import { ChevronRight, X } from "lucide-react";
 import { drawerSections } from "./constant";
 import Link from "next/link";
 import { selectUser } from "@/store/auth/authSelectors";
-import { useGetPlayerQuery } from "@/store/api/playerApi";
+import { useGetPlayerQuery } from "@/store/api/cricket/playerApi";
 import { resetMatch } from "@/store/startMatch/startMatchSlice";
 import { useGetSignedUrlQuery } from "@/store/api/uploadApi";
 import { skipToken } from "@reduxjs/toolkit/query";

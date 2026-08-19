@@ -10,15 +10,13 @@ import {
   YAxis,
 } from "recharts";
 
-import type { BattingYearlyStats } from "@/types/performance";
+import type { BattingYearlyStats } from "@/types/cricket/performance";
 
 type YearlyRunsChartProps = {
   items: BattingYearlyStats[];
 };
 
-export default function YearlyRunsChart({
-  items,
-}: YearlyRunsChartProps) {
+export default function YearlyRunsChart({ items }: YearlyRunsChartProps) {
   return (
     <div className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">

@@ -10,23 +10,19 @@ import {
   YAxis,
 } from "recharts";
 
-import type { BattingRecentInnings } from "@/types/performance";
+import type { BattingRecentInnings } from "@/types/cricket/performance";
 
 type BattingFormChartProps = {
   innings: BattingRecentInnings[];
 };
 
-export default function BattingFormChart({
-  innings,
-}: BattingFormChartProps) {
-  const data = [...innings]
-    .reverse()
-    .map((item, index) => ({
-      label: `${index + 1}`,
-      runs: item.runs,
-      balls: item.balls,
-      opponent: item.opponentTeamName,
-    }));
+export default function BattingFormChart({ innings }: BattingFormChartProps) {
+  const data = [...innings].reverse().map((item, index) => ({
+    label: `${index + 1}`,
+    runs: item.runs,
+    balls: item.balls,
+    opponent: item.opponentTeamName,
+  }));
 
   return (
     <div className="h-64 w-full">

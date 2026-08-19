@@ -1,11 +1,11 @@
 "use client";
 
-import { useGetScorecardSummaryQuery } from "@/store/api/scorecardApi";
+import { useGetScorecardSummaryQuery } from "@/store/api/cricket/scorecardApi";
 import {
   ScorecardResponse,
   ScorecardSummaryResponse,
   TeamScoreSummary,
-} from "@/types/scorecard";
+} from "@/types/cricket/scorecard";
 import SummaryResultCard from "./SummaryResultCard";
 import SummaryScoreCard from "./SummaryScoreCard";
 import SummaryPerformerCard from "./SummaryPerformerCard";

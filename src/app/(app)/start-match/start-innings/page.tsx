@@ -16,15 +16,15 @@ import { cn } from "@/lib/cn";
 import { useAppSelector } from "@/store/hooks";
 import { selectMatchId } from "@/store/startMatch/selectors";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { useGetMatchByIdQuery } from "@/store/api/matchApi";
-import { BattingStyle, BowlingStyle } from "@/types/player";
+import { useGetMatchByIdQuery } from "@/store/api/cricket/matchApi";
+import { BattingStyle, BowlingStyle } from "@/types/cricket/player";
 import {
   useGetScoringStateQuery,
   useStartInningMutation,
-} from "@/store/api/scoringApi";
+} from "@/store/api/cricket/scoringApi";
 import { S3Image } from "@/components/common/S3Image";
 import { DialogBottom } from "@/components/common/DialogBottom";
-import MatchRules from "@/components/match-rules/MatchRules";
+import MatchRules from "@/components/cricket/match-rules/MatchRules";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

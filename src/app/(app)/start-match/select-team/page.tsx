@@ -11,7 +11,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useGetOwnedTeamQuery } from "@/store/api/teamApi";
+import { useGetOwnedTeamQuery } from "@/store/api/cricket/teamApi";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -21,7 +21,7 @@ import {
   setTeamB,
 } from "@/store/startMatch/startMatchSlice";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
-import { TeamCard } from "@/components/team/TeamCard";
+import { TeamCard } from "@/components/cricket/team/TeamCard";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
 function getErrorMessage(error: unknown): string {

@@ -13,8 +13,8 @@
 //   "2LEG_BYE"   → leg bye runs (grey tint)
 
 import { cn } from "@/lib/cn";
-import { OverBall } from "@/types/innings";
-import { ExtraType } from "@/types/scoring";
+import { OverBall } from "@/types/cricket/innings";
+import { ExtraType } from "@/types/cricket/scoring";
 
 // ─── Parse symbol into display parts ─────────────────────────────────────────
 
