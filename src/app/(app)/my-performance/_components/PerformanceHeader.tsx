@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Activity, MapPin, UserRound } from "lucide-react";
 
-import type { PerformancePlayer } from "@/types/performance";
+import type { PerformancePlayer } from "@/types/cricket/performance";
 import { S3Image } from "@/components/common/S3Image";
 
 type PerformanceHeaderProps = {

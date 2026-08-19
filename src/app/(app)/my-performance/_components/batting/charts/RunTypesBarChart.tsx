@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
-import type { BattingRunComposition } from "@/types/performance";
+import type { BattingRunComposition } from "@/types/cricket/performance";
 
 type RunTypesBarChartProps = {
   data: BattingRunComposition;
@@ -26,9 +26,7 @@ const BAR_COLORS = [
   "var(--color-live)",
 ];
 
-export default function RunTypesBarChart({
-  data,
-}: RunTypesBarChartProps) {
+export default function RunTypesBarChart({ data }: RunTypesBarChartProps) {
   const chartData = [
     { label: "Dots", value: data.dots },
     { label: "1s", value: data.ones },

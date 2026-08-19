@@ -1,5 +1,5 @@
-import { Stats } from "@/components/stats/page";
-import { CricketProfile } from "@/types/cricketProfile";
+import { Stats } from "@/components/cricket/stats/page";
+import { CricketProfile } from "@/types/cricket/cricketProfile";
 import React from "react";
 
 type MatchesTabProps = {

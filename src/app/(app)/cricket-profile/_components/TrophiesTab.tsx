@@ -6,12 +6,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Award, CalendarDays, RefreshCcw, Trophy } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useGetMyCricketProfileTrophiesQuery } from "@/store/api/cricketProfileApi";
+import { useGetMyCricketProfileTrophiesQuery } from "@/store/api/cricket/cricketProfileApi";
 
 import type {
   CricketProfileTrophyItem,
   CricketProfileTrophyScope,
-} from "@/types/cricketProfile";
+} from "@/types/cricket/cricketProfile";
 
 const PAGE_LIMIT = 10;
 

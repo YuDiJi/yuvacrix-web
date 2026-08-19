@@ -13,7 +13,7 @@ import {
   Tv,
   type LucideIcon,
 } from "lucide-react";
-import type { HomeIcon } from "@/types/home";
+import type { HomeIcon } from "@/types/cricket/home";
 
 export const ICON_MAP: Record<HomeIcon, LucideIcon> = {
   LIVE: Radio,

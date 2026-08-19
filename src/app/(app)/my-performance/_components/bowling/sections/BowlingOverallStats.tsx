@@ -1,4 +1,4 @@
-import type { BowlingStats } from "@/types/performance";
+import type { BowlingStats } from "@/types/cricket/performance";
 import PerformanceSection from "../../batting/components/PerformanceSection";
 
 const fmt = (value: number | null) => (value === null ? "—" : value.toFixed(2));

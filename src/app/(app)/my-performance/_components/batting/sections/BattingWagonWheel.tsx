@@ -1,7 +1,7 @@
 import type {
   BattingAnalysisResponse,
   BattingWagonWheelData,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 
 import WagonWheelChart from "../charts/WagonWheelChart";
 import PerformanceEmptyState from "../components/PerformanceEmptyState";

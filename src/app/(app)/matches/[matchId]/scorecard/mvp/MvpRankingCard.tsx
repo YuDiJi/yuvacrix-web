@@ -1,7 +1,7 @@
 "use client";
 
 import { S3Image } from "@/components/common/S3Image";
-import { MvpPlayer } from "@/types/scorecard";
+import { MvpPlayer } from "@/types/cricket/scorecard";
 
 type Props = {
   player: MvpPlayer;

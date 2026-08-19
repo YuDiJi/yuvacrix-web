@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { Team } from "@/types/team";
+import { Team } from "@/types/cricket/team";
 import {
   selectTeamACaptain,
   selectTeamAKeeper,
@@ -21,16 +21,16 @@ import {
   selectTeamBKeeper,
 } from "@/store/startMatch/selectors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { useGetTeamDetailQuery } from "@/store/api/teamApi";
+import { useGetTeamDetailQuery } from "@/store/api/cricket/teamApi";
 import {
   useCreateMatchMutation,
   useSubmitTeamLineupMutation,
-} from "@/store/api/matchApi";
-import type { MatchType, BallType, PitchType } from "@/types/match";
-import { LineupModeSheet } from "@/components/match/LineupModeSheet";
+} from "@/store/api/cricket/matchApi";
+import type { MatchType, BallType, PitchType } from "@/types/cricket/match";
+import { LineupModeSheet } from "@/components/cricket/match/LineupModeSheet";
 import { setMatchIdMode } from "@/store/startMatch/startMatchSlice";
 import { S3Image } from "@/components/common/S3Image";
-import ScheduleModal from "@/components/match/ScheduleModal";
+import ScheduleModal from "@/components/cricket/match/ScheduleModal";
 
 // ─── Zod schema ───────────────────────────────────────────────────────────────
 

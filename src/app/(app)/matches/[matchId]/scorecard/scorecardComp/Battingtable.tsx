@@ -1,6 +1,6 @@
 "use client";
 
-import { BatterScore } from "@/types/scorecard";
+import { BatterScore } from "@/types/cricket/scorecard";
 
 type Props = {
   batters: BatterScore[];

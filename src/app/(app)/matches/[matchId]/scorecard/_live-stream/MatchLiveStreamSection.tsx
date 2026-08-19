@@ -7,7 +7,7 @@ import {
   useConfigureMatchLiveStreamMutation,
   useGetMatchLiveStreamQuery,
   useUpdateMatchLiveStreamStatusMutation,
-} from "@/store/api/liveStreamApi";
+} from "@/store/api/cricket/liveStreamApi";
 import { ConfigureLiveStreamSheet } from "./ConfigureLiveStreamSheet";
 import { GoLiveBanner } from "./GoLiveBanner";
 import { LiveStreamPlayer } from "./LiveStreamPlayer";

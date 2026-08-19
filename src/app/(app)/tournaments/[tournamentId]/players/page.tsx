@@ -10,12 +10,12 @@ import {
   useGetTeamMembersQuery,
   useRemoveTeamMemberMutation,
   // useSetTeamMemberRoleMutation,
-} from "@/store/api/teamApi";
+} from "@/store/api/cricket/teamApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 import { Button } from "@/components/common/Button";
-import { PlayerList } from "@/components/Players/Playerlist";
+import { PlayerList } from "@/components/cricket/Players/Playerlist";
 import { PlayerListSkeleton } from "@/components/common/loaders/Skeletonloader";
 import { cn } from "@/lib/cn";
 import {
@@ -26,7 +26,7 @@ import { S3Image } from "@/components/common/S3Image";
 import {
   useAssignTournamentPlayerRolesMutation,
   useGetTeamsRoleSummaryQuery,
-} from "@/store/api/tournamentTeamApi";
+} from "@/store/api/cricket/tournamentTeamApi";
 
 export default function PlayersPage() {
   const router = useRouter();

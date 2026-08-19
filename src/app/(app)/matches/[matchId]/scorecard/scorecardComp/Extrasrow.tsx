@@ -1,6 +1,6 @@
 "use client";
 
-import { Extras } from "@/types/scorecard";
+import { Extras } from "@/types/cricket/scorecard";
 
 type Props = {
   extras: Extras;

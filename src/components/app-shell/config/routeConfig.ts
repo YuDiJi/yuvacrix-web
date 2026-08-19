@@ -1,6 +1,6 @@
 //
 
-import { Team } from "@/types/team";
+import { Team } from "@/types/cricket/team";
 
 export type HeaderBackConfig =
   | {

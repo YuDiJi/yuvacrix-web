@@ -1,6 +1,6 @@
 "use client";
 
-import { CreatePlayerFlow } from "@/components/Players/CreatePlayerFlow";
+import { CreatePlayerFlow } from "@/components/cricket/Players/CreatePlayerFlow";
 import { useAppSelector } from "@/store/hooks";
 import { useRouter, useSearchParams } from "next/navigation";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";

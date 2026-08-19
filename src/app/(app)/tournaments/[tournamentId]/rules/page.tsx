@@ -4,17 +4,17 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 import { CricketLoader } from "@/components/common/loaders/CricketLoader";
-import { MatchRulesEditor } from "@/components/match-rules/MatchRulesEditor";
+import { MatchRulesEditor } from "@/components/cricket/match-rules/MatchRulesEditor";
 import {
   useGetMatchRulePresetsQuery,
   useGetTournamentMatchRulesQuery,
   useUpdateTournamentMatchRulesMutation,
   useUpdateTournamentRoundMatchRulesMutation,
-} from "@/store/api/matchRulesApi";
+} from "@/store/api/cricket/matchRulesApi";
 import {
   useGetTournamentRoundDetailsQuery,
   useGetTournamentRoundsQuery,
-} from "@/store/api/tournamentRoundApi";
+} from "@/store/api/cricket/tournamentRoundApi";
 
 export default function TournamentRulesPage() {
   const params = useParams();

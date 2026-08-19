@@ -1,7 +1,7 @@
 import type {
   BattingCurrentForm,
   BattingOverallStats,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 
 import BattingFormChart from "../charts/BattingFormChart";
 import PerformanceInsight from "../components/PerformanceInsight";

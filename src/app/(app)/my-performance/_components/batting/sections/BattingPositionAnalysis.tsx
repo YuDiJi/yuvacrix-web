@@ -1,4 +1,4 @@
-import type { BattingByPosition } from "@/types/performance";
+import type { BattingByPosition } from "@/types/cricket/performance";
 
 import BattingPositionChart from "../charts/BattingPositionChart";
 

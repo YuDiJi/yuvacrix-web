@@ -7,14 +7,14 @@ import {
   RecordBallRequest,
   WicketFlowState,
   WicketType,
-} from "@/types/scoring";
+} from "@/types/cricket/scoring";
 import FielderSelector from "./FielderSelector";
 import DismissedBatterSelector from "./DismissedBatterSelector";
-import { ScoringState } from "@/types/innings";
-import { MatchDetailsPlayer } from "@/types/match";
+import { ScoringState } from "@/types/cricket/innings";
+import { MatchDetailsPlayer } from "@/types/cricket/match";
 import DeliveryTypeRunsSelector from "./DeliveryTypeRunsSelector";
 import Confirm from "./ConfirmSelector";
-import { useRecordBallMutation } from "@/store/api/scoringApi";
+import { useRecordBallMutation } from "@/store/api/cricket/scoringApi";
 import { ArrowLeft } from "lucide-react";
 
 interface OutSheetProps {

@@ -1,4 +1,4 @@
-import { Team } from "@/types/team";
+import { Team } from "@/types/cricket/team";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type MatchPlayerRole = {

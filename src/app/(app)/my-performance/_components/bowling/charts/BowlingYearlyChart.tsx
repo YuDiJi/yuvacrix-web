@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { BowlingYearlyStats } from "@/types/performance";
+import type { BowlingYearlyStats } from "@/types/cricket/performance";
 
 export default function BowlingYearlyChart({
   items,

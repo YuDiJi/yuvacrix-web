@@ -1,4 +1,4 @@
-import { CricketProfile } from "@/types/cricketProfile";
+import { CricketProfile } from "@/types/cricket/cricketProfile";
 import React from "react";
 
 type HighlightsTabProps = {

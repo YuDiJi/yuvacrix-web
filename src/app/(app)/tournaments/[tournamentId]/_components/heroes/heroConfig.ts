@@ -12,7 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 
-import { TournamentHeroType } from "@/types/tournamentAnalytics";
+import { TournamentHeroType } from "@/types/cricket/tournamentAnalytics";
 
 export type HeroVisualConfig = {
   icon: typeof Trophy;

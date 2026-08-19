@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
-import { CreateTeamForm } from "@/components/team/CreateTeamForm";
-import { useCreateTeamMutation } from "@/store/api/teamApi";
+import { CreateTeamForm } from "@/components/cricket/team/CreateTeamForm";
+import { useCreateTeamMutation } from "@/store/api/cricket/teamApi";
 import { useUploadFileMutation } from "@/store/api/uploadApi";
 import { useAppDispatch } from "@/store/hooks";
-import { useAddTeamToTournamentMutation } from "@/store/api/tournamentTeamApi";
+import { useAddTeamToTournamentMutation } from "@/store/api/cricket/tournamentTeamApi";
 
 export default function CreateTournamentTeam() {
   const router = useRouter();

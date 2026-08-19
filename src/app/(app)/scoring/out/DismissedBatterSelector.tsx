@@ -1,9 +1,9 @@
 import { Button } from "@/components/common/Button";
 import { S3Image } from "@/components/common/S3Image";
 import { cn } from "@/lib/cn";
-import { ScoringState } from "@/types/innings";
-import { MatchDetailsPlayer } from "@/types/match";
-import { DismissalEnd } from "@/types/scoring";
+import { ScoringState } from "@/types/cricket/innings";
+import { MatchDetailsPlayer } from "@/types/cricket/match";
+import { DismissalEnd } from "@/types/cricket/scoring";
 import { Check } from "lucide-react";
 import React, { useState } from "react";
 

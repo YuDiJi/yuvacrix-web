@@ -1,7 +1,7 @@
 import type {
   BowlingAnalysisResponse,
   BowlingShotImpactData,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 import PerformanceEmptyState from "../../batting/components/PerformanceEmptyState";
 import PerformanceSection from "../../batting/components/PerformanceSection";
 

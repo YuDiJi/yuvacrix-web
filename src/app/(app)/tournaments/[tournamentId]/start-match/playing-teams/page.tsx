@@ -6,7 +6,7 @@ import {
   selectTeamB,
   selectTournamentId,
 } from "@/store/startMatch/selectors";
-import TeamSelection from "@/components/match/TeamSelection";
+import TeamSelection from "@/components/cricket/match/TeamSelection";
 import { useParams, useRouter } from "next/navigation";
 import TournamentMatchDetails from "./MatchDetails";
 

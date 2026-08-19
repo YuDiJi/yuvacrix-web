@@ -20,7 +20,7 @@ import {
   useDeleteFixtureMutation,
   useGetTournamentFixturesQuery,
   useUpdateFixtureMutation,
-} from "@/store/api/tournamentFixtureApi";
+} from "@/store/api/cricket/tournamentFixtureApi";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

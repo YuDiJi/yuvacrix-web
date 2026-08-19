@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useGetScorecardCommentaryQuery } from "@/store/api/scorecardApi";
-import { CommentaryItem } from "@/types/scorecard";
+import { useGetScorecardCommentaryQuery } from "@/store/api/cricket/scorecardApi";
+import { CommentaryItem } from "@/types/cricket/scorecard";
 import CommentaryItemCard from "./CommentaryItemCard";
 import CommentaryFilters, { CommentaryFilterKey } from "./CommentaryFilters";
 import CommentaryTeamSelector, { TeamSide } from "./CommentaryTeamSelector";

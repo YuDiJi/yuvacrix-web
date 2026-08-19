@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import type { HomeCricketPulse } from "@/types/home";
+import type { HomeCricketPulse } from "@/types/cricket/home";
 import { getIcon } from "./iconMap";
 
 type Props = { pulses: HomeCricketPulse[] };

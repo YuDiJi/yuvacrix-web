@@ -9,13 +9,13 @@ import {
   type CreateGroupFormValues,
   type CreateGroupRound,
   type CreateGroupTeam,
-} from "@/components/tournament/CreateGroupForm";
+} from "@/components/cricket/tournament/CreateGroupForm";
 
 import { Button } from "@/components/common/Button";
 
-import { useGetTournamentRoundsQuery } from "@/store/api/tournamentRoundApi";
-import { useGetTournamentTeamsQuery } from "@/store/api/tournamentTeamApi";
-import { useCreateTournamentGroupMutation } from "@/store/api/tournamentGroupApi";
+import { useGetTournamentRoundsQuery } from "@/store/api/cricket/tournamentRoundApi";
+import { useGetTournamentTeamsQuery } from "@/store/api/cricket/tournamentTeamApi";
+import { useCreateTournamentGroupMutation } from "@/store/api/cricket/tournamentGroupApi";
 
 function getApiErrorMessage(error: unknown, fallback: string): string {
   if (

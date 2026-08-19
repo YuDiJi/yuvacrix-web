@@ -6,8 +6,8 @@ import { AlertCircle, BarChart3, RefreshCw, SearchX } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { S3Image } from "@/components/common/S3Image";
-import { useGetTournamentBoundaryStatsQuery } from "@/store/api/tournamentAnalyticsApi";
-import { TournamentBoundaryStatType } from "@/types/tournamentAnalytics";
+import { useGetTournamentBoundaryStatsQuery } from "@/store/api/cricket/tournamentAnalyticsApi";
+import { TournamentBoundaryStatType } from "@/types/cricket/tournamentAnalytics";
 
 type Props = {
   tournamentId: string;

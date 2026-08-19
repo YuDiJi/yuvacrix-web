@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { useGetScorecardSquadsQuery } from "@/store/api/scorecardApi";
-import { ScorecardSquads, SquadPlayer } from "@/types/scorecard";
+import { useGetScorecardSquadsQuery } from "@/store/api/cricket/scorecardApi";
+import { ScorecardSquads, SquadPlayer } from "@/types/cricket/scorecard";
 import TeamLogo from "./Teamlogo";
 import SquadPlayerCard from "./Squadplayercard";
 

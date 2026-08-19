@@ -4,11 +4,11 @@ import { useCallback } from "react";
 import {
   useGetMyBowlingPerformanceQuery,
   useLazyGetMyBowlingAnalysisQuery,
-} from "@/store/api/performanceApi";
+} from "@/store/api/cricket/performanceApi";
 import type {
   BowlingAnalysisResponse,
   BowlingAnalysisSection,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 
 import LazyPerformanceSection from "../batting/components/LazyPerformanceSection";
 import PerformanceEmptyState from "../batting/components/PerformanceEmptyState";

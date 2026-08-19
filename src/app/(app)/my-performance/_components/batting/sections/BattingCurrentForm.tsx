@@ -6,7 +6,7 @@ import { ChevronRight } from "lucide-react";
 import type {
   BattingCurrentForm as BattingCurrentFormType,
   BattingRecentInnings,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 
 import BattingFormChart from "../charts/BattingFormChart";
 import PerformanceInsight from "../components/PerformanceInsight";

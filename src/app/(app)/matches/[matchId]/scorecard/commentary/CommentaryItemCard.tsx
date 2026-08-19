@@ -1,6 +1,6 @@
 "use client";
 
-import { CommentaryItem } from "@/types/scorecard";
+import { CommentaryItem } from "@/types/cricket/scorecard";
 
 type Props = {
   item: CommentaryItem;

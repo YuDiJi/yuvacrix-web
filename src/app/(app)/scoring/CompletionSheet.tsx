@@ -1,12 +1,12 @@
 import { Settings, Trophy } from "lucide-react";
 import { DialogBox } from "@/components/common/DialogBox";
-import { ScoringState } from "@/types/innings";
+import { ScoringState } from "@/types/cricket/innings";
 import { Button } from "@/components/common/Button";
 import { BallChip } from "./BallChip";
-import { MatchDetailsPlayer, MatchDetailsTeam } from "@/types/match";
+import { MatchDetailsPlayer, MatchDetailsTeam } from "@/types/cricket/match";
 import { useMemo } from "react";
 
-import { useCompleteMatchMutation } from "@/store/api/matchApi";
+import { useCompleteMatchMutation } from "@/store/api/cricket/matchApi";
 
 type CompletionSheetMode =
   | "OVER_COMPLETED"

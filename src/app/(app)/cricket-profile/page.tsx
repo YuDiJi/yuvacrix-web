@@ -4,14 +4,14 @@ import { useState } from "react";
 import { AlertCircle, CalendarDays, RefreshCw, UserRound } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useGetMyCricketProfileQuery } from "@/store/api/cricketProfileApi";
+import { useGetMyCricketProfileQuery } from "@/store/api/cricket/cricketProfileApi";
 
 import { CricketProfileHeader } from "./_components/CricketProfileHeader";
 import { CricketProfileSkeleton } from "./_components/CricketProfileSkeleton";
 import { MatchesTab } from "./_components/MatchesTab";
 import StatsTab from "./_components/StatsTab";
 import HighlightsTab from "./_components/HighlightsTab";
-import { CricketProfile } from "@/types/cricketProfile";
+import { CricketProfile } from "@/types/cricket/cricketProfile";
 import { TrophiesTab } from "./_components/TrophiesTab";
 import { BadgesTab } from "./_components/BadgesTab";
 import { TeamsTab } from "./_components/TeamsTab";

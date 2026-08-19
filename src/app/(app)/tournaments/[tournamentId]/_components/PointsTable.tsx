@@ -20,15 +20,15 @@ import { cn } from "@/lib/cn";
 import {
   useDeleteTournamentGroupMutation,
   useGetTournamentGroupsQuery,
-} from "@/store/api/tournamentGroupApi";
+} from "@/store/api/cricket/tournamentGroupApi";
 import {
   useGetTournamentGroupPointsTableQuery,
   useGetTournamentPointsTableQuery,
   useGetTournamentRoundPointsTableQuery,
-} from "@/store/api/tournamentPointsApi";
-import { useGetTournamentRoundsQuery } from "@/store/api/tournamentRoundApi";
+} from "@/store/api/cricket/tournamentPointsApi";
+import { useGetTournamentRoundsQuery } from "@/store/api/cricket/tournamentRoundApi";
 
-import type { TournamentPointsTableResponse } from "@/store/api/tournamentPointsApi";
+import type { TournamentPointsTableResponse } from "@/store/api/cricket/tournamentPointsApi";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

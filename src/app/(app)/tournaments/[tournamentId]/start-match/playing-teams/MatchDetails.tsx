@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { Team } from "@/types/team";
+import { Team } from "@/types/cricket/team";
 import {
   selectTeamACaptain,
   selectTeamAKeeper,
@@ -25,19 +25,14 @@ import {
   selectTournamentGroupId,
 } from "@/store/startMatch/selectors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { useGetTeamDetailQuery } from "@/store/api/teamApi";
-import { useCreateManualFixtureMutation } from "@/store/api/tournamentFixtureApi";
+import { useGetTeamDetailQuery } from "@/store/api/cricket/teamApi";
+import { useCreateManualFixtureMutation } from "@/store/api/cricket/tournamentFixtureApi";
 
-// import {
-//   useCreateMatchMutation,
-//   useSubmitTeamLineupMutation,
-// } from "@/store/api/matchApi";
-import type { MatchType, BallType, PitchType } from "@/types/match";
-// import { LineupModeSheet } from "./LineupModeSheet";
+import type { MatchType, BallType, PitchType } from "@/types/cricket/match";
 import { setMatchIdMode } from "@/store/startMatch/startMatchSlice";
 import { S3Image } from "@/components/common/S3Image";
-import { LineupModeSheet } from "@/components/match/LineupModeSheet";
-import ScheduleModal from "@/components/match/ScheduleModal";
+import { LineupModeSheet } from "@/components/cricket/match/LineupModeSheet";
+import ScheduleModal from "@/components/cricket/match/ScheduleModal";
 
 // ─── Zod schema ───────────────────────────────────────────────────────────────
 

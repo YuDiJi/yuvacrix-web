@@ -7,7 +7,7 @@ import { useState } from "react";
 
 import { S3Image } from "@/components/common/S3Image";
 import { cn } from "@/lib/cn";
-import { TournamentHeroCard } from "@/types/tournamentAnalytics";
+import { TournamentHeroCard } from "@/types/cricket/tournamentAnalytics";
 
 import { HERO_VISUAL_CONFIG } from "./heroConfig";
 

@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Shield, AlertCircle } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useGetTournamentDetailsQuery } from "@/store/api/tournamentApi";
+import { useGetTournamentDetailsQuery } from "@/store/api/cricket/tournamentApi";
 import About from "./_components/About";
 import Teams from "./_components/Teams";
 import { S3Image } from "@/components/common/S3Image";

@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 
-import type { BowlingWicketsByInningsItem } from "@/types/performance";
+import type { BowlingWicketsByInningsItem } from "@/types/cricket/performance";
 
 type Props = {
   items: BowlingWicketsByInningsItem[];

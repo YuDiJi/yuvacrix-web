@@ -2,7 +2,7 @@
 
 import { ExternalLink, MoreVertical, Radio, Settings } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { MatchLiveStream } from "@/types/liveStream";
+import { MatchLiveStream } from "@/types/cricket/liveStream";
 
 type LiveStreamPlayerProps = {
   stream: MatchLiveStream;

@@ -6,11 +6,11 @@ import { useState } from "react";
 import { RefreshCw, SearchX } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useGetTournamentBattingLeaderboardQuery } from "@/store/api/tournamentAnalyticsApi";
+import { useGetTournamentBattingLeaderboardQuery } from "@/store/api/cricket/tournamentAnalyticsApi";
 import {
   TournamentBattingLeaderboardMetric,
   TournamentLeaderboardTeamOption,
-} from "@/types/tournamentAnalytics";
+} from "@/types/cricket/tournamentAnalytics";
 
 import { battingLeaderboardFilters } from "./leaderboardConfig";
 import { S3Image } from "@/components/common/S3Image";

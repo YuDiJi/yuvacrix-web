@@ -1,4 +1,4 @@
-import type { BattingByPitchType } from "@/types/performance";
+import type { BattingByPitchType } from "@/types/cricket/performance";
 
 import PerformanceSection from "../components/PerformanceSection";
 import PerformanceTable from "../components/PerformanceTable";

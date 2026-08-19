@@ -1,4 +1,4 @@
-import TournamentForm from "@/components/tournament/TournamentForm";
+import TournamentForm from "@/components/cricket/tournament/TournamentForm";
 
 export default function CreateTournamentPage() {
   return <TournamentForm mode="CREATE" />;

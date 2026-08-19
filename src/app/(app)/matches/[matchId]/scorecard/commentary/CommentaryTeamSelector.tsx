@@ -1,4 +1,4 @@
-import { MatchTeamSnapshot } from "@/types/scorecard";
+import { MatchTeamSnapshot } from "@/types/cricket/scorecard";
 
 export type TeamSide = "teamA" | "teamB";
 

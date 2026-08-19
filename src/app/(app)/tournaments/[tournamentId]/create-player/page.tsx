@@ -1,6 +1,6 @@
 "use client";
 
-import { CreatePlayerFlow } from "@/components/Players/CreatePlayerFlow";
+import { CreatePlayerFlow } from "@/components/cricket/Players/CreatePlayerFlow";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 

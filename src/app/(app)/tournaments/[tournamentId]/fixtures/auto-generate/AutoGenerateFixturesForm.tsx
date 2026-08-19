@@ -27,14 +27,14 @@ import {
   PreviewAutoFixturesResponse,
   usePreviewAutoFixturesMutation,
   type AutoGenerateFixturesRequest,
-} from "@/store/api/tournamentFixtureApi";
-import { useGetTournamentRoundsQuery } from "@/store/api/tournamentRoundApi";
-import { useGetTournamentGroupsQuery } from "@/store/api/tournamentGroupApi";
+} from "@/store/api/cricket/tournamentFixtureApi";
+import { useGetTournamentRoundsQuery } from "@/store/api/cricket/tournamentRoundApi";
+import { useGetTournamentGroupsQuery } from "@/store/api/cricket/tournamentGroupApi";
 
 import {
   useGetTournamentTeamsQuery,
   type TournamentTeam,
-} from "@/store/api/tournamentTeamApi";
+} from "@/store/api/cricket/tournamentTeamApi";
 
 type AutoGenerateFixturesFormProps = {
   tournamentId: string;

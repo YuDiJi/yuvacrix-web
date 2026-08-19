@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { useGetScorecardQuery } from "@/store/api/scorecardApi";
+import { useGetScorecardQuery } from "@/store/api/cricket/scorecardApi";
 import ScorecardInningsAccordion from "./scorecardComp/Scorecardinningsaccordion";
 import CommentaryTab from "./commentary/CommentaryTab";
 import SquadTab from "./squad/Squadtab";

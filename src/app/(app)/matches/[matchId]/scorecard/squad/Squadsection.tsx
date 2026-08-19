@@ -1,6 +1,6 @@
 "use client";
 
-import { SquadPlayer } from "@/types/scorecard";
+import { SquadPlayer } from "@/types/cricket/scorecard";
 import SquadPlayerCard from "./Squadplayercard";
 
 type Props = {

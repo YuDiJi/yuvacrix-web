@@ -6,8 +6,8 @@ import { useState } from "react";
 import { AlertCircle, BarChart3 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useGetTournamentTeamsQuery } from "@/store/api/tournamentTeamApi";
-import { TournamentLeaderboardTeamOption } from "@/types/tournamentAnalytics";
+import { useGetTournamentTeamsQuery } from "@/store/api/cricket/tournamentTeamApi";
+import { TournamentLeaderboardTeamOption } from "@/types/cricket/tournamentAnalytics";
 
 import OverallStats from "./OverallStats";
 import SixesStats from "./SixesStats";

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { InningsScorecard } from "@/types/scorecard";
+import { InningsScorecard } from "@/types/cricket/scorecard";
 import BattingTable from "./Battingtable";
 import BowlingTable from "./Bowlingtable";
 import ExtrasRow from "./Extrasrow";
@@ -108,11 +108,13 @@ export default function ScorecardInningsAccordion({
                     className="flex justify-between text-xs text-(--color-text-secondary)"
                   >
                     <span>
-                      Bowling target powerplay · Over {adjustment.overNumber + 1}
+                      Bowling target powerplay · Over{" "}
+                      {adjustment.overNumber + 1}
                       {` (${adjustment.rawOverRuns}/${adjustment.targetRuns})`}
                     </span>
                     <span className="font-bold text-(--color-navy)">
-                      {adjustment.runs > 0 ? "+" : ""}{adjustment.runs} runs
+                      {adjustment.runs > 0 ? "+" : ""}
+                      {adjustment.runs} runs
                     </span>
                   </div>
                 ))}

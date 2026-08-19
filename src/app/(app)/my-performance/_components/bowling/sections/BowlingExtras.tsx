@@ -1,4 +1,4 @@
-import type { BowlingExtras as Data } from "@/types/performance";
+import type { BowlingExtras as Data } from "@/types/cricket/performance";
 import BowlingExtrasPieChart from "../charts/BowlingExtrasPieChart";
 import PerformanceInsight from "../../batting/components/PerformanceInsight";
 import PerformanceSection from "../../batting/components/PerformanceSection";

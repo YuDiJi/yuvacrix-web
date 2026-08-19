@@ -2,7 +2,7 @@ import type {
   BowlingAnalysisResponse,
   BowlingOverSlotData,
   BowlingOverSlotItem,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 
 import BowlingPositionChart from "../charts/BowlingPositionChart";
 

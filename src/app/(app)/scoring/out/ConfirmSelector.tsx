@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 import { Button } from "@/components/common/Button";
-import { MatchDetailsPlayer } from "@/types/match";
-import { WicketFlowState } from "@/types/scoring";
+import { MatchDetailsPlayer } from "@/types/cricket/match";
+import { WicketFlowState } from "@/types/cricket/scoring";
 import { cn } from "@/lib/cn";
 import { WICKET_CONFIG } from "./constant";
 import { Dispatch, SetStateAction, useState } from "react";

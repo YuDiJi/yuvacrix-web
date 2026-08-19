@@ -1,7 +1,7 @@
 "use client";
 
 import { S3Image } from "@/components/common/S3Image";
-import { TeamScoreSummary } from "@/types/scorecard";
+import { TeamScoreSummary } from "@/types/cricket/scorecard";
 
 type Props = {
   team: TeamScoreSummary;

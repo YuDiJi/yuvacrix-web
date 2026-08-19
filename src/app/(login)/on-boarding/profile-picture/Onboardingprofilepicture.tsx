@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { useUpdatePlayerMutation } from "@/store/api/playerApi";
+import { useUpdatePlayerMutation } from "@/store/api/cricket/playerApi";
 import { useUploadFileMutation } from "@/store/api/uploadApi";
 import { ImageUploader } from "@/components/common/ImageUploader";
 

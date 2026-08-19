@@ -4,7 +4,7 @@ import {
   RecordBallRequest,
   WicketFlowState,
   WicketType,
-} from "@/types/scoring";
+} from "@/types/cricket/scoring";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/common/Button";
 import { WICKET_CONFIG } from "./constant";

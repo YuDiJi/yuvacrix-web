@@ -6,7 +6,7 @@ import { CalendarDays, ChevronDown, CircleDot, Swords } from "lucide-react";
 import type {
   BattingPartnershipItem,
   BattingPartnershipsResponse,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 
 import PerformanceEmptyState from "../components/PerformanceEmptyState";
 import PerformanceSection from "../components/PerformanceSection";

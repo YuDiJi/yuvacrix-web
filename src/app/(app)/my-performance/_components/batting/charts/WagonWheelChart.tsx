@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 
-import type { BattingWagonWheelData } from "@/types/performance";
+import type { BattingWagonWheelData } from "@/types/cricket/performance";
 
 type WagonWheelChartProps = {
   data: BattingWagonWheelData;
@@ -25,9 +25,7 @@ function normalizeCoordinate(value: number) {
   return Math.max(-100, Math.min(100, value));
 }
 
-export default function WagonWheelChart({
-  data,
-}: WagonWheelChartProps) {
+export default function WagonWheelChart({ data }: WagonWheelChartProps) {
   const clipId = useId().replaceAll(":", "");
 
   return (

@@ -6,9 +6,9 @@ import { RefreshCcw, Shield } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useGetMyCricketProfileTeamsQuery } from "@/store/api/teamApi";
+import { useGetMyCricketProfileTeamsQuery } from "@/store/api/cricket/teamApi";
 
-import type { CricketProfileTeamHistoryItem } from "@/types/team";
+import type { CricketProfileTeamHistoryItem } from "@/types/cricket/team";
 
 import { TeamHistoryCard } from "./TeamHistoryCard";
 

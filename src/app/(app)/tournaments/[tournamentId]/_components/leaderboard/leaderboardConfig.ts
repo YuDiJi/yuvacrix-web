@@ -4,7 +4,7 @@ import {
   TournamentBattingLeaderboardMetric,
   TournamentBowlingLeaderboardMetric,
   TournamentFieldingLeaderboardMetric,
-} from "@/types/tournamentAnalytics";
+} from "@/types/cricket/tournamentAnalytics";
 
 export const battingLeaderboardFilters = [
   {

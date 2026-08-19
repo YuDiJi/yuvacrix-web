@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetScorecardMVPQuery } from "@/store/api/scorecardApi";
+import { useGetScorecardMVPQuery } from "@/store/api/cricket/scorecardApi";
 import MvpCandidateCard from "./MvpCandidateCard";
 import MvpStatCard from "./MvpStatCard";
 import MvpRankingCard from "./MvpRankingCard";

@@ -1,7 +1,7 @@
 import { Button } from "@/components/common/Button";
-import { PlayerPickerSheet } from "@/components/Players/PlayerPickerSheet";
-import { ScoringState } from "@/types/innings";
-import { MatchDetailsPlayer } from "@/types/match";
+import { PlayerPickerSheet } from "@/components/cricket/Players/PlayerPickerSheet";
+import { ScoringState } from "@/types/cricket/innings";
+import { MatchDetailsPlayer } from "@/types/cricket/match";
 import React, { useState } from "react";
 
 const WicketKeeperSelector = ({

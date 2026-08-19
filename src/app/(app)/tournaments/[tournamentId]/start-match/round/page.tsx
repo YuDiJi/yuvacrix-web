@@ -21,7 +21,7 @@ import {
   useCreateTournamentRoundMutation,
   useGetTournamentRoundsQuery,
   useGetTournamentRoundTemplatesQuery,
-} from "@/store/api/tournamentRoundApi";
+} from "@/store/api/cricket/tournamentRoundApi";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/common/Button";
 import { useAppDispatch } from "@/store/hooks";

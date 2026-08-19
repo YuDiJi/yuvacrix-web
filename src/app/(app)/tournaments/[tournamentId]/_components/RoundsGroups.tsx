@@ -25,7 +25,7 @@ import {
   TournamentGroupTeam,
   useDeleteTournamentGroupMutation,
   useGetTournamentGroupsQuery,
-} from "@/store/api/tournamentGroupApi";
+} from "@/store/api/cricket/tournamentGroupApi";
 
 import {
   TournamentRound,
@@ -33,12 +33,12 @@ import {
   TournamentRoundType,
   useDeleteTournamentRoundMutation,
   useGetTournamentRoundsQuery,
-} from "@/store/api/tournamentRoundApi";
+} from "@/store/api/cricket/tournamentRoundApi";
 import { S3Image } from "@/components/common/S3Image";
 import {
   TournamentTeam,
   useGetTournamentTeamsQuery,
-} from "@/store/api/tournamentTeamApi";
+} from "@/store/api/cricket/tournamentTeamApi";
 import { DialogBox } from "@/components/common/DialogBox";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

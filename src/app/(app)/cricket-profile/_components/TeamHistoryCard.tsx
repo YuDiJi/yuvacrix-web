@@ -7,7 +7,7 @@ import { BadgeCheck, ChevronRight, MapPin } from "lucide-react";
 import { S3Image } from "@/components/common/S3Image";
 import { cn } from "@/lib/cn";
 
-import type { CricketProfileTeamHistoryItem } from "@/types/team";
+import type { CricketProfileTeamHistoryItem } from "@/types/cricket/team";
 
 type TeamHistoryCardProps = {
   team: CricketProfileTeamHistoryItem;

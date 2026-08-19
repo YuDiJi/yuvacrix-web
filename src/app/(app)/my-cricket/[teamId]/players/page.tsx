@@ -5,9 +5,9 @@ import { useParams } from "next/navigation";
 import {
   useGetTeamDetailQuery,
   useGetTeamMembersQuery,
-} from "@/store/api/teamApi";
+} from "@/store/api/cricket/teamApi";
 import { skipToken } from "@reduxjs/toolkit/query";
-import { PlayerList } from "@/components/Players/Playerlist";
+import { PlayerList } from "@/components/cricket/Players/Playerlist";
 import { PlayerListSkeleton } from "@/components/common/loaders/Skeletonloader";
 
 import { S3Image } from "@/components/common/S3Image";

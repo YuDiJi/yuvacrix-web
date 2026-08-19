@@ -2,7 +2,7 @@ import type {
   BowlingAnalysisResponse,
   BowlingBattingPositionData,
   BowlingBattingPositionGroupItem,
-} from "@/types/performance";
+} from "@/types/cricket/performance";
 
 import BattingPositionWicketsChart from "../charts/BattingPositionWicketsChart";
 

@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 
-import type { BowlingBattingPositionItem } from "@/types/performance";
+import type { BowlingBattingPositionItem } from "@/types/cricket/performance";
 
 type BattingPositionWicketsChartProps = {
   items: BowlingBattingPositionItem[];

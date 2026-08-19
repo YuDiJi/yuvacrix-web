@@ -7,11 +7,11 @@ import { useState } from "react";
 import { ChevronDown, SearchX, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useGetTournamentMvpLeaderboardQuery } from "@/store/api/tournamentAnalyticsApi";
+import { useGetTournamentMvpLeaderboardQuery } from "@/store/api/cricket/tournamentAnalyticsApi";
 import {
   TournamentLeaderboardTeamOption,
   TournamentMvpLeaderboardItem,
-} from "@/types/tournamentAnalytics";
+} from "@/types/cricket/tournamentAnalytics";
 import { S3Image } from "@/components/common/S3Image";
 
 type Props = {

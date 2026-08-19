@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 import Matches from "./Matches";
 import { useState } from "react";
 import Tournaments from "./Tournaments";
-import { Stats } from "@/components/stats/page";
+import { Stats } from "@/components/cricket/stats/page";
 import Teams from "./Teams";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
