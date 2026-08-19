@@ -9,6 +9,12 @@ import {
   useRecordBallMutation,
   useDeclareBowlingPowerplayMutation,
 } from "@/store/api/scoringApi";
+
+import {
+  useGetMatchRulesQuery,
+  useUpdateMatchRulesMutation,
+} from "@/store/api/matchRulesApi";
+
 import { skipToken } from "@reduxjs/toolkit/query";
 import { ExtraType, FieldZone } from "@/types/scoring";
 import { useEffect, useState } from "react";
@@ -34,6 +40,10 @@ import { useRouter } from "next/navigation";
 import { SyncStatus, SyncStatusToast } from "./SyncStatusToast";
 import { DialogBottom } from "@/components/common/DialogBottom";
 import { S3Image } from "@/components/common/S3Image";
+import { ScoringShortcutsSheet } from "./scoringShortcuts/ScoringShortcutsSheet";
+import { MatchOversSheet } from "./scoringShortcuts/MatchOversSheet";
+import { WagonWheelSettingsSheet } from "./scoringShortcuts/WagonWheelSettingsSheet";
+import MatchRules from "@/components/match-rules/MatchRules";
 
 export type DialogType =
   | "WIDE"
@@ -52,6 +62,30 @@ type ScoringFlow =
   | "AWAITING_NEXT_OVER"
   | "START_NEXT_INNINGS"
   | "MATCH_COMPLETED";
+
+type ShortcutScreen =
+  | null
+  | "MENU"
+  | "MATCH_RULES"
+  | "MATCH_OVERS"
+  | "WAGON_WHEEL";
+
+const RUNNING_RUNS: readonly number[] = [1, 2, 3];
+const BOUNDARY_RUNS: readonly number[] = [4, 6];
+
+function replaceRunGroup(
+  existing: number[],
+  group: readonly number[],
+  enabled: boolean,
+): number[] {
+  const withoutGroup = existing.filter((run) => !group.includes(run));
+
+  if (!enabled) {
+    return withoutGroup;
+  }
+
+  return [...new Set([...withoutGroup, ...group])].sort((a, b) => a - b);
+}
 
 function InlineSkeleton({ className }: { className?: string }) {
   return (
@@ -83,6 +117,13 @@ export default function ScoringPage() {
   const { data: matchData } = useGetMatchByIdQuery(
     matchId ? { matchId } : skipToken,
   );
+
+  const { data: matchRulesConfiguration, isLoading: isLoadingMatchRules } =
+    useGetMatchRulesQuery(matchId ?? skipToken);
+
+  const [updateMatchRules, { isLoading: isUpdatingMatchRules }] =
+    useUpdateMatchRulesMutation();
+
   const {
     data: state,
     isLoading: loadingState,
@@ -111,9 +152,25 @@ export default function ScoringPage() {
   const [completedOverSnapshot, setCompletedOverSnapshot] =
     useState<ScoringState | null>(null);
 
+  const [shortcutScreen, setShortcutScreen] = useState<ShortcutScreen>(null);
+
   const isInitialStateLoading = loadingState && !state;
   const isInitialMatchLoading = !matchData;
   const isInitialPageLoading = (loadingState && !state) || !matchData;
+
+  const wagonWheelRules = matchRulesConfiguration?.resolvedSnapshot.wagonWheel;
+
+  const showForRunningRuns =
+    wagonWheelRules?.enabled === true &&
+    RUNNING_RUNS.every((run) =>
+      wagonWheelRules.optionalForBatRuns.includes(run),
+    );
+
+  const showForBoundaries =
+    wagonWheelRules?.enabled === true &&
+    BOUNDARY_RUNS.every((run) =>
+      wagonWheelRules.requiredForBatRuns.includes(run),
+    );
 
   const playersById = useMemo(() => {
     return new Map(
@@ -123,6 +180,12 @@ export default function ScoringPage() {
 
   const scoringStateRefreshing =
     isFetchingState && state?.inningsCompleted === true;
+
+  const handleShortcutSelect = (
+    action: "MATCH_RULES" | "MATCH_OVERS" | "WAGON_WHEEL",
+  ) => {
+    setShortcutScreen(action);
+  };
 
   const handleNonStrikerClick = () => {
     if (
@@ -171,6 +234,173 @@ export default function ScoringPage() {
       setSyncStatus("error");
     }
   };
+
+  async function saveWagonWheelSettings({
+    requiredForBatRuns,
+    optionalForBatRuns,
+  }: {
+    requiredForBatRuns: number[];
+    optionalForBatRuns: number[];
+  }) {
+    if (!matchId || !matchRulesConfiguration || !wagonWheelRules) {
+      return;
+    }
+
+    const enabled =
+      requiredForBatRuns.length > 0 || optionalForBatRuns.length > 0;
+
+    await updateMatchRules({
+      matchId,
+
+      body: {
+        preset: matchRulesConfiguration.preset,
+
+        overrides: {
+          ...matchRulesConfiguration.overrides,
+
+          wagonWheel: {
+            ...matchRulesConfiguration.overrides.wagonWheel,
+
+            enabled,
+            requiredForBatRuns,
+            optionalForBatRuns,
+
+            inputMode: "FIELD_ZONE",
+          },
+        },
+      },
+    }).unwrap();
+  }
+
+  async function handleToggleRunningRuns(enabled: boolean) {
+    if (!wagonWheelRules || isUpdatingMatchRules) {
+      return;
+    }
+
+    const requiredForBatRuns = wagonWheelRules.requiredForBatRuns.filter(
+      (run) => !RUNNING_RUNS.includes(run),
+    );
+
+    const optionalForBatRuns = replaceRunGroup(
+      wagonWheelRules.optionalForBatRuns,
+      RUNNING_RUNS,
+      enabled,
+    );
+
+    const affectsCurrentDelivery =
+      !enabled &&
+      pendingWagonWheelRuns !== null &&
+      RUNNING_RUNS.includes(pendingWagonWheelRuns);
+
+    setSyncStatus("saving");
+
+    try {
+      await saveWagonWheelSettings({
+        requiredForBatRuns,
+        optionalForBatRuns,
+      });
+
+      /*
+       * Example:
+       *
+       * User scored 2
+       * → Wagon Wheel opened
+       * → user turned OFF 1s, 2s & 3s
+       *
+       * Save the setting first, then record the
+       * current 2 without a wagonWheel fieldZone.
+       */
+      if (affectsCurrentDelivery && pendingWagonWheelRuns !== null) {
+        await recordRuns(pendingWagonWheelRuns);
+
+        return;
+      }
+
+      setSyncMessage(
+        enabled
+          ? "Wagon wheel enabled for 1s, 2s & 3s"
+          : "Wagon wheel disabled for 1s, 2s & 3s",
+      );
+
+      setSyncStatus("synced");
+
+      setShortcutScreen(null);
+
+      window.setTimeout(() => {
+        setSyncStatus("idle");
+      }, 1200);
+    } catch (error) {
+      console.error("Failed to update wagon wheel preference:", error);
+
+      setSyncMessage("Could not update wagon wheel preference.");
+
+      setSyncStatus("error");
+    }
+  }
+
+  async function handleToggleBoundaries(enabled: boolean) {
+    if (!wagonWheelRules || isUpdatingMatchRules) {
+      return;
+    }
+
+    const optionalForBatRuns = wagonWheelRules.optionalForBatRuns.filter(
+      (run) => !BOUNDARY_RUNS.includes(run),
+    );
+
+    const requiredForBatRuns = replaceRunGroup(
+      wagonWheelRules.requiredForBatRuns,
+      BOUNDARY_RUNS,
+      enabled,
+    );
+
+    const affectsCurrentDelivery =
+      !enabled &&
+      pendingWagonWheelRuns !== null &&
+      BOUNDARY_RUNS.includes(pendingWagonWheelRuns);
+
+    setSyncStatus("saving");
+
+    try {
+      await saveWagonWheelSettings({
+        requiredForBatRuns,
+        optionalForBatRuns,
+      });
+
+      /*
+       * Example:
+       *
+       * User scored 6
+       * → Wagon Wheel opened
+       * → user turned OFF 4s & 6s
+       *
+       * Save rules first, then record that same
+       * six without wagon wheel direction.
+       */
+      if (affectsCurrentDelivery && pendingWagonWheelRuns !== null) {
+        await recordRuns(pendingWagonWheelRuns);
+
+        return;
+      }
+
+      setSyncMessage(
+        enabled
+          ? "Wagon wheel enabled for 4s & 6s"
+          : "Wagon wheel disabled for 4s & 6s",
+      );
+
+      setSyncStatus("synced");
+
+      window.setTimeout(() => {
+        setSyncStatus("idle");
+      }, 1200);
+    } catch (error) {
+      console.error("Failed to update wagon wheel preference:", error);
+
+      setSyncMessage("Could not update wagon wheel preference.");
+
+      setSyncStatus("error");
+    }
+  }
 
   async function recordRuns(batRuns: number, fieldZone?: FieldZone) {
     if (!state || !matchId || isRecording) return;
@@ -227,13 +457,26 @@ export default function ScoringPage() {
   }
 
   function handleRuns(batRuns: number) {
-    const settings = matchData?.match.scoringSettings;
-    const requiresWagonWheel =
-      settings?.wagonWheelEnabled === true &&
-      settings.wagonWheelForRuns.includes(batRuns);
+    /*
+     * Avoid recording a run before the match-rule configuration
+     * has loaded, otherwise a required wagon wheel could be skipped.
+     */
+    if (!wagonWheelRules) {
+      setSyncMessage("Match rules are still loading. Please try again.");
 
-    if (requiresWagonWheel) {
+      setSyncStatus("error");
+
+      return;
+    }
+
+    const shouldShowWagonWheel =
+      wagonWheelRules.enabled &&
+      (wagonWheelRules.requiredForBatRuns.includes(batRuns) ||
+        wagonWheelRules.optionalForBatRuns.includes(batRuns));
+
+    if (shouldShowWagonWheel) {
       setPendingWagonWheelRuns(batRuns);
+
       return;
     }
 
@@ -373,7 +616,8 @@ export default function ScoringPage() {
       !powerplay?.canDeclare ||
       !powerplay.bowlingCaptainPlayerId ||
       isDeclaringPowerplay
-    ) return;
+    )
+      return;
 
     setSyncStatus("saving");
     try {
@@ -457,7 +701,9 @@ export default function ScoringPage() {
               onClick={handleDeclarePowerplay}
               className="mt-2 rounded-full bg-[#4DFFDE] px-3 py-1 text-[10px] font-black uppercase text-(--color-navy) disabled:opacity-50"
             >
-              {isDeclaringPowerplay ? "Declaring…" : "Declare bowling powerplay"}
+              {isDeclaringPowerplay
+                ? "Declaring…"
+                : "Declare bowling powerplay"}
             </button>
           ) : null}
 
@@ -942,24 +1188,98 @@ export default function ScoringPage() {
           players={matchData?.players}
           state={state}
         />
+
+        <ScoringShortcutsSheet
+          open={shortcutScreen === "MENU"}
+          onClose={() => setShortcutScreen(null)}
+          onSelect={handleShortcutSelect}
+        />
+
+        <MatchOversSheet
+          open={shortcutScreen === "MATCH_OVERS"}
+          configuration={matchRulesConfiguration}
+          currentInningsNumber={state?.inningsNumber}
+          saving={isUpdatingMatchRules}
+          onClose={() => setShortcutScreen("MENU")}
+          onSave={async (body) => {
+            if (!matchId) return;
+
+            await updateMatchRules({
+              matchId,
+              body,
+            }).unwrap();
+
+            setSyncMessage("Match overs updated");
+            setSyncStatus("synced");
+
+            setShortcutScreen(null);
+
+            window.setTimeout(() => {
+              setSyncStatus("idle");
+            }, 1200);
+          }}
+        />
       </div>
 
       <SyncStatusToast status={syncStatus} successMessage={syncMessage} />
+
       <WagonWheelDirectionSheet
         open={pendingWagonWheelRuns !== null}
         batRuns={pendingWagonWheelRuns}
         isRecording={isRecording}
+        isUpdatingSettings={isUpdatingMatchRules}
+        showForRunningRuns={showForRunningRuns}
+        showForBoundaries={showForBoundaries}
         onClose={() => {
-          if (!isRecording) setPendingWagonWheelRuns(null);
+          if (!isRecording && !isUpdatingMatchRules) {
+            setPendingWagonWheelRuns(null);
+          }
         }}
         onSelect={(fieldZone) => {
           if (pendingWagonWheelRuns !== null) {
             void recordRuns(pendingWagonWheelRuns, fieldZone);
           }
         }}
+        onToggleRunningRuns={handleToggleRunningRuns}
+        onToggleBoundaries={handleToggleBoundaries}
       />
+
+      <WagonWheelSettingsSheet
+        open={shortcutScreen === "WAGON_WHEEL"}
+        showForRunningRuns={showForRunningRuns}
+        showForBoundaries={showForBoundaries}
+        saving={isUpdatingMatchRules}
+        onClose={() => setShortcutScreen("MENU")}
+        onToggleRunningRuns={handleToggleRunningRuns}
+        onToggleBoundaries={handleToggleBoundaries}
+      />
+
+      <DialogBottom
+        open={shortcutScreen === "MATCH_RULES"}
+        onClose={() => setShortcutScreen("MENU")}
+      >
+        <div className="flex max-h-[82dvh] min-h-[68dvh] flex-col overflow-hidden bg-(--color-bg-base) rounded-t-xl">
+          <MatchRules
+            onClose={() => {
+              setShortcutScreen(null);
+
+              setSyncMessage("Match rules updated");
+              setSyncStatus("synced");
+
+              window.setTimeout(() => {
+                setSyncStatus("idle");
+              }, 1200);
+            }}
+          />
+        </div>
+      </DialogBottom>
+
       {/* 4. BOTTOM ACTION SHEET TRIGGER */}
-      <button className="h-6 shrink-0 bg-(--color-navy) flex items-center justify-center gap-2 w-full active:bg-[#0a1532] transition-colors safe-bottom pt-0">
+      <button
+        type="button"
+        onClick={() => setShortcutScreen("MENU")}
+        className="h-6 shrink-0 bg-(--color-navy) flex items-center justify-center gap-2 w-full active:bg-[#0a1532] transition-colors safe-bottom pt-0"
+      >
         <span className="font-display text-xs font-bold text-white uppercase tracking-widest">
           Scoring Shortcuts
         </span>

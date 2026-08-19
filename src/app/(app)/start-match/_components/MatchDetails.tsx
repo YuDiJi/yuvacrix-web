@@ -481,12 +481,12 @@ const MatchDetails = ({ teamA, teamB }: { teamA: Team; teamB: Team }) => {
                       />
                     )}
                   />
-                  <button
+                  {/* <button
                     type="button"
                     className="flex items-center gap-0.5 whitespace-nowrap text-[10px] font-bold uppercase tracking-wide text-(--color-brand)"
                   >
                     Power Play <ChevronRight size={11} />
-                  </button>
+                  </button> */}
                 </div>
                 <FieldError message={errors.oversPerBowler?.message} />
               </div>

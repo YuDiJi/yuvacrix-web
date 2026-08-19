@@ -17,7 +17,6 @@ const Matches = ({ isAdmin }: { isAdmin: boolean }) => {
   const tournamentId = params.tournamentId as string;
   const [scheduleMethodOpen, setScheduleMethodOpen] = useState(false);
 
-  console.log(isAdmin);
   return (
     <div className="flex flex-col h-full">
       <div className="pb-20">

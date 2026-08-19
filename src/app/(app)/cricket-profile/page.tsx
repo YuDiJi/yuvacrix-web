@@ -62,7 +62,6 @@ export default function CricketProfilePage() {
   const { data, isLoading, isFetching, isError, error, refetch } =
     useGetMyCricketProfileQuery();
 
-  console.log(data);
   if (isLoading) {
     return <CricketProfileSkeleton />;
   }

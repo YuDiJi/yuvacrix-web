@@ -23,6 +23,8 @@ import {
   useStartInningMutation,
 } from "@/store/api/scoringApi";
 import { S3Image } from "@/components/common/S3Image";
+import { DialogBottom } from "@/components/common/DialogBottom";
+import MatchRules from "@/components/match-rules/MatchRules";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -433,6 +435,8 @@ export default function StartInningsPage() {
   const router = useRouter();
   const matchId = useAppSelector(selectMatchId);
 
+  const [showMatchRules, setShowMatchRules] = useState(false);
+
   // const { data, isLoading } = useGetMatchByIdQuery(
   //   matchId ? { matchId } : skipToken,
   // );
@@ -605,7 +609,7 @@ export default function StartInningsPage() {
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="relative flex min-h-full flex-col bg-(--color-bg-base)">
+    <div className="relative flex h-full min-h-full flex-col bg-(--color-bg-base)">
       {isSecondInnings && state && (
         <div className="overflow-hidden bg-(--color-navy)/90 px-5 py-2 shadow-[0_8px_32px_rgba(27,63,160,0.30)]">
           <div className="whitespace-nowrap animate-marquee">
@@ -617,7 +621,7 @@ export default function StartInningsPage() {
         </div>
       )}
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex flex-col gap-5 p-4">
           {/* Hero card */}
           <div className="relative overflow-hidden rounded-3xl bg-(--color-brand) px-5 py-6 shadow-[0_8px_32px_rgba(27,63,160,0.30)]">
@@ -738,9 +742,8 @@ export default function StartInningsPage() {
       {/* Footer CTA */}
       <div className="safe-bottom shrink-0 flex border-t border-(--color-bg-border) bg-(--color-bg-card)">
         <button
-          onClick={() =>
-            router.push(`/matches/${matchId}/rules`)
-          }
+          onClick={() => setShowMatchRules(true)}
+          // onClick={() => router.push(`/matches/${matchId}/rules`)}
           className="flex flex-1 items-center justify-center gap-2 py-4 font-(family-name:--font-display) text-xs font-black uppercase tracking-[0.06em] text-(--color-text-secondary) transition-colors hover:text-(--color-text-primary)"
         >
           <Pencil size={13} /> Match Rules
@@ -762,14 +765,38 @@ export default function StartInningsPage() {
       </div>
 
       {/* Player Picker Sheet */}
-      <PlayerPickerSheet
-        open={openRole !== null}
-        role={openRole}
-        players={openRole === "bowler" ? bowlingPlayers : batters}
-        disabledIds={openRole === "bowler" ? [] : disabledBatterIds}
-        onPick={handlePick}
-        onClose={() => setOpenRole(null)}
-      />
+      {openRole && (
+        <PlayerPickerSheet
+          open={openRole !== null}
+          role={openRole}
+          players={openRole === "bowler" ? bowlingPlayers : batters}
+          disabledIds={openRole === "bowler" ? [] : disabledBatterIds}
+          onPick={handlePick}
+          onClose={() => setOpenRole(null)}
+        />
+      )}
+
+      {/* {showMatchRules && (
+        <DialogBottom
+          open={showMatchRules}
+          onClose={() => setShowMatchRules(false)}
+        >
+          <div className="flex max-h-[75vh] min-h-[60vh] flex-col overflow-y-auto scrollbar-none">
+            <MatchRules />
+          </div>
+        </DialogBottom>
+      )} */}
+
+      {showMatchRules && (
+        <DialogBottom
+          open={showMatchRules}
+          onClose={() => setShowMatchRules(false)}
+        >
+          <div className="flex max-h-[82dvh] min-h-[68dvh] flex-col overflow-hidden bg-(--color-bg-base) rounded-t-xl">
+            <MatchRules onClose={() => setShowMatchRules(false)} />
+          </div>
+        </DialogBottom>
+      )}
 
       {/* {pendingStyle?.kind === "batting" && (
         <BattingStyleDialog

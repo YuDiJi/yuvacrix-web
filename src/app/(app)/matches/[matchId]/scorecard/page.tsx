@@ -87,7 +87,6 @@ export default function ScorecardPage() {
   // });
 
   const match = scorecard?.match;
-  console.log(match?.isAdmin);
 
   const canManageStream = match?.isAdmin === true;
 
@@ -174,7 +173,7 @@ export default function ScorecardPage() {
               {!scorecard.innings || scorecard.innings.length === 0 ? (
                 <div className="mt-12 flex flex-col items-center gap-2 px-6 text-center">
                   <p className="font-display text-[15px] font-bold uppercase text-(--color-navy)">
-                    Scorecard not started yet
+                    Match not started yet
                   </p>
                   <p className="text-meta">Check back once the match begins.</p>
                 </div>

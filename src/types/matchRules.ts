@@ -1,3 +1,7 @@
+// =============================================================================
+// Match Rules - Domain Enums
+// =============================================================================
+
 export type MatchRulesPresetKey =
   | "LIMITED_OVERS_STANDARD"
   | "T20_STANDARD"
@@ -7,14 +11,28 @@ export type MatchRulesPresetKey =
 
 export type MatchRulesSourceLevel = "PRESET" | "TOURNAMENT" | "ROUND" | "MATCH";
 
+export type CatchStrikePolicy =
+  | "NEW_BATTER_ON_STRIKE"
+  | "FOLLOW_COMPLETED_RUNS";
+
+export type WagonWheelInputMode = "FIELD_ZONE";
+
+// =============================================================================
+// Preset Reference
+// =============================================================================
+
 export type MatchRulesPresetReference = {
   key: MatchRulesPresetKey;
   version: number;
 };
 
+// =============================================================================
+// Rule Snapshot
+// =============================================================================
+
 export type MatchRulesSnapshot = {
   schemaVersion: 1;
-  preset: MatchRulesPresetReference;
+
   format: {
     inningsPerTeam: 1;
     oversPerInnings: number;
@@ -22,92 +40,214 @@ export type MatchRulesSnapshot = {
     playingPlayers: number | null;
     wicketsToEndInnings: number | null;
   };
+
   bowling: {
     maxOversPerBowler: number;
     consecutiveOversAllowed: boolean;
     minimumDistinctBowlers: number | null;
     additionalOverBowlerLimit: number | null;
   };
+
   extras: {
-    wide: { enabled: boolean; runs: number; countsAsLegalDelivery: boolean };
+    wide: {
+      enabled: boolean;
+      runs: number;
+      countsAsLegalDelivery: boolean;
+    };
+
     noBall: {
       enabled: boolean;
       runs: number;
       countsAsLegalDelivery: boolean;
       freeHitEnabled: boolean;
     };
+
     byesEnabled: boolean;
     legByesEnabled: boolean;
   };
+
   batting: {
     rotateStrikeOnOddRuns: boolean;
     rotateStrikeAtOverEnd: boolean;
-    catchStrikePolicy: "NEW_BATTER_ON_STRIKE" | "FOLLOW_COMPLETED_RUNS";
+    catchStrikePolicy: CatchStrikePolicy;
     lastBatterAllowed: boolean;
     retiredBatterCanReturn: boolean;
   };
-  powerplays: Array<{
-    type: "BOWLING_TARGET_POWERPLAY";
-    version: 1;
-    enabled: boolean;
-    allowedSelections: number;
-    selectionAuthority: "BOWLING_CAPTAIN";
-    targetRuns: number;
-    successOutcome: "KEEP_RUNS_PLUS_BONUS" | "BONUS_REPLACES_RUNS";
-    successBonusRuns: number;
-    failureOutcome: "ZERO_OVER_RUNS" | "KEEP_RUNS";
-    endOverWhenTargetReached: boolean;
-  }>;
+
   wagonWheel: {
     enabled: boolean;
     requiredForBatRuns: number[];
     optionalForBatRuns: number[];
-    inputMode: "FIELD_ZONE";
+    inputMode: WagonWheelInputMode;
   };
-  source: { levels: MatchRulesSourceLevel[] };
+
+  /**
+   * Present on resolved match configurations.
+   *
+   * Preset examples in the API documentation don't show `source`,
+   * while resolved match snapshots do, so keep this optional so the
+   * same snapshot type can safely represent both responses.
+   */
+  source?: {
+    levels: MatchRulesSourceLevel[];
+  };
+};
+
+// =============================================================================
+// Overrides
+// =============================================================================
+
+/**
+ * IMPORTANT:
+ *
+ * Do not use:
+ *
+ * Partial<MatchRulesSnapshot["format"]>
+ *
+ * because that would allow `inningsPerTeam` to be sent as an override,
+ * while the current API contract does not allow it.
+ */
+export type MatchRulesFormatOverrides = {
+  oversPerInnings?: number;
+  ballsPerOver?: number;
+  playingPlayers?: number | null;
+  wicketsToEndInnings?: number | null;
+};
+
+export type MatchRulesBowlingOverrides = {
+  maxOversPerBowler?: number;
+  consecutiveOversAllowed?: boolean;
+  minimumDistinctBowlers?: number | null;
+  additionalOverBowlerLimit?: number | null;
+};
+
+export type MatchRulesExtrasOverrides = {
+  wide?: {
+    enabled?: boolean;
+    runs?: number;
+    countsAsLegalDelivery?: boolean;
+  };
+
+  noBall?: {
+    enabled?: boolean;
+    runs?: number;
+    countsAsLegalDelivery?: boolean;
+    freeHitEnabled?: boolean;
+  };
+
+  byesEnabled?: boolean;
+  legByesEnabled?: boolean;
+};
+
+export type MatchRulesBattingOverrides = {
+  rotateStrikeOnOddRuns?: boolean;
+  rotateStrikeAtOverEnd?: boolean;
+  catchStrikePolicy?: CatchStrikePolicy;
+  lastBatterAllowed?: boolean;
+  retiredBatterCanReturn?: boolean;
+};
+
+export type MatchRulesWagonWheelOverrides = {
+  enabled?: boolean;
+  requiredForBatRuns?: number[];
+  optionalForBatRuns?: number[];
+  inputMode?: WagonWheelInputMode;
 };
 
 export type MatchRulesOverrides = {
-  format?: Partial<MatchRulesSnapshot["format"]>;
-  bowling?: Partial<MatchRulesSnapshot["bowling"]>;
-  extras?: {
-    wide?: Partial<MatchRulesSnapshot["extras"]["wide"]>;
-    noBall?: Partial<MatchRulesSnapshot["extras"]["noBall"]>;
-    byesEnabled?: boolean;
-    legByesEnabled?: boolean;
-  };
-  batting?: Partial<MatchRulesSnapshot["batting"]>;
-  powerplays?: MatchRulesSnapshot["powerplays"];
-  wagonWheel?: Partial<MatchRulesSnapshot["wagonWheel"]>;
+  format?: MatchRulesFormatOverrides;
+  bowling?: MatchRulesBowlingOverrides;
+  extras?: MatchRulesExtrasOverrides;
+  batting?: MatchRulesBattingOverrides;
+  wagonWheel?: MatchRulesWagonWheelOverrides;
 };
 
-export type MatchRulesConfiguration = {
-  preset: MatchRulesPresetReference;
-  overrides: MatchRulesOverrides;
-  resolvedSnapshot: MatchRulesSnapshot;
-  snapshotHash: string;
-  lockedAt?: string | null;
-  inheritedSources?: MatchRulesSourceLevel[];
-  inheritedSnapshot?: MatchRulesSnapshot;
-  issues?: Array<{ code: string; path: string; message: string }>;
-  summary?: string;
-  isLocked?: boolean;
+// =============================================================================
+// Issues
+// =============================================================================
+
+export type MatchRulesIssue = {
+  code: string;
+  path: string;
+  message: string;
 };
+
+// =============================================================================
+// Requests
+// =============================================================================
 
 export type UpdateMatchRulesRequest = {
   preset: MatchRulesPresetReference;
   overrides: MatchRulesOverrides;
 };
 
+// =============================================================================
+// Responses
+// =============================================================================
+
+/**
+ * Persisted Match Rules configuration returned by:
+ *
+ * GET /matches/:matchId/rules
+ * PUT /matches/:matchId/rules
+ */
+export type MatchRulesConfiguration = {
+  preset: MatchRulesPresetReference;
+  overrides: MatchRulesOverrides;
+
+  resolvedSnapshot: MatchRulesSnapshot;
+
+  snapshotHash: string;
+
+  inheritedSources: MatchRulesSourceLevel[];
+
+  issues: MatchRulesIssue[];
+
+  isLocked: boolean;
+};
+
+/**
+ * Dry-run validation result.
+ *
+ * The new API documentation does not guarantee snapshotHash or
+ * inheritedSources on /rules/validate, so this should not incorrectly
+ * be typed as MatchRulesConfiguration.
+ */
+export type MatchRulesValidationResult = {
+  preset: MatchRulesPresetReference;
+  overrides: MatchRulesOverrides;
+
+  resolvedSnapshot: MatchRulesSnapshot;
+
+  issues: MatchRulesIssue[];
+
+  isLocked: boolean;
+};
+
+// =============================================================================
+// Presets
+// =============================================================================
+
 export type MatchRulesPreset = {
   key: MatchRulesPresetKey;
   version: number;
   snapshot: MatchRulesSnapshot;
-  summary: string;
 };
 
+// =============================================================================
+// Tournament Rule Propagation
+// =============================================================================
+
+/**
+ * These fields belong to the existing tournament match-rule integration.
+ *
+ * The newly supplied Match Rules document doesn't document the tournament
+ * endpoints, so this contract is being preserved rather than inferred or
+ * removed.
+ */
 export type RulesPropagationResult = {
   configuration: MatchRulesConfiguration;
+
   affectedUnlockedFixtures: number;
   affectedUnlockedMatches: number;
   skippedLockedMatches: number;
