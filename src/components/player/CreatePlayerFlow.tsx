@@ -11,12 +11,9 @@ import { selectUser } from "@/store/auth/authSelectors";
 import {
   useCreatePlayerMutation,
   useLazySearchPlayerMobileQuery,
-} from "@/store/api/cricket/playerApi";
-import {
-  useAddTeamMemberMutation,
-  useRemoveTeamMemberMutation,
-} from "@/store/api/cricket/teamApi";
-import type { Player } from "@/types/cricket/player";
+} from "@/store/api/playerApi";
+
+import type { Player } from "@/types/player";
 
 import MobileSearchForm from "./MobileSearchForm";
 import CreatePlayerForm from "./CreatePlayerForm";
@@ -25,28 +22,48 @@ import CreatePlayerCard from "./CreatePlayerCard";
 type Step = "SEARCH_MOBILE" | "CREATE_PLAYER";
 
 type CreatePlayerFlowProps = {
-  teamId?: string | null;
+  onAddPlayer: (player: Player) => boolean | Promise<boolean>;
+
+  onRemovePlayer?: (player: Player) => void | Promise<void>;
+
   onDone: (players: Player[]) => void;
+
   manualAddPath?: string;
+
   createdSource?:
     | "MATCH_SCORING"
     | "TEAM_MANAGEMENT"
     | "TOURNAMENT_REGISTRATION";
+
   doneLabel?: (count: number) => string;
+
+  isAddingPlayer?: boolean;
+
+  helperText?: string;
+
+  addedPlayers?: Player[];
 };
 
 export function CreatePlayerFlow({
-  teamId,
+  onAddPlayer,
+  onRemovePlayer,
   onDone,
   manualAddPath,
   createdSource = "MATCH_SCORING",
   doneLabel,
+  isAddingPlayer,
+  helperText = "Players are added to the team immediately.",
+  addedPlayers,
 }: CreatePlayerFlowProps) {
   const router = useRouter();
   const user = useAppSelector(selectUser);
 
   const [step, setStep] = useState<Step>("SEARCH_MOBILE");
   const [players, setPlayers] = useState<Player[]>([]);
+  const isControlled = addedPlayers !== undefined;
+
+  const currentPlayers = isControlled ? addedPlayers : players;
+
   const [mobile, setMobile] = useState("");
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
@@ -56,12 +73,6 @@ export function CreatePlayerFlow({
 
   const [createPlayer, { isLoading: isCreatingPlayer }] =
     useCreatePlayerMutation();
-
-  const [addTeamMember, { isLoading: isAddingTeam }] =
-    useAddTeamMemberMutation();
-
-  const [removeTeamMember, { isLoading: isRemoving }] =
-    useRemoveTeamMemberMutation();
 
   const [removingPlayerId, setRemovingPlayerId] = useState<string | null>(null);
 
@@ -73,25 +84,24 @@ export function CreatePlayerFlow({
   }
 
   async function addToList(player: Player) {
-    if (players.some((p) => p.id === player.id)) {
+    if (currentPlayers.some((p) => p.id === player.id)) {
       setError("This player is already in your list.");
-      return;
-    }
-
-    if (!teamId) {
-      setError("Team ID not found.");
       return;
     }
 
     setError("");
 
     try {
-      await addTeamMember({
-        teamId,
-        body: { playerId: player.id },
-      }).unwrap();
+      const isAdded = await onAddPlayer(player);
 
-      setPlayers((prev) => [...prev, player]);
+      if (!isAdded) {
+        return;
+      }
+
+      if (!isControlled) {
+        setPlayers((prev) => [...prev, player]);
+      }
+
       resetFlow();
     } catch (err) {
       const message =
@@ -177,22 +187,20 @@ export function CreatePlayerFlow({
     }
   }
 
-  async function handleRemovePlayer(playerId: string) {
-    if (!teamId) {
-      setError("Team ID not found.");
+  async function handleRemovePlayer(player: Player) {
+    if (!onRemovePlayer) {
       return;
     }
 
     setError("");
-    setRemovingPlayerId(playerId);
+    setRemovingPlayerId(player.id);
 
     try {
-      await removeTeamMember({
-        teamId,
-        playerId,
-      }).unwrap();
+      await onRemovePlayer(player);
 
-      setPlayers((prev) => prev.filter((player) => player.id !== playerId));
+      if (!isControlled) {
+        setPlayers((prev) => prev.filter((item) => item.id !== player.id));
+      }
     } catch (err) {
       const message =
         err &&
@@ -202,7 +210,7 @@ export function CreatePlayerFlow({
         err.data !== null &&
         "message" in err.data
           ? String(err.data.message)
-          : "Failed to remove player from team.";
+          : "Failed to remove player.";
 
       setError(message);
     } finally {
@@ -216,31 +224,34 @@ export function CreatePlayerFlow({
   const primaryAction =
     step === "SEARCH_MOBILE" ? handleSearch : handleCreatePlayer;
 
-  const primaryLoading = isSearching || isCreatingPlayer || isAddingTeam;
+  const primaryLoading = isSearching || isCreatingPlayer || isAddingPlayer;
 
   return (
     <div className="h-full bg-(--color-bg-base)">
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 pt-5">
-        <p className="mt-1 text-xs text-(--color-text-muted)">
-          Players are added to the team immediately.
-        </p>
-        {players.length > 0 && (
+        <p className="mt-1 text-xs text-(--color-text-muted)">{helperText}</p>
+        {currentPlayers.length > 0 && (
           <div>
             <div className="mb-2 flex items-center justify-between px-0.5">
               <div className="flex items-center gap-2">
                 <Users size={14} className="text-(--color-brand)" />
                 <p className="text-section-label">
-                  Recently Added ({players.length})
+                  Recently Added ({currentPlayers.length})
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col gap-2 rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-3 shadow-(--shadow-card)">
-              {players.map((player) => (
+              {currentPlayers.map((player) => (
                 <CreatePlayerCard
                   key={player.id}
                   player={player}
-                  onRemove={() => handleRemovePlayer(player.id)}
+                  // onRemove={() => handleRemovePlayer(player.id)}
+                  onRemove={
+                    onRemovePlayer
+                      ? () => handleRemovePlayer(player)
+                      : undefined
+                  }
                   isRemoving={removingPlayerId === player.id}
                 />
               ))}
@@ -310,17 +321,17 @@ export function CreatePlayerFlow({
           {primaryLabel}
         </Button>
 
-        {players.length > 0 && (
+        {currentPlayers.length > 0 && (
           <Button
             size="sm"
             fullWidth
             variant="secondary"
-            onClick={() => onDone(players)}
+            onClick={() => onDone(currentPlayers)}
           >
             {doneLabel
-              ? doneLabel(players.length)
-              : `Done — ${players.length} Player${
-                  players.length > 1 ? "s" : ""
+              ? doneLabel(currentPlayers.length)
+              : `Done — ${currentPlayers.length} Player${
+                  currentPlayers.length > 1 ? "s" : ""
                 } added to Team`}
           </Button>
         )}

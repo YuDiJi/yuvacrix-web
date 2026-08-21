@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, MapPin, ChevronRight, Check } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { useCreatePlayerMutation } from "@/store/api/cricket/playerApi";
+import { useCreatePlayerMutation } from "@/store/api/playerApi";
 import { useGetMeQuery } from "@/store/api/authApi";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

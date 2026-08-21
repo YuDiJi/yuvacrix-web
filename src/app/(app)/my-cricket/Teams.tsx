@@ -6,13 +6,13 @@ import { Users } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { TeamCard } from "@/components/cricket/team/TeamCard";
-import { useGetMyTeamsOverviewQuery } from "@/store/api/cricket/teamApi";
+import { useGetMyTeamsOverviewQuery } from "@/store/api/cricket/cricketTeamApi";
 
 import type {
-  Team,
   TeamOverviewFilter,
   TeamsOverviewPagination,
 } from "@/types/cricket/team";
+import { Team } from "@/types/team";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

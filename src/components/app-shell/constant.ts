@@ -43,14 +43,24 @@ type DrawerSection = {
 
 // ─── Nav Config ───────────────────────────────────────────────────────────────
 
-export const bottomNav = [
+export const cricketBottomNav = [
   { label: "Home", icon: Home, href: "/home" },
   // { label: "Start Match", icon: PlayCircle, href: "/start-match" },
   { label: "My Cricket", icon: Trophy, href: "/my-cricket", hasLive: true },
   { label: "More", icon: MoreHorizontal, href: null },
 ] as const;
+export const volleyballBottomNav = [
+  { label: "Home", icon: Home, href: "/volleyball/home" },
+  {
+    label: "My Volleyball",
+    icon: Trophy,
+    href: "/my-volleyball",
+    hasLive: true,
+  },
+  { label: "More", icon: MoreHorizontal, href: null },
+] as const;
 
-export const drawerSections: DrawerSection[] = [
+export const cricketDrawerSections: DrawerSection[] = [
   {
     title: "Main",
     items: [
@@ -124,6 +134,93 @@ export const drawerSections: DrawerSection[] = [
         href: "/terms-of-service",
       },
       // { label: "LogOut", icon: LogOut, danger: true },
+      {
+        label: "LogOut",
+        icon: LogOut,
+        href: "/",
+        danger: true,
+        action: "logout",
+      },
+    ],
+  },
+];
+export const volleyballDrawerSections: DrawerSection[] = [
+  {
+    title: "Main",
+    items: [
+      {
+        label: "Home",
+        icon: Home,
+        href: "/volleyball/home",
+      },
+      {
+        label: "My Volleyball",
+        icon: ShieldCheck,
+        href: "/volleyball/my-volleyball",
+      },
+      {
+        label: "Start a Match",
+        icon: PlayCircle,
+        href: "/volleyball/matches/create",
+      },
+      {
+        label: "Create team",
+        icon: PlayCircle,
+        href: "/volleyball/teams/create",
+      },
+      {
+        label: "Tournaments",
+        icon: Trophy,
+        href: "/volleyball/tournaments",
+      },
+    ],
+  },
+
+  {
+    title: "Volleyball",
+    items: [
+      {
+        label: "My Performance",
+        icon: BarChart3,
+        href: "/volleyball/my-performance",
+      },
+      {
+        label: "My Awards",
+        icon: Award,
+        href: "/volleyball/awards",
+      },
+    ],
+  },
+
+  {
+    title: "Profile",
+    items: [
+      {
+        label: "My Profile",
+        icon: User,
+        href: "/profile",
+      },
+    ],
+  },
+
+  {
+    title: "More",
+    items: [
+      {
+        label: "About Us",
+        icon: Info,
+        href: "/about-us",
+      },
+      {
+        label: "Contact Us",
+        icon: Contact,
+        href: "/contact-us",
+      },
+      {
+        label: "Terms of Service",
+        icon: ScrollText,
+        href: "/terms-of-service",
+      },
       {
         label: "LogOut",
         icon: LogOut,

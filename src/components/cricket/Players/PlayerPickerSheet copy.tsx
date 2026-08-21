@@ -1,5 +1,5 @@
 import { cn } from "@/lib/cn";
-import { BattingStyle, BowlingStyle } from "@/types/cricket/player";
+import { BattingStyle, BowlingStyle } from "@/types/player";
 import { Check, ChevronRight, Search, Users, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "../../common/Button";

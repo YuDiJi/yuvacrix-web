@@ -1,7 +1,7 @@
 import { Users, Tv, Check, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useRouter } from "next/navigation";
-import { Team } from "@/types/cricket/team";
+import { Team } from "@/types/team";
 import { S3Image } from "@/components/common/S3Image";
 
 type TeamSelectionProps = {

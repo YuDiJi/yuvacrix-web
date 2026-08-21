@@ -17,7 +17,7 @@ import { useAppSelector } from "@/store/hooks";
 import { selectMatchId } from "@/store/startMatch/selectors";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useGetMatchByIdQuery } from "@/store/api/cricket/matchApi";
-import { BattingStyle, BowlingStyle } from "@/types/cricket/player";
+import { BattingStyle, BowlingStyle } from "@/types/player";
 import {
   useGetScoringStateQuery,
   useStartInningMutation,

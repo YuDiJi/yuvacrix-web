@@ -1,6 +1,9 @@
 import { cn } from "@/lib/cn";
 import Link from "next/link";
-import { bottomNav } from "./constant";
+import { cricketBottomNav, volleyballBottomNav } from "./constant";
+import { useAppSelector } from "@/store/hooks";
+import { selectActiveSport } from "@/store/sport/selectors";
+import { SPORT_TYPES } from "@/types/sport";
 
 export default function BottomNav({
   pathname,
@@ -11,6 +14,13 @@ export default function BottomNav({
   onMoreClick: () => void;
   drawerOpen: boolean;
 }) {
+  const activeSport = useAppSelector(selectActiveSport);
+
+  const bottomNav =
+    activeSport === SPORT_TYPES.VOLLEYBALL
+      ? volleyballBottomNav
+      : cricketBottomNav;
+
   return (
     // <nav className="safe-bottom absolute bottom-0 left-0 right-0 z-30 border-t border-(--color-bg-border) bg-white/97 backdrop-blur-2xl">
     <nav className="safe-bottom fixed bottom-0 left-1/2 right-auto z-50 w-full -translate-x-1/2 border-t border-(--color-bg-border) bg-white/97 backdrop-blur-2xl md:max-w-107.5">

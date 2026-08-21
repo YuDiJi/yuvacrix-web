@@ -14,7 +14,7 @@ import {
   setMatchContext,
 } from "@/store/startMatch/startMatchSlice";
 
-import type { Team } from "@/types/cricket/team";
+import type { Team } from "@/types/team";
 import type {
   MatchOverviewFilter,
   Match,

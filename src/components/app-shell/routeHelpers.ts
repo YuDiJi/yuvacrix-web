@@ -1,8 +1,14 @@
-// routeHelpers.ts
+// src/components/app-shell/routeHelpers.ts
 
-import { drawerSections, bottomNav } from "./constant";
+import { volleyballBottomNav, cricketBottomNav } from "./constant";
+import { SPORT_TYPES, SportType } from "@/types/sport";
 
-export function isBottomNavRoute(pathname: string) {
+export function isBottomNavRoute(pathname: string, activeSport: SportType) {
+  const bottomNav =
+    activeSport === SPORT_TYPES.VOLLEYBALL
+      ? volleyballBottomNav
+      : cricketBottomNav;
+
   return bottomNav.some(
     (item) =>
       item.href &&

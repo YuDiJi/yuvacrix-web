@@ -11,6 +11,7 @@ import {
   selectTeamB,
 } from "@/store/startMatch/selectors";
 import { getRouteConfig } from "./config/getRouteConfig";
+import { selectActiveSport } from "@/store/sport/selectors";
 
 function Header({
   onMenuClick,
@@ -20,7 +21,9 @@ function Header({
   pathname: string;
 }) {
   const router = useRouter();
-  const showBottomNav = isBottomNavRoute(pathname);
+  const activeSport = useAppSelector(selectActiveSport);
+  const showBottomNav =
+    activeSport !== null && isBottomNavRoute(pathname, activeSport);
 
   const teamA = useAppSelector(selectTeamA);
   const teamB = useAppSelector(selectTeamB);

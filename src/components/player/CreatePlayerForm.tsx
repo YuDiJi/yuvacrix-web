@@ -11,12 +11,12 @@ const CreatePlayerForm = ({
   setFullName: (fullName: string) => void;
 }) => {
   return (
-    <div className="bg-white p-4 rounded-xl shadow-sm border-l-2 border-red-500 relative">
+    <div className="relative rounded-xl border border-(--color-bg-border) bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
         Enter a valid Mobile Number
       </label>
       <div className="flex items-center gap-3">
-        <Phone size={16} className="text-blue-600" />
+        <Phone size={16} className="text-(--color-brand)" />
         <p className="flex-1 outline-none text-base text-slate-800 font-medium">
           {mobile}
         </p>
