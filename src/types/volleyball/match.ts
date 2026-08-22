@@ -53,14 +53,22 @@ export interface GetVolleyballMatchRulePresetsResponse {
   presets: VolleyballMatchRulePresetItem[];
 }
 
+export const VOLLEYBALL_MATCH_FORMAT_TYPES = {
+  BEST_OF: "BEST_OF",
+  FIXED_SETS: "FIXED_SETS",
+} as const;
+
+export type VolleyballMatchFormatType =
+  (typeof VOLLEYBALL_MATCH_FORMAT_TYPES)[keyof typeof VOLLEYBALL_MATCH_FORMAT_TYPES];
+
 export interface VolleyballMatchRulesOverrides {
-  formatType?: VolleyballRuleFormatType;
+  formatType: VolleyballMatchFormatType;
 
   maxSets?: number | null;
   totalSets?: number | null;
+  setsToWin?: number | null;
 
   normalSetPoints?: number;
-
   decidingSetPoints?: number | null;
 
   winByMargin?: number;
@@ -69,7 +77,18 @@ export interface VolleyballMatchRulesOverrides {
 export interface CreateVolleyballMatchRules {
   presetKey: VolleyballMatchRulePreset;
 
+  customRules?: VolleyballMatchRulesOverrides;
+
+  /**
+   * Backend-supported alias.
+   * Prefer customRules in frontend code.
+   */
   overrides?: VolleyballMatchRulesOverrides;
+}
+
+export interface CreateVolleyballMatchRules {
+  presetKey: VolleyballMatchRulePreset;
+  customRules?: VolleyballMatchRulesOverrides;
 }
 
 export interface CreateVolleyballMatchDto {

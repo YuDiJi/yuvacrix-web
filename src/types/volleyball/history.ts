@@ -1,5 +1,6 @@
 import type { VolleyballPointType } from "@/types/volleyball/scoring";
 import type { VolleyballSet } from "@/types/volleyball/set";
+import { VolleyballMatchStatus } from "./match";
 
 export const VOLLEYBALL_EVENT_TYPES = {
   RALLY: "RALLY",
@@ -118,4 +119,41 @@ export interface UndoVolleyballEventResponse {
   set: VolleyballSet;
 
   match: VolleyballUndoMatchState;
+}
+
+export interface UndoLastVolleyballEventRequest {
+  clientEventId: string;
+}
+
+export interface UndoLastVolleyballEventResponse {
+  event: {
+    id: string;
+    sequenceNumber: number;
+    eventType: "UNDO";
+
+    targetEventId: string;
+    targetEventType: string;
+    targetSequenceNumber: number;
+
+    isRevoked: boolean;
+
+    createdAt: string;
+  };
+
+  set: VolleyballSet;
+
+  match: {
+    id: string;
+
+    status: VolleyballMatchStatus;
+
+    teamASetsWon: number;
+    teamBSetsWon: number;
+
+    winnerTeamId: string | null;
+
+    isTie: boolean;
+
+    completedAt: string | null;
+  };
 }

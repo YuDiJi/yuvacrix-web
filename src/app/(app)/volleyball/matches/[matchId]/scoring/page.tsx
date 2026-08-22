@@ -139,6 +139,9 @@ export default function VolleyballScoringPage() {
   const searchParams = useSearchParams();
 
   const matchId = params.matchId as string;
+  const tournamentId = searchParams.get("tournamentId");
+
+  const fixtureId = searchParams.get("fixtureId");
 
   const setIdFromRoute = searchParams.get("setId");
 
@@ -189,6 +192,7 @@ export default function VolleyballScoringPage() {
     data: currentSet,
     isLoading: isSetLoading,
     isError: isSetError,
+    refetch: refetchCurrentSet,
   } = useGetCurrentVolleyballSetQuery({
     matchId,
   });
@@ -214,25 +218,40 @@ export default function VolleyballScoringPage() {
 
   useEffect(() => {
     /*
-     * Explicit route set wins.
-     * Important for Set 2+.
+     * Route set is authoritative.
+     *
+     * When Set 2+ has just started, `currentSet`
+     * can temporarily still contain the previous
+     * cached set.
      */
-    if (setIdFromRoute && sets?.length) {
-      const routeSet = sets.find((set) => set.id === setIdFromRoute);
-
-      if (routeSet) {
-        setLiveSet(routeSet);
-
-        setCompletedSet(
-          routeSet.status === VOLLEYBALL_SET_STATUSES.COMPLETED
-            ? routeSet
-            : null,
-        );
-
+    if (setIdFromRoute) {
+      if (!sets?.length) {
         return;
       }
+
+      const routeSet = sets.find((set) => set.id === setIdFromRoute);
+
+      if (!routeSet) {
+        /*
+         * Do NOT fall back to currentSet here.
+         * Wait for the fresh sets request.
+         */
+        return;
+      }
+
+      setLiveSet(routeSet);
+
+      setCompletedSet(
+        routeSet.status === VOLLEYBALL_SET_STATUSES.COMPLETED ? routeSet : null,
+      );
+
+      return;
     }
 
+    /*
+     * Only use currentSet when there is
+     * no explicit setId in the URL.
+     */
     if (currentSet) {
       setLiveSet(currentSet);
 
@@ -388,7 +407,9 @@ export default function VolleyballScoringPage() {
   ========================= */
 
   async function handleUndo() {
-    if (!liveSet || isUndoing || isRecordingRally) {
+    const targetSet = completedSet ?? liveSet;
+
+    if (!targetSet) {
       return;
     }
 
@@ -400,26 +421,39 @@ export default function VolleyballScoringPage() {
 
         body: {
           clientEventId: crypto.randomUUID(),
-
-          expectedSetVersion: liveSet.version,
         },
       }).unwrap();
 
+      /*
+       * Backend-authoritative state.
+       */
       setLiveSet(response.set);
 
-      setCompletedSet(
-        response.set.status === VOLLEYBALL_SET_STATUSES.COMPLETED
-          ? response.set
-          : null,
-      );
+      /*
+       * If a completed set/match was reopened,
+       * remove completion UI.
+       */
+      if (response.set.status === VOLLEYBALL_SET_STATUSES.LIVE) {
+        setCompletedSet(null);
+      }
+
+      if (response.match.status === VOLLEYBALL_MATCH_STATUSES.LIVE) {
+        setCompletedMatch(null);
+
+        setEndMatchOpen(false);
+      }
 
       setUndoOpen(false);
+
+      setError("");
+
+      /*
+       * Still refetch lifecycle resources because
+       * undo may remove a derived pending next-set shell.
+       */
+      await Promise.all([refetchMatch(), refetchSets(), refetchCurrentSet()]);
     } catch (err) {
       setError(extractErrorMessage(err));
-
-      setUndoOpen(false);
-
-      void refetchSets();
     }
   }
 
@@ -493,7 +527,7 @@ export default function VolleyballScoringPage() {
       setCompletedSet(null);
 
       router.replace(
-        `/volleyball/matches/${matchId}/sets/setup?setNumber=${nextSet.setNumber}`,
+        `/volleyball/matches/${matchId}/sets/setup?setNumber=${nextSet.setNumber}&tournamentId=${tournamentId}&fixtureId=${fixtureId}`,
       );
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -502,11 +536,15 @@ export default function VolleyballScoringPage() {
     }
   }
 
+  const isWaitingForRouteSet = Boolean(
+    setIdFromRoute && !sets?.some((set) => set.id === setIdFromRoute),
+  );
+
   /* =========================
      LOADING
   ========================= */
 
-  if (isMatchLoading || isSetLoading || isSetsLoading) {
+  if (isMatchLoading || isSetLoading || isSetsLoading || isWaitingForRouteSet) {
     return (
       <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden bg-(--color-bg-base) p-3">
         <div className="h-14 animate-pulse rounded-2xl bg-(--color-bg-card)" />
@@ -567,7 +605,7 @@ export default function VolleyballScoringPage() {
   ===================================================== */
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-(--color-bg-base)">
+    <div className="relative flex min-h-full flex-col bg-(--color-bg-base)">
       {/* ERROR TOAST */}
 
       {error && (
@@ -724,82 +762,92 @@ export default function VolleyballScoringPage() {
           POINT DIALOG
       ================================= */}
 
-      <VolleyballPointSheet
-        open={pointSheetOpen}
-        teamA={{
-          id: match.teamAId,
-          name: match.teamASnapshot.name,
-          shortName: match.teamASnapshot.shortName,
-          logoUrl: match.teamASnapshot.logoUrl,
-        }}
-        teamB={{
-          id: match.teamBId,
-          name: match.teamBSnapshot.name,
-          shortName: match.teamBSnapshot.shortName,
-          logoUrl: match.teamBSnapshot.logoUrl,
-        }}
-        selectedTeamId={pointTeamId}
-        players={pointPlayers}
-        isSubmitting={isRecordingRally}
-        onChangeTeam={(teamId) => {
-          setPointTeamId(teamId);
-        }}
-        onClose={() => {
-          if (isRecordingRally) {
-            return;
-          }
+      {pointSheetOpen && (
+        <VolleyballPointSheet
+          open={pointSheetOpen}
+          teamA={{
+            id: match.teamAId,
+            name: match.teamASnapshot.name,
+            shortName: match.teamASnapshot.shortName,
+            logoUrl: match.teamASnapshot.logoUrl,
+          }}
+          teamB={{
+            id: match.teamBId,
+            name: match.teamBSnapshot.name,
+            shortName: match.teamBSnapshot.shortName,
+            logoUrl: match.teamBSnapshot.logoUrl,
+          }}
+          selectedTeamId={pointTeamId}
+          players={pointPlayers}
+          isSubmitting={isRecordingRally}
+          onChangeTeam={(teamId) => {
+            setPointTeamId(teamId);
+          }}
+          onClose={() => {
+            if (isRecordingRally) {
+              return;
+            }
 
-          setPointSheetOpen(false);
+            setPointSheetOpen(false);
 
-          setPointTeamId(null);
-        }}
-        onSubmit={submitRally}
-      />
+            setPointTeamId(null);
+          }}
+          onSubmit={submitRally}
+        />
+      )}
 
       {/* SUBSTITUTION */}
 
-      <VolleyballSubstitutionSheet
-        open={substitutionOpen}
-        match={match}
-        liveSet={liveSet}
-        onClose={() => setSubstitutionOpen(false)}
-        onSuccess={(updatedSet) => {
-          setLiveSet(updatedSet);
+      {substitutionOpen && (
+        <VolleyballSubstitutionSheet
+          open={substitutionOpen}
+          match={match}
+          liveSet={liveSet}
+          onClose={() => setSubstitutionOpen(false)}
+          onSuccess={(updatedSet) => {
+            setLiveSet(updatedSet);
 
-          setError("");
-        }}
-      />
+            setError("");
+          }}
+        />
+      )}
 
       {/* LIBERO */}
 
-      <VolleyballLiberoReplacementSheet
-        open={liberoReplacementOpen}
-        match={match}
-        liveSet={liveSet}
-        onClose={() => setLiberoReplacementOpen(false)}
-        onSuccess={(updatedSet) => {
-          setLiveSet(updatedSet);
+      {liberoReplacementOpen && (
+        <VolleyballLiberoReplacementSheet
+          open={liberoReplacementOpen}
+          match={match}
+          liveSet={liveSet}
+          onClose={() => setLiberoReplacementOpen(false)}
+          onSuccess={(updatedSet) => {
+            setLiveSet(updatedSet);
 
-          setError("");
-        }}
-      />
+            setError("");
+          }}
+        />
+      )}
 
       {/* HISTORY */}
 
-      <VolleyballHistorySheet
-        open={historyOpen}
-        match={match}
-        onClose={() => setHistoryOpen(false)}
-      />
+      {historyOpen && (
+        <VolleyballHistorySheet
+          open={historyOpen}
+          match={match}
+          onClose={() => setHistoryOpen(false)}
+        />
+      )}
 
       {/* UNDO */}
 
-      <UndoSheet
-        open={undoOpen}
-        loading={isUndoing}
-        onClose={() => setUndoOpen(false)}
-        onConfirm={() => void handleUndo()}
-      />
+      {undoOpen && (
+        <UndoSheet
+          open={undoOpen}
+          loading={isUndoing}
+          onClose={() => setUndoOpen(false)}
+          onConfirm={() => void handleUndo()}
+        />
+      )}
 
       {/* SET COMPLETE */}
 
@@ -817,13 +865,29 @@ export default function VolleyballScoringPage() {
         <VolleyballEndMatchSheet
           open={endMatchOpen}
           match={completedMatch}
+          isUndoing={isUndoing}
+          onUndoLastPoint={() => {
+            setEndMatchOpen(false);
+
+            setUndoOpen(true);
+          }}
           onClose={() => {
             setEndMatchOpen(false);
 
             router.replace(`/volleyball/matches/${matchId}`);
           }}
-          onFinished={() => {
+          onFinished={(updatedMatch) => {
+            setCompletedMatch(updatedMatch);
+
             setEndMatchOpen(false);
+
+            if (tournamentId) {
+              router.replace(
+                `/volleyball/tournaments/${tournamentId}/fixtures`,
+              );
+
+              return;
+            }
 
             router.replace(`/volleyball/matches/${matchId}`);
           }}

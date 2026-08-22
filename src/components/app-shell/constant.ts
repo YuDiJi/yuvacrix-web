@@ -54,7 +54,7 @@ export const volleyballBottomNav = [
   {
     label: "My Volleyball",
     icon: Trophy,
-    href: "/my-volleyball",
+    href: "/volleyball/my-volleyball",
     hasLive: true,
   },
   { label: "More", icon: MoreHorizontal, href: null },
@@ -169,9 +169,9 @@ export const volleyballDrawerSections: DrawerSection[] = [
         href: "/volleyball/teams/create",
       },
       {
-        label: "Tournaments",
+        label: "Create a Tournaments",
         icon: Trophy,
-        href: "/volleyball/tournaments",
+        href: "/volleyball/tournaments/create",
       },
     ],
   },

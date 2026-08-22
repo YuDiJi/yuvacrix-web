@@ -14,7 +14,7 @@ import {
 
 import { useEffect, useMemo, useState } from "react";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/common/Button";
 import { S3Image } from "@/components/common/S3Image";
@@ -148,10 +148,15 @@ function getTeamLabel(name: string) {
 
 export default function VolleyballRosterPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
 
   const router = useRouter();
 
   const matchId = params.matchId as string;
+
+  const tournamentId = searchParams.get("tournamentId");
+
+  const fixtureId = searchParams.get("fixtureId");
 
   const [activeSide, setActiveSide] = useState<TeamSide>("TEAM_A");
 
@@ -551,6 +556,11 @@ export default function VolleyballRosterPage() {
         matchId,
       }).unwrap();
 
+      if (tournamentId && fixtureId) {
+        router.push(
+          `/volleyball/matches/${matchId}/sets/setup?tournamentId=${tournamentId}&fixtureId=${fixtureId}`,
+        );
+      }
       router.push(`/volleyball/matches/${matchId}/sets/setup`);
     } catch (err) {
       setError(extractErrorMessage(err, "Failed to confirm rosters."));

@@ -5,11 +5,7 @@ import { isBottomNavRoute } from "./routeHelpers";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useHeader } from "@/providers/HeaderProvider";
 import { useAppSelector } from "@/store/hooks";
-import {
-  selectCreatedMatchId,
-  selectTeamA,
-  selectTeamB,
-} from "@/store/startMatch/selectors";
+import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 import { getRouteConfig } from "./config/getRouteConfig";
 import { selectActiveSport } from "@/store/sport/selectors";
 
@@ -27,7 +23,6 @@ function Header({
 
   const teamA = useAppSelector(selectTeamA);
   const teamB = useAppSelector(selectTeamB);
-  const matchId = useAppSelector(selectCreatedMatchId);
 
   const { header } = useHeader();
   const searchParams = useSearchParams();
@@ -52,8 +47,7 @@ function Header({
     header.title ??
     "";
 
-  const isHome = pathname === "/home";
-  const rootRoutes = ["/home", "/my-cricket"];
+  const isHome = pathname === "/home" || pathname === "/volleyball/home";
 
   const showBackButton = config?.showBackButton ?? false;
   // const showNotifications = header.showNotifications;

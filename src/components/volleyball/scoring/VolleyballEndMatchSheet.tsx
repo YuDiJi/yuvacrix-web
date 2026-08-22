@@ -3,6 +3,7 @@
 import {
   Check,
   ChevronRight,
+  RotateCcw,
   Trophy,
   Users,
   Volleyball,
@@ -31,6 +32,10 @@ type Props = {
   onClose: () => void;
 
   onFinished: (match: VolleyballMatch) => void;
+
+  onUndoLastPoint: () => void;
+
+  isUndoing?: boolean;
 };
 
 type PlayerWithTeam = VolleyballMatchRosterPlayer & {
@@ -89,6 +94,8 @@ export function VolleyballEndMatchSheet({
   match,
   onClose,
   onFinished,
+  onUndoLastPoint,
+  isUndoing = false,
 }: Props) {
   const [bestPlayerId, setBestPlayerId] = useState<string | null>(
     match.bestPlayer?.playerId ?? null,
@@ -382,6 +389,41 @@ export function VolleyballEndMatchSheet({
             >
               Save & Finish Match
             </Button>
+          </div>
+
+          <div className="mt-3 border-t border-(--color-bg-border) pt-3">
+            <div className="rounded-2xl bg-(--color-bg-base) px-3 py-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-card) text-(--color-text-secondary)">
+                  <RotateCcw size={16} />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-black text-(--color-text-primary)">
+                    Wrong final point?
+                  </p>
+
+                  <p className="mt-0.5 text-[9px] leading-4 text-(--color-text-muted)">
+                    Undo the match-winning point and continue scoring.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={isSaving || isUndoing}
+                onClick={onUndoLastPoint}
+                className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-(--color-live)/20 bg-(--color-live)/5 text-xs font-black text-(--color-live) disabled:opacity-50"
+              >
+                {isUndoing ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-(--color-live)/25 border-t-(--color-live)" />
+                ) : (
+                  <RotateCcw size={14} />
+                )}
+
+                {isUndoing ? "Undoing..." : "Undo Last Point"}
+              </button>
+            </div>
           </div>
         </div>
       </DialogBottom>

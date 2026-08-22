@@ -150,6 +150,9 @@ export default function VolleyballSetSetupPage() {
   const searchParams = useSearchParams();
 
   const matchId = params.matchId as string;
+  const tournamentId = searchParams.get("tournamentId");
+
+  const fixtureId = searchParams.get("fixtureId");
 
   /*
    * SET 1:
@@ -426,6 +429,11 @@ export default function VolleyballSetSetupPage() {
         }).unwrap();
       }
 
+      if (tournamentId && fixtureId) {
+        router.replace(
+          `/volleyball/matches/${matchId}/scoring?setId=${startedSet.id}&tournamentId=${tournamentId}&fixtureId=${fixtureId}`,
+        );
+      }
       router.replace(
         `/volleyball/matches/${matchId}/scoring?setId=${startedSet.id}`,
       );

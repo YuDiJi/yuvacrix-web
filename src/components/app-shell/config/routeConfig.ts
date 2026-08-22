@@ -16,6 +16,7 @@ export type HeaderBackConfig =
     };
 
 export type RouteConfig = {
+  showHeader?: boolean;
   showBackButton: boolean;
   title?: string;
   back?: HeaderBackConfig;
@@ -280,6 +281,139 @@ export const routeConfig: Record<string, RouteConfig> = {
 
   "/tournaments/[tournamentId]/start-match/select-team": {
     title: "Select Teams",
+    showBackButton: true,
+    back: {
+      type: "history",
+    },
+  },
+
+  // =========================================================
+  // VOLLEYBALL
+  // =========================================================
+
+  "/volleyball/home": {
+    title: "Volleyball",
+    showBackButton: false,
+  },
+
+  "/volleyball/my-volleyball": {
+    title: "My Volleyball",
+    showBackButton: false,
+  },
+
+  "/volleyball/matches/create": {
+    title: "Start a Match",
+    showBackButton: true,
+    back: {
+      type: "route",
+      href: "/volleyball/my-volleyball",
+    },
+  },
+
+  "/volleyball/matches/[matchId]": {
+    title: "Match",
+    showBackButton: true,
+    back: {
+      type: "route",
+      href: "/volleyball/my-volleyball",
+    },
+  },
+
+  "/volleyball/matches/[matchId]/rosters": {
+    title: "Team Rosters",
+    showBackButton: true,
+    back: {
+      type: "history",
+    },
+  },
+
+  "/volleyball/matches/[matchId]/sets/setup": {
+    title: "Set Setup",
+    showBackButton: true,
+    back: {
+      type: "history",
+    },
+  },
+
+  "/volleyball/matches/[matchId]/scoring": {
+    title: "Scoring",
+    showBackButton: true,
+    back: {
+      type: "route",
+      href: "/volleyball/my-volleyball",
+      replace: true,
+    },
+  },
+
+  "/volleyball/teams/create": {
+    title: "Create Team",
+    showBackButton: true,
+    back: {
+      type: "history",
+    },
+  },
+
+  "/volleyball/tournaments/create": {
+    title: "Create Tournament",
+    showBackButton: true,
+    back: {
+      type: "route",
+      href: "/volleyball/my-volleyball?tab=tournaments&filter=all",
+    },
+  },
+
+  "/volleyball/tournaments/[tournamentId]": {
+    title: "Tournament",
+    showBackButton: true,
+    back: {
+      type: "route",
+      href: "/volleyball/my-volleyball?tab=tournaments&filter=all",
+      replace: true,
+    },
+  },
+
+  "/volleyball/tournaments/[tournamentId]/teams": {
+    title: "Teams",
+    showBackButton: true,
+    back: {
+      type: "history",
+    },
+  },
+
+  "/volleyball/tournaments/[tournamentId]/fixtures": {
+    title: "Fixtures",
+    showBackButton: true,
+    back: {
+      type: "history",
+    },
+  },
+
+  "/volleyball/tournaments/[tournamentId]/standings": {
+    title: "Standings",
+    showBackButton: true,
+    back: {
+      type: "history",
+    },
+  },
+
+  "/volleyball/tournaments/[tournamentId]/bracket": {
+    title: "Bracket",
+    showBackButton: true,
+    back: {
+      type: "history",
+    },
+  },
+
+  "/volleyball/my-performance": {
+    title: "My Performance",
+    showBackButton: true,
+    back: {
+      type: "history",
+    },
+  },
+
+  "/volleyball/awards": {
+    title: "My Awards",
     showBackButton: true,
     back: {
       type: "history",

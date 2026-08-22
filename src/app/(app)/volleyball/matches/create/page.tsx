@@ -364,7 +364,7 @@ export default function CreateVolleyballMatchPage() {
           ? {
               presetKey: VOLLEYBALL_MATCH_RULE_PRESETS.CUSTOM,
 
-              overrides: customOverrides,
+              customRules: customOverrides,
             }
           : {
               presetKey: selectedPreset,
