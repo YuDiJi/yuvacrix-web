@@ -1,3 +1,5 @@
+import { SportType } from "./sport";
+
 export type BattingStyle = "RIGHT_HAND_BAT" | "LEFT_HAND_BAT";
 export type BowlingStyle =
   | "RIGHT_ARM_FAST"
@@ -17,6 +19,7 @@ export interface Player {
   fullName: string;
   fullNameLower: string;
   userId: string;
+  activeSport?: SportType;
   ownershipStatus: "GUEST" | "CLAIMED";
   profileImageUrl?: string;
   gender?: "MALE" | "FEMALE" | "OTHER";
@@ -46,6 +49,7 @@ export interface GetPlayerResponse {
 export interface CreatePlayerDto {
   fullName: string;
   fullNameLower?: string;
+  activeSport?: SportType;
   profileImageUrl?: string;
   gender?: string;
   dateOfBirth?: string;

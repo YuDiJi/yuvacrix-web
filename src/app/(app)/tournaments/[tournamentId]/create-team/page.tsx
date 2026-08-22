@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
-import { CreateTeamForm } from "@/components/cricket/team/CreateTeamForm";
-import { useCreateTeamMutation } from "@/store/api/cricket/teamApi";
+import { CreateTeamForm } from "@/components/team/CreateTeamForm";
+import { useCreateTeamMutation } from "@/store/api/teamApi";
 import { useUploadFileMutation } from "@/store/api/uploadApi";
 import { useAppDispatch } from "@/store/hooks";
 import { useAddTeamToTournamentMutation } from "@/store/api/cricket/tournamentTeamApi";
+import { SPORT_TYPES } from "@/types/sport";
 
 export default function CreateTournamentTeam() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function CreateTournamentTeam() {
           const response = await createTeam({
             name: name.trim(),
             city: city.trim(),
-            sportType: "CRICKET",
+            sportType: SPORT_TYPES.CRICKET,
             ...(logoKey && { logoUrl: logoKey }),
           }).unwrap();
 

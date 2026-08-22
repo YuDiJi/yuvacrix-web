@@ -32,7 +32,8 @@ import {
 import { useGetTournamentTeamsQuery } from "@/store/api/cricket/tournamentTeamApi";
 import { useGetTournamentGroupDetailQuery } from "@/store/api/cricket/tournamentGroupApi";
 
-import type { Team } from "@/types/cricket/team";
+import type { Team } from "@/types/team";
+import { SPORT_TYPES } from "@/types/sport";
 
 export default function SelectTournamentTeamPage() {
   const dispatch = useAppDispatch();
@@ -126,7 +127,7 @@ export default function SelectTournamentTeamPage() {
         name: team.teamNameSnapshot,
         shortName: team.teamShortNameSnapshot ?? undefined,
         logoUrl: team.teamLogoSnapshot ?? undefined,
-        sportType: "CRICKET",
+        sportType: SPORT_TYPES.CRICKET,
         memberCount: 0,
         city: undefined,
       }));

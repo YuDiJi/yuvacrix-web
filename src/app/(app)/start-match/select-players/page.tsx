@@ -6,11 +6,7 @@ import { useEffect, useState } from "react";
 // import { useHeader } from "@/providers/HeaderProvider";
 import { UserPlus, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  useGetTeamMembersQuery,
-  useRemoveTeamMemberMutation,
-  // useSetTeamMemberRoleMutation,
-} from "@/store/api/cricket/teamApi";
+
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
@@ -23,6 +19,10 @@ import {
   setTeamBRoles,
 } from "@/store/startMatch/startMatchSlice";
 import { S3Image } from "@/components/common/S3Image";
+import {
+  useGetTeamMembersQuery,
+  useRemoveTeamMemberMutation,
+} from "@/store/api/cricket/cricketTeamApi";
 
 export default function SelectPlayersPage() {
   // const { setHeader } = useHeader();

@@ -16,7 +16,7 @@ import {
   selectMatchId,
   selectLineUpMode,
 } from "@/store/startMatch/selectors";
-import { useGetTeamMembersQuery } from "@/store/api/cricket/teamApi";
+import { useGetTeamMembersQuery } from "@/store/api/cricket/cricketTeamApi";
 import { PlayerList } from "@/components/cricket/Players/Playerlist";
 import { PlayerListItem } from "@/components/cricket/Players/Types";
 import {

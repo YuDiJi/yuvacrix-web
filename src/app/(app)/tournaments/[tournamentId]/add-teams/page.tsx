@@ -3,7 +3,7 @@
 // import { useHeader } from "@/providers/HeaderProvider";
 import { Search, SlidersHorizontal, Plus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useGetOwnedTeamQuery } from "@/store/api/cricket/teamApi";
+import { useGetOwnedTeamQuery } from "@/store/api/teamApi";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 

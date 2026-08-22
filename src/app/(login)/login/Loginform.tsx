@@ -113,7 +113,8 @@ export function LoginForm() {
       dispatch(setCredentials(response));
 
       if (response.user.isProfileCompleted) {
-        router.push("/home");
+        // router.push("/home");
+        router.push("/mode");
       } else {
         router.push("/on-boarding");
       }

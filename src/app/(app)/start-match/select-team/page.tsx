@@ -11,7 +11,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useGetOwnedTeamQuery } from "@/store/api/cricket/teamApi";
+import { useGetOwnedTeamQuery } from "@/store/api/teamApi";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";

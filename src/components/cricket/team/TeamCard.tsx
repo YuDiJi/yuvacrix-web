@@ -3,7 +3,7 @@
 import { ChevronRight, Check } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { S3Image } from "@/components/common/S3Image";
-import type { Team } from "@/types/cricket/team";
+import type { Team } from "@/types/team";
 
 type TeamCardProps = {
   team: Team;

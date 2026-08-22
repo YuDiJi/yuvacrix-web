@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { CreateTeamForm } from "@/components/cricket/team/CreateTeamForm";
-import { useCreateTeamMutation } from "@/store/api/cricket/teamApi";
+import { CreateTeamForm } from "@/components/team/CreateTeamForm";
+import { useCreateTeamMutation } from "@/store/api/teamApi";
 import { useUploadFileMutation } from "@/store/api/uploadApi";
 import { useAppDispatch } from "@/store/hooks";
 import {
@@ -12,6 +12,7 @@ import {
   setTeamA,
   setTeamB,
 } from "@/store/startMatch/startMatchSlice";
+import { SPORT_TYPES } from "@/types/sport";
 
 export default function CreateTeamPage() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function CreateTeamPage() {
           const response = await createTeam({
             name: name.trim(),
             city: city.trim(),
-            sportType: "CRICKET",
+            sportType: SPORT_TYPES.CRICKET,
             ...(logoKey && { logoUrl: logoKey }),
           }).unwrap();
 

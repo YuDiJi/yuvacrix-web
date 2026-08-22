@@ -1,7 +1,7 @@
 import { S3Image } from "@/components/common/S3Image";
 import { cn } from "@/lib/cn";
 import { useGetSignedUrlQuery } from "@/store/api/uploadApi";
-import { Player } from "@/types/cricket/player";
+import { Player } from "@/types/player";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { Trash2 } from "lucide-react";
 import React from "react";

@@ -5,12 +5,7 @@
 import { useEffect, useState } from "react";
 import { UserPlus, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import {
-  useGetTeamDetailQuery,
-  useGetTeamMembersQuery,
-  useRemoveTeamMemberMutation,
-  // useSetTeamMemberRoleMutation,
-} from "@/store/api/cricket/teamApi";
+import { useGetTeamDetailQuery } from "@/store/api/teamApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
@@ -27,6 +22,10 @@ import {
   useAssignTournamentPlayerRolesMutation,
   useGetTeamsRoleSummaryQuery,
 } from "@/store/api/cricket/tournamentTeamApi";
+import {
+  useGetTeamMembersQuery,
+  useRemoveTeamMemberMutation,
+} from "@/store/api/cricket/cricketTeamApi";
 
 export default function PlayersPage() {
   const router = useRouter();

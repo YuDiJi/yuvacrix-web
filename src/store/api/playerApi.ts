@@ -1,5 +1,5 @@
-import { CreatePlayerDto, GetPlayerResponse } from "@/types/cricket/player";
-import { baseApi } from "../baseApi";
+import { CreatePlayerDto, GetPlayerResponse } from "@/types/player";
+import { baseApi } from "./baseApi";
 
 export const playerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({

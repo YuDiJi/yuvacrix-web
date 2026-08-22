@@ -1,7 +1,8 @@
 import { TeamCard } from "@/components/cricket/team/TeamCard";
 import { cn } from "@/lib/cn";
 import { useGetTournamentTeamsQuery } from "@/store/api/cricket/tournamentTeamApi";
-import { Team } from "@/types/cricket/team";
+import { SPORT_TYPES } from "@/types/sport";
+import { Team } from "@/types/team";
 import {
   AlertCircle,
   ChevronRight,
@@ -35,7 +36,7 @@ const Teams = ({ isAdmin }: { isAdmin: boolean }) => {
         name: team.teamNameSnapshot,
         shortName: team.teamShortNameSnapshot ?? undefined,
         logoUrl: team.teamLogoSnapshot ?? undefined,
-        sportType: "CRICKET",
+        sportType: SPORT_TYPES.CRICKET,
         city: undefined,
         memberCount: team.memberCount,
       })) ?? [];

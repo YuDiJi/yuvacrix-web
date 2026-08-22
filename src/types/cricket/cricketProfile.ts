@@ -1,7 +1,7 @@
 // src/types/cricketProfile.ts
 
 import { Match } from "./match";
-import type { BattingStyle, BowlingStyle, PlayerRole } from "./player";
+import type { BattingStyle, BowlingStyle, PlayerRole } from "../player";
 
 export type Nullable<T> = T | null;
 

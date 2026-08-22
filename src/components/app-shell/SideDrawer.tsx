@@ -6,14 +6,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import LogoMark from "./LogoMark";
 import { ChevronRight, X } from "lucide-react";
-import { drawerSections } from "./constant";
+import { cricketDrawerSections, volleyballDrawerSections } from "./constant";
 import Link from "next/link";
 import { selectUser } from "@/store/auth/authSelectors";
-import { useGetPlayerQuery } from "@/store/api/cricket/playerApi";
+import { useGetPlayerQuery } from "@/store/api/playerApi";
 import { resetMatch } from "@/store/startMatch/startMatchSlice";
 import { useGetSignedUrlQuery } from "@/store/api/uploadApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { S3Image } from "../common/S3Image";
+import { selectActiveSport } from "@/store/sport/selectors";
+import { SPORT_TYPES } from "@/types/sport";
 
 export default function SideDrawer({
   open,
@@ -32,6 +34,13 @@ export default function SideDrawer({
   const user = useAppSelector(selectUser);
 
   const { data, isLoading } = useGetPlayerQuery();
+
+  const activeSport = useAppSelector(selectActiveSport);
+
+  const drawerSections =
+    activeSport === SPORT_TYPES.VOLLEYBALL
+      ? volleyballDrawerSections
+      : cricketDrawerSections;
 
   async function handleLogout() {
     try {
@@ -107,13 +116,6 @@ export default function SideDrawer({
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 px-4 py-3">
             <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--color-sky) font-(family-name:--font-display) text-sm font-black text-white shadow-[0_2px_8px_rgba(75,139,255,0.35)]">
               {data?.player?.profileImageUrl ? (
-                // <Image
-                //   src={imageUrl.signedUrl}
-                //   alt={data?.player?.fullName ?? "User Profile Pic"}
-                //   fill
-                //   className="object-cover"
-                //   sizes="40px"
-                // />
                 <S3Image
                   imageKey={data.player.profileImageUrl}
                   alt={data.player.fullName}
@@ -146,6 +148,67 @@ export default function SideDrawer({
               Upgrade
             </span>
           </div>
+        </div>
+
+        <div className="px-4 pt-3">
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              router.push("/mode");
+            }}
+            className={cn(
+              "group relative w-full overflow-hidden rounded-2xl border border-white/10",
+              "bg-linear-to-br from-white/12 via-white/8 to-white/5",
+              "px-3.5 py-3 text-left",
+              "transition-all duration-200",
+              "hover:border-white/20 hover:from-white/16 hover:via-white/10",
+              "active:scale-[0.98]",
+            )}
+          >
+            {/* subtle sport glow */}
+            <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-(--color-brand)/20 blur-2xl" />
+
+            <div className="relative flex items-center gap-3">
+              {/* Sport icon */}
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-(--color-brand) text-white shadow-(--shadow-button)">
+                {activeSport === SPORT_TYPES.VOLLEYBALL ? (
+                  <span className="text-xl">🏐</span>
+                ) : (
+                  <span className="text-xl">🏏</span>
+                )}
+              </div>
+
+              {/* Sport info */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40">
+                    Active Sport
+                  </p>
+
+                  <span className="h-1.5 w-1.5 rounded-full bg-(--color-brand)" />
+                </div>
+
+                <p className="mt-0.5 font-(family-name:--font-display) text-lg font-bold uppercase tracking-wide text-white">
+                  {activeSport === SPORT_TYPES.VOLLEYBALL
+                    ? "Volleyball"
+                    : "Cricket"}
+                </p>
+
+                <p className="mt-0.5 text-[11px] font-medium text-white/45">
+                  Tap to switch sport
+                </p>
+              </div>
+
+              {/* Action */}
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/8 text-white/50 transition-all group-hover:bg-white/12 group-hover:text-white">
+                <ChevronRight
+                  size={16}
+                  className="transition-transform duration-200 group-hover:translate-x-0.5"
+                />
+              </div>
+            </div>
+          </button>
         </div>
 
         {/* Nav sections */}

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { Team } from "@/types/cricket/team";
+import { Team } from "@/types/team";
 import {
   selectTeamACaptain,
   selectTeamAKeeper,
@@ -25,7 +25,7 @@ import {
   selectTournamentGroupId,
 } from "@/store/startMatch/selectors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { useGetTeamDetailQuery } from "@/store/api/cricket/teamApi";
+import { useGetTeamDetailQuery } from "@/store/api/teamApi";
 import { useCreateManualFixtureMutation } from "@/store/api/cricket/tournamentFixtureApi";
 
 import type { MatchType, BallType, PitchType } from "@/types/cricket/match";

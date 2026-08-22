@@ -2,15 +2,13 @@
 
 import { Users, AlertCircle, RefreshCw } from "lucide-react";
 import { useParams } from "next/navigation";
-import {
-  useGetTeamDetailQuery,
-  useGetTeamMembersQuery,
-} from "@/store/api/cricket/teamApi";
+import { useGetTeamDetailQuery } from "@/store/api/teamApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { PlayerList } from "@/components/cricket/Players/Playerlist";
 import { PlayerListSkeleton } from "@/components/common/loaders/Skeletonloader";
 
 import { S3Image } from "@/components/common/S3Image";
+import { useGetTeamMembersQuery } from "@/store/api/cricket/cricketTeamApi";
 
 export default function PlayersPage() {
   const params = useParams();

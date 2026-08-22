@@ -22,7 +22,7 @@ import { cn } from "@/lib/cn";
 import {
   useGetPlayerQuery,
   useUpdatePlayerMutation,
-} from "@/store/api/cricket/playerApi";
+} from "@/store/api/playerApi";
 import { useLogoutMutation } from "@/store/api/authApi";
 import { useUploadFileMutation } from "@/store/api/uploadApi";
 import { logout } from "@/store/auth/authSlice";
@@ -33,7 +33,7 @@ import type {
   BowlingStyle,
   Player,
   PlayerRole,
-} from "@/types/cricket/player";
+} from "@/types/player";
 import { Button } from "@/components/common/Button";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

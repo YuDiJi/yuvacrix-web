@@ -140,13 +140,6 @@ export function PlayerCard({
           )}
         >
           {player.profileImageUrl ? (
-            // <Image
-            //   src={player.profileImageUrl}
-            //   alt={player.fullName}
-            //   width={48}
-            //   height={48}
-            //   className="h-full w-full object-cover"
-            // />
             <S3Image
               imageKey={player.profileImageUrl}
               alt={player.fullName}

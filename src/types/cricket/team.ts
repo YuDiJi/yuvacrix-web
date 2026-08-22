@@ -1,20 +1,4 @@
-export interface Team {
-  id: string;
-  name: string;
-  logoUrl?: string;
-  description?: string;
-  sportType: string;
-  memberCount?: number;
-  isAdmin?: boolean;
-}
-
-export interface CreateTeamDto {
-  name: string;
-  city?: string;
-  logoUrl?: string;
-  description?: string;
-  sportType: string;
-}
+import { Team } from "../team";
 
 export interface AddTeamMemberDto {
   playerId: string;

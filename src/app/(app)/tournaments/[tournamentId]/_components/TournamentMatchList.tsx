@@ -16,9 +16,10 @@ import {
   setTournamentMatchContext,
 } from "@/store/startMatch/startMatchSlice";
 
-import type { Team } from "@/types/cricket/team";
+import type { Team } from "@/types/team";
 import { MatchCardModel } from "@/types/cricket/matchCard";
 import { tournamentMatchToMatchCard } from "@/lib/adapters/tournamentMatchCardAdapter";
+import { SPORT_TYPES } from "@/types/sport";
 
 const TOURNAMENT_MATCH_TABS = ["LIVE", "UPCOMING", "PAST"] as const;
 
@@ -109,7 +110,7 @@ export default function TournamentMatchList() {
           id: match.teamA.teamId,
           name: match.teamA.name,
           logoUrl: match.teamA.logoUrl,
-          sportType: "CRICKET",
+          sportType: SPORT_TYPES.CRICKET,
           memberCount: match.teamA.squadCount,
         } as Team,
 
@@ -117,7 +118,7 @@ export default function TournamentMatchList() {
           id: match.teamB.teamId,
           name: match.teamB.name,
           logoUrl: match.teamB.logoUrl,
-          sportType: "CRICKET",
+          sportType: SPORT_TYPES.CRICKET,
           memberCount: match.teamB.squadCount,
         } as Team,
 

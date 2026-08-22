@@ -5,6 +5,7 @@ import storage from "redux-persist/lib/storage";
 import authReducer from "./auth/authSlice";
 import startMatchReducer from "./startMatch/startMatchSlice";
 import scoringReducer from "./scoring/scoringSlice";
+import sportReducer from "./sport/sportSlice";
 
 import { baseApi } from "./api/baseApi";
 
@@ -12,6 +13,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   startMatch: startMatchReducer,
   scoring: scoringReducer,
+  sport: sportReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
