@@ -274,3 +274,31 @@ export interface VolleyballTournamentStandingsResponse {
 
   generatedAt: string;
 }
+
+export interface UpdateVolleyballTournamentFixtureDto {
+  stage?: VolleyballTournamentStage;
+
+  roundNumber?: number;
+
+  groupName?: string | null;
+
+  teamAId?: string | null;
+  teamBId?: string | null;
+
+  teamASourceFixtureId?: string | null;
+  teamBSourceFixtureId?: string | null;
+
+  matchRulesPresetKey?: VolleyballMatchRulePreset;
+
+  customRules?: VolleyballMatchRulesOverrides;
+
+  scheduledAt?: string | null;
+}
+
+export interface DeleteVolleyballTournamentFixtureResponse {
+  success: boolean;
+
+  fixtureId: string;
+
+  deletedExecutionMatchId: string | null;
+}
