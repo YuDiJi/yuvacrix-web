@@ -5,9 +5,12 @@ import {
   Check,
   ChevronDown,
   CircleDot,
+  MoreVertical,
+  Pencil,
   Play,
   Plus,
   Settings2,
+  Trash2,
   Trophy,
   X,
 } from "lucide-react";
@@ -27,9 +30,11 @@ import { useGetVolleyballMatchRulePresetsQuery } from "@/store/api/volleyball/vo
 import {
   useCreateVolleyballMatchFromFixtureMutation,
   useCreateVolleyballTournamentFixtureMutation,
+  useDeleteVolleyballTournamentFixtureMutation,
   useGetVolleyballTournamentFixturesQuery,
   useGetVolleyballTournamentQuery,
   useGetVolleyballTournamentTeamsQuery,
+  useUpdateVolleyballTournamentFixtureMutation,
 } from "@/store/api/volleyball/volleyballTournamentApi";
 
 import {
@@ -86,6 +91,15 @@ export default function VolleyballTournamentFixturesPage() {
   ===================================================== */
 
   const [createSheetOpen, setCreateSheetOpen] = useState(false);
+
+  const [editingFixture, setEditingFixture] =
+    useState<VolleyballTournamentFixture | null>(null);
+
+  const [manageFixture, setManageFixture] =
+    useState<VolleyballTournamentFixture | null>(null);
+
+  const [deleteFixtureTarget, setDeleteFixtureTarget] =
+    useState<VolleyballTournamentFixture | null>(null);
 
   const [error, setError] = useState("");
 
@@ -199,6 +213,12 @@ export default function VolleyballTournamentFixturesPage() {
 
   const [createFixture, { isLoading: isCreatingFixture }] =
     useCreateVolleyballTournamentFixtureMutation();
+
+  const [updateFixture, { isLoading: isUpdatingFixture }] =
+    useUpdateVolleyballTournamentFixtureMutation();
+
+  const [deleteFixture, { isLoading: isDeletingFixture }] =
+    useDeleteVolleyballTournamentFixtureMutation();
 
   const [createMatchFromFixture] =
     useCreateVolleyballMatchFromFixtureMutation();
@@ -549,7 +569,76 @@ export default function VolleyballTournamentFixturesPage() {
   function handleOpenCreateSheet() {
     setError("");
 
+    setEditingFixture(null);
+
+    resetFixtureForm();
+
     setCreateSheetOpen(true);
+  }
+
+  function handleOpenEditFixture(fixture: VolleyballTournamentFixture) {
+    setError("");
+
+    setManageFixture(null);
+
+    setEditingFixture(fixture);
+
+    setStage(fixture.stage);
+    setRoundNumber(fixture.roundNumber);
+    setGroupName(fixture.groupName ?? "");
+
+    if (fixture.teamASourceFixtureId) {
+      setTeamASlotMode("WINNER");
+      setTeamASourceFixtureId(fixture.teamASourceFixtureId);
+      setTeamAId("");
+    } else {
+      setTeamASlotMode("TEAM");
+      setTeamAId(fixture.teamAId ?? "");
+      setTeamASourceFixtureId("");
+    }
+
+    if (fixture.teamBSourceFixtureId) {
+      setTeamBSlotMode("WINNER");
+      setTeamBSourceFixtureId(fixture.teamBSourceFixtureId);
+      setTeamBId("");
+    } else {
+      setTeamBSlotMode("TEAM");
+      setTeamBId(fixture.teamBId ?? "");
+      setTeamBSourceFixtureId("");
+    }
+
+    const rules = fixture.matchRulesSnapshot;
+
+    setMatchRulesPresetKey(VOLLEYBALL_MATCH_RULE_PRESETS.CUSTOM);
+    setCustomFormatType(
+      rules.formatType === "FIXED_SETS" ? "FIXED_SETS" : "BEST_OF",
+    );
+    setCustomMaxSets(rules.maxSets ?? 1);
+    setCustomTotalSets(rules.totalSets ?? 1);
+    setCustomNormalSetPoints(rules.normalSetPoints ?? 15);
+    setCustomDecidingSetPoints(
+      rules.decidingSetPoints ?? rules.normalSetPoints ?? 15,
+    );
+    setCustomWinByMargin(rules.winByMargin ?? 2);
+
+    setScheduledAt(
+      fixture.scheduledAt ? toDateTimeLocalValue(fixture.scheduledAt) : "",
+    );
+
+    setStageOpen(false);
+    setRulesOpen(false);
+
+    setCreateSheetOpen(true);
+  }
+
+  function handleCloseFixtureEditor() {
+    if (isCreatingFixture || isUpdatingFixture) {
+      return;
+    }
+
+    setCreateSheetOpen(false);
+    setEditingFixture(null);
+    setError("");
   }
 
   /* =====================================================
@@ -606,7 +695,7 @@ export default function VolleyballTournamentFixturesPage() {
      CREATE FIXTURE
   ===================================================== */
 
-  async function handleCreateFixture() {
+  async function handleSaveFixture() {
     if (!teamASlotReady) {
       setError("Configure Side A.");
 
@@ -678,61 +767,97 @@ export default function VolleyballTournamentFixturesPage() {
     setError("");
 
     try {
-      await createFixture({
-        tournamentId,
+      const commonBody = {
+        stage,
+        roundNumber,
+        matchRulesPresetKey,
+        ...(isCustomRules
+          ? {
+              customRules: buildCustomRules(),
+            }
+          : {}),
+      };
 
-        body: {
-          stage,
+      if (editingFixture) {
+        await updateFixture({
+          tournamentId,
+          fixtureId: editingFixture.id,
+          body: {
+            ...commonBody,
+            groupName: requiresGroup ? groupName.trim() : null,
+            teamAId: teamASlotMode === "TEAM" ? teamAId : null,
+            teamBId: teamBSlotMode === "TEAM" ? teamBId : null,
+            teamASourceFixtureId:
+              teamASlotMode === "WINNER" ? teamASourceFixtureId : null,
+            teamBSourceFixtureId:
+              teamBSlotMode === "WINNER" ? teamBSourceFixtureId : null,
+            scheduledAt: scheduledAt
+              ? new Date(scheduledAt).toISOString()
+              : null,
+          },
+        }).unwrap();
 
-          roundNumber,
+        setSuccessMessage("Fixture updated successfully.");
+      } else {
+        await createFixture({
+          tournamentId,
+          body: {
+            ...commonBody,
+            ...(teamASlotMode === "TEAM"
+              ? { teamAId }
+              : { teamASourceFixtureId }),
+            ...(teamBSlotMode === "TEAM"
+              ? { teamBId }
+              : { teamBSourceFixtureId }),
+            ...(requiresGroup ? { groupName: groupName.trim() } : {}),
+            ...(scheduledAt
+              ? { scheduledAt: new Date(scheduledAt).toISOString() }
+              : {}),
+          },
+        }).unwrap();
 
-          ...(teamASlotMode === "TEAM"
-            ? {
-                teamAId,
-              }
-            : {
-                teamASourceFixtureId,
-              }),
-
-          ...(teamBSlotMode === "TEAM"
-            ? {
-                teamBId,
-              }
-            : {
-                teamBSourceFixtureId,
-              }),
-
-          ...(requiresGroup
-            ? {
-                groupName: groupName.trim(),
-              }
-            : {}),
-
-          matchRulesPresetKey,
-
-          ...(isCustomRules
-            ? {
-                customRules: buildCustomRules(),
-              }
-            : {}),
-
-          ...(scheduledAt
-            ? {
-                scheduledAt: new Date(scheduledAt).toISOString(),
-              }
-            : {}),
-        },
-      }).unwrap();
+        setSuccessMessage("Fixture added to the schedule.");
+      }
 
       await refetchFixtures();
 
       resetFixtureForm();
-
+      setEditingFixture(null);
       setCreateSheetOpen(false);
-
-      setSuccessMessage("Fixture added to the schedule.");
     } catch (err) {
-      setError(extractErrorMessage(err, "Failed to create fixture."));
+      setError(
+        getFixtureMutationError(
+          err,
+          editingFixture
+            ? "Failed to update fixture."
+            : "Failed to create fixture.",
+        ),
+      );
+    }
+  }
+
+  async function handleDeleteFixture() {
+    if (!deleteFixtureTarget) {
+      return;
+    }
+
+    setError("");
+
+    try {
+      await deleteFixture({
+        tournamentId,
+        fixtureId: deleteFixtureTarget.id,
+      }).unwrap();
+
+      await refetchFixtures();
+
+      setDeleteFixtureTarget(null);
+      setSuccessMessage("Fixture deleted from the schedule.");
+    } catch (err) {
+      const message = getFixtureMutationError(err, "Failed to delete fixture.");
+
+      setDeleteFixtureTarget(null);
+      setError(message);
     }
   }
 
@@ -1026,6 +1151,7 @@ export default function VolleyballTournamentFixturesPage() {
                     creatingMatchFixtureId={creatingMatchFixtureId}
                     onCreateMatch={handleCreateMatch}
                     onOpenMatch={handleOpenFixtureMatch}
+                    onManageFixture={setManageFixture}
                   />
                 ))}
 
@@ -1070,15 +1196,7 @@ export default function VolleyballTournamentFixturesPage() {
       {createSheetOpen && (
         <DialogBottom
           open={createSheetOpen}
-          onClose={() => {
-            if (isCreatingFixture) {
-              return;
-            }
-
-            setCreateSheetOpen(false);
-
-            setError("");
-          }}
+          onClose={handleCloseFixtureEditor}
           className="h-[92dvh] max-h-[92dvh] overflow-hidden rounded-t-3xl bg-(--color-bg-card)"
         >
           <div className="flex h-full min-h-0 flex-col">
@@ -1091,24 +1209,24 @@ export default function VolleyballTournamentFixturesPage() {
                 </p>
 
                 <h2 className="mt-0.5 font-(family-name:--font-display) text-xl font-black uppercase text-(--color-text-primary)">
-                  {fixtures.length === 0
-                    ? "Create First Fixture"
-                    : "Add Another Fixture"}
+                  {editingFixture
+                    ? "Edit Fixture"
+                    : fixtures.length === 0
+                      ? "Create First Fixture"
+                      : "Add Another Fixture"}
                 </h2>
 
                 <p className="mt-0.5 text-[9px] text-(--color-text-muted)">
-                  {fixtures.length} already added
+                  {editingFixture
+                    ? `${formatStage(editingFixture.stage)} ${editingFixture.roundNumber}`
+                    : `${fixtures.length} already added`}
                 </p>
               </div>
 
               <button
                 type="button"
-                disabled={isCreatingFixture}
-                onClick={() => {
-                  setCreateSheetOpen(false);
-
-                  setError("");
-                }}
+                disabled={isCreatingFixture || isUpdatingFixture}
+                onClick={handleCloseFixtureEditor}
                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
               >
                 <X size={18} />
@@ -1519,16 +1637,152 @@ export default function VolleyballTournamentFixturesPage() {
             <div className="safe-bottom shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3 shadow-[0_-8px_24px_rgba(13,27,62,0.06)]">
               <Button
                 fullWidth
-                loading={isCreatingFixture}
-                disabled={isCreatingFixture || !fixtureFormReady}
-                onClick={handleCreateFixture}
+                loading={isCreatingFixture || isUpdatingFixture}
+                disabled={
+                  isCreatingFixture || isUpdatingFixture || !fixtureFormReady
+                }
+                onClick={handleSaveFixture}
               >
                 <Plus size={16} />
 
-                {fixtures.length === 0
-                  ? "Create First Fixture"
-                  : "Add Fixture to Schedule"}
+                {editingFixture
+                  ? "Save Changes"
+                  : fixtures.length === 0
+                    ? "Create First Fixture"
+                    : "Add Fixture to Schedule"}
               </Button>
+            </div>
+          </div>
+        </DialogBottom>
+      )}
+
+      {manageFixture && (
+        <DialogBottom
+          open={Boolean(manageFixture)}
+          onClose={() => setManageFixture(null)}
+          className="rounded-t-3xl bg-(--color-bg-card)"
+        >
+          <div className="safe-bottom px-4 pb-4 pt-3">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-(--color-bg-border)" />
+
+            <div className="mb-4">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-(--color-text-muted)">
+                {formatStage(manageFixture.stage)} {manageFixture.roundNumber}
+              </p>
+
+              <p className="mt-1 text-sm font-black text-(--color-text-primary)">
+                {formatFixtureTeams(manageFixture)}
+              </p>
+
+              <p className="mt-1 text-[9px] text-(--color-text-muted)">
+                {formatFixtureRuleSummary(manageFixture.matchRulesSnapshot)}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => handleOpenEditFixture(manageFixture)}
+                className="flex w-full items-center gap-3 rounded-2xl border border-(--color-bg-border) bg-(--color-bg-base) px-3 py-3 text-left"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-bg-tint) text-(--color-brand)">
+                  <Pencil size={15} />
+                </div>
+
+                <div>
+                  <p className="text-xs font-black text-(--color-text-primary)">
+                    Edit Fixture
+                  </p>
+
+                  <p className="mt-0.5 text-[8px] text-(--color-text-muted)">
+                    Change teams, rules or match time.
+                  </p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteFixtureTarget(manageFixture);
+                  setManageFixture(null);
+                }}
+                className="flex w-full items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-3 py-3 text-left"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                  <Trash2 size={15} />
+                </div>
+
+                <div>
+                  <p className="text-xs font-black text-red-700">
+                    Delete Fixture
+                  </p>
+
+                  <p className="mt-0.5 text-[8px] text-red-600/70">
+                    Permanently remove this unplayed fixture.
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </DialogBottom>
+      )}
+
+      {deleteFixtureTarget && (
+        <DialogBottom
+          open={Boolean(deleteFixtureTarget)}
+          onClose={() => {
+            if (!isDeletingFixture) {
+              setDeleteFixtureTarget(null);
+            }
+          }}
+          className="rounded-t-3xl bg-(--color-bg-card)"
+        >
+          <div className="safe-bottom px-4 pb-4 pt-3">
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-(--color-bg-border)" />
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+              <Trash2 size={20} />
+            </div>
+
+            <h3 className="mt-4 text-base font-black text-(--color-text-primary)">
+              Delete this fixture?
+            </h3>
+
+            <p className="mt-1 text-xs font-black text-(--color-text-secondary)">
+              {formatFixtureTeams(deleteFixtureTarget)}
+            </p>
+
+            <p className="mt-1 text-[9px] leading-4 text-(--color-text-muted)">
+              {formatStage(deleteFixtureTarget.stage)}{" "}
+              {deleteFixtureTarget.roundNumber}
+              {" · "}
+              {formatFixtureRuleSummary(deleteFixtureTarget.matchRulesSnapshot)}
+            </p>
+
+            <p className="mt-3 rounded-xl bg-red-50 px-3 py-2.5 text-[9px] leading-4 text-red-700">
+              This permanently removes the fixture. If its match has already
+              started, the backend will block the deletion.
+            </p>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                disabled={isDeletingFixture}
+                onClick={() => setDeleteFixtureTarget(null)}
+                className="h-11 rounded-xl border border-(--color-bg-border) bg-(--color-bg-card) text-xs font-black text-(--color-text-secondary) disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={isDeletingFixture}
+                onClick={handleDeleteFixture}
+                className="flex h-11 items-center justify-center gap-2 rounded-xl bg-red-600 text-xs font-black text-white disabled:opacity-50"
+              >
+                {isDeletingFixture ? <LoadingSpinner /> : <Trash2 size={14} />}
+                Delete Fixture
+              </button>
             </div>
           </div>
         </DialogBottom>
@@ -1915,6 +2169,7 @@ function FixtureStageSection({
   creatingMatchFixtureId,
   onCreateMatch,
   onOpenMatch,
+  onManageFixture,
 }: {
   stage: VolleyballTournamentStage;
 
@@ -1927,6 +2182,8 @@ function FixtureStageSection({
   onCreateMatch: (fixture: VolleyballTournamentFixture) => void;
 
   onOpenMatch: (fixture: VolleyballTournamentFixture) => void;
+
+  onManageFixture: (fixture: VolleyballTournamentFixture) => void;
 }) {
   return (
     <div>
@@ -1951,6 +2208,7 @@ function FixtureStageSection({
             creatingMatch={creatingMatchFixtureId === fixture.id}
             onCreateMatch={() => onCreateMatch(fixture)}
             onOpenMatch={() => onOpenMatch(fixture)}
+            onManage={() => onManageFixture(fixture)}
           />
         ))}
       </div>
@@ -1968,6 +2226,7 @@ function FixtureCard({
   creatingMatch,
   onCreateMatch,
   onOpenMatch,
+  onManage,
 }: {
   fixture: VolleyballTournamentFixture;
 
@@ -1978,6 +2237,8 @@ function FixtureCard({
   onCreateMatch: () => void;
 
   onOpenMatch: () => void;
+
+  onManage: () => void;
 }) {
   /* =====================================================
      BASIC STATE
@@ -2003,6 +2264,10 @@ function FixtureCard({
   const isCompleted = fixture.status === VOLLEYBALL_FIXTURE_STATUSES.COMPLETED;
 
   const isKnockout = isKnockoutTournamentStage(fixture.stage);
+
+  const canManage =
+    fixture.status === VOLLEYBALL_FIXTURE_STATUSES.SCHEDULED ||
+    fixture.status === VOLLEYBALL_FIXTURE_STATUSES.MATCH_CREATED;
 
   /* =====================================================
      SIDE LABELS
@@ -2052,7 +2317,20 @@ function FixtureCard({
           )}
         </div>
 
-        <FixtureStatusBadge status={fixture.status} />
+        <div className="flex items-center gap-2">
+          <FixtureStatusBadge status={fixture.status} />
+
+          {canManage && (
+            <button
+              type="button"
+              onClick={onManage}
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary) active:scale-90"
+              aria-label="Fixture actions"
+            >
+              <MoreVertical size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* =================================================
@@ -3330,6 +3608,32 @@ function getInitials(value: string) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+function toDateTimeLocalValue(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+
+  return local.toISOString().slice(0, 16);
+}
+
+function getFixtureMutationError(error: unknown, fallback: string) {
+  const message = extractErrorMessage(error, fallback);
+
+  if (message.includes("FIXTURE_MATCH_ALREADY_STARTED")) {
+    return "This fixture can no longer be changed because the match has already started.";
+  }
+
+  if (message.includes("FIXTURE_HAS_ACTIVE_DOWNSTREAM_DEPENDENCY")) {
+    return "This fixture is already connected to an active knockout match and can no longer be changed.";
+  }
+
+  return message;
 }
 
 function extractErrorMessage(

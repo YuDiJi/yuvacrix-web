@@ -13,6 +13,8 @@ import type {
   VolleyballTournamentTeam,
   VolleyballTournamentStage,
   VolleyballFixtureStatus,
+  UpdateVolleyballTournamentFixtureDto,
+  DeleteVolleyballTournamentFixtureResponse,
 } from "@/types/volleyball/tournament";
 
 export const volleyballTournamentApi = baseApi.injectEndpoints({
@@ -134,6 +136,76 @@ export const volleyballTournamentApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { tournamentId }) => [
         {
           type: "VolleyballTournamentFixtures",
+          id: tournamentId,
+        },
+      ],
+    }),
+
+    /* =====================================================
+   UPDATE FIXTURE
+===================================================== */
+
+    updateVolleyballTournamentFixture: builder.mutation<
+      VolleyballTournamentFixture,
+      {
+        tournamentId: string;
+        fixtureId: string;
+        body: UpdateVolleyballTournamentFixtureDto;
+      }
+    >({
+      query: ({ tournamentId, fixtureId, body }) => ({
+        url: `/volleyball/tournaments/${tournamentId}/fixtures/${fixtureId}`,
+        method: "PATCH",
+        body,
+      }),
+
+      invalidatesTags: (_result, _error, { tournamentId }) => [
+        {
+          type: "VolleyballTournamentFixtures",
+          id: tournamentId,
+        },
+
+        {
+          type: "VolleyballTournament",
+          id: tournamentId,
+        },
+
+        {
+          type: "VolleyballTournamentStandings",
+          id: tournamentId,
+        },
+      ],
+    }),
+
+    /* =====================================================
+   DELETE FIXTURE
+===================================================== */
+
+    deleteVolleyballTournamentFixture: builder.mutation<
+      DeleteVolleyballTournamentFixtureResponse,
+      {
+        tournamentId: string;
+        fixtureId: string;
+      }
+    >({
+      query: ({ tournamentId, fixtureId }) => ({
+        url: `/volleyball/tournaments/${tournamentId}/fixtures/${fixtureId}`,
+        method: "DELETE",
+      }),
+
+      invalidatesTags: (_result, _error, { tournamentId }) => [
+        {
+          type: "VolleyballTournamentFixtures",
+          id: tournamentId,
+        },
+
+        {
+          type: "VolleyballTournament",
+          id: tournamentId,
+        },
+
+        {
+          type: "VolleyballTournamentStandings",
           id: tournamentId,
         },
       ],
@@ -297,4 +369,8 @@ export const {
   useAdvanceVolleyballTournamentFixtureMutation,
 
   useGetVolleyballTournamentStandingsQuery,
+
+  useUpdateVolleyballTournamentFixtureMutation,
+
+  useDeleteVolleyballTournamentFixtureMutation,
 } = volleyballTournamentApi;
