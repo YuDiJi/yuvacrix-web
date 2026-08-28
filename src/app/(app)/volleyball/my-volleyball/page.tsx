@@ -9,20 +9,31 @@ import {
   Volleyball,
 } from "lucide-react";
 
-import { useMemo } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/common/Button";
 import { cn } from "@/lib/cn";
-
-import { useGetVolleyballTournamentsQuery } from "@/store/api/volleyball/volleyballTournamentApi";
 
 import {
   VOLLEYBALL_TOURNAMENT_STATUSES,
   type VolleyballTournament,
   type VolleyballTournamentStatus,
 } from "@/types/volleyball/tournament";
+
+import { S3Image } from "@/components/common/S3Image";
+
+import { useGetMyVolleyballMatchesQuery } from "@/store/api/volleyball/volleyballMatchApi";
+
+import {
+  VOLLEYBALL_MATCH_FEED_STATUSES,
+  VOLLEYBALL_MATCH_PRIMARY_ACTIONS,
+  VOLLEYBALL_MY_MATCH_SOURCES,
+  type VolleyballMyMatchItem,
+  type VolleyballMyMatchStatusFilter,
+} from "@/types/volleyball/match";
+
+import { useGetMyVolleyballTournamentsQuery } from "@/store/api/volleyball/volleyballTournamentApi";
 
 /* =========================================================
    LOCAL TYPES
@@ -69,35 +80,21 @@ export default function MyVolleyballPage() {
   const tournamentStatus = getTournamentStatus(tournamentFilter);
 
   const {
-    data: tournaments = [],
+    currentData: tournaments = [],
     isLoading: isTournamentsLoading,
     isFetching: isTournamentsFetching,
     isError: isTournamentsError,
     refetch: refetchTournaments,
-  } = useGetVolleyballTournamentsQuery(
-    activeTab === "tournaments"
-      ? tournamentStatus
-        ? {
-            status: tournamentStatus,
-          }
-        : {}
+  } = useGetMyVolleyballTournamentsQuery(
+    tournamentStatus
+      ? {
+          status: tournamentStatus,
+        }
       : undefined,
     {
       skip: activeTab !== "tournaments",
     },
   );
-
-  /*
-   * Current API already returns VolleyballTournament[].
-   *
-   * Once backend adds:
-   *
-   * GET /volleyball/tournaments/me
-   *
-   * we will replace only the query above.
-   *
-   * The UI below will not need structural changes.
-   */
 
   const sortedTournaments = useMemo(() => {
     return [...tournaments].sort(
@@ -211,7 +208,10 @@ export default function MyVolleyballPage() {
         <TournamentsTab
           filter={tournamentFilter}
           tournaments={sortedTournaments}
-          loading={isTournamentsLoading}
+          loading={
+            isTournamentsLoading ||
+            (isTournamentsFetching && !tournaments.length)
+          }
           fetching={isTournamentsFetching}
           error={isTournamentsError}
           onFilterChange={changeTournamentFilter}
@@ -230,6 +230,10 @@ export default function MyVolleyballPage() {
    MATCHES TAB
 ========================================================= */
 
+/* =========================================================
+   MATCHES TAB
+========================================================= */
+
 function MatchesTab({
   filter,
   onFilterChange,
@@ -241,9 +245,69 @@ function MatchesTab({
 
   onCreateMatch: () => void;
 }) {
+  const router = useRouter();
+
+  const [limit, setLimit] = useState(20);
+
+  const status = getMatchStatusFilter(filter);
+
+  useEffect(() => {
+    setLimit(20);
+  }, [filter]);
+
+  const { currentData, isLoading, isFetching, isError, refetch } =
+    useGetMyVolleyballMatchesQuery({
+      ...(status ? { status } : {}),
+      skip: 0,
+      limit,
+    });
+
+  const matches = currentData?.items ?? [];
+
+  const pagination = currentData?.pagination;
+
+  function handleMatchAction(match: VolleyballMyMatchItem) {
+    const query = createMatchContextQuery(match);
+
+    const suffix = query ? `?${query}` : "";
+
+    switch (match.primaryAction) {
+      case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.SETUP_ROSTER:
+        router.push(`/volleyball/matches/${match.matchId}/rosters${suffix}`);
+
+        return;
+
+      case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.START_SET:
+        router.push(`/volleyball/matches/${match.matchId}/sets/setup${suffix}`);
+
+        return;
+
+      /*
+       * The scorer route needs the active setId.
+       *
+       * My Matches intentionally returns compact score data,
+       * not the VolleyballSet id.
+       *
+       * The existing Match Details page already resolves the
+       * live set and creates the correct scoring URL.
+       */
+      case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.RESUME_SCORING:
+      case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.VIEW_RESULT:
+      case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.VIEW_MATCH:
+      default:
+        router.push(`/volleyball/matches/${match.matchId}${suffix}`);
+    }
+  }
+
+  function handleLoadMore() {
+    setLimit((current) => Math.min(current + 20, 100));
+  }
+
   return (
     <main className="px-4 py-4">
-      {/* FILTERS */}
+      {/* =================================================
+          FILTERS
+      ================================================= */}
 
       <HorizontalFilters>
         <FilterChip
@@ -275,40 +339,475 @@ function MatchesTab({
         </FilterChip>
       </HorizontalFilters>
 
-      {/* MATCH FEED WAITING STATE */}
+      {/* =================================================
+          CONTENT
+      ================================================= */}
 
-      <section className="mt-5 overflow-hidden rounded-3xl border border-(--color-bg-border) bg-(--color-bg-card) shadow-sm">
-        <div className="px-5 py-6 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-(--color-bg-tint)">
-            <CircleDot size={21} className="text-(--color-brand)" />
+      <div className="mt-5">
+        {isLoading || (isFetching && !currentData) ? (
+          <MatchesSkeleton />
+        ) : isError ? (
+          <MatchesError
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        ) : matches.length === 0 ? (
+          <MatchesEmpty filter={filter} onCreateMatch={onCreateMatch} />
+        ) : (
+          <div className="space-y-3">
+            {/* =============================================
+                HEADING
+            ============================================= */}
+
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-wide text-(--color-text-secondary)">
+                  My Matches
+                </p>
+
+                <p className="mt-0.5 text-[8px] text-(--color-text-muted)">
+                  {pagination?.total ?? matches.length}{" "}
+                  {(pagination?.total ?? matches.length) === 1
+                    ? "match"
+                    : "matches"}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={onCreateMatch}
+                className="flex h-9 items-center gap-1.5 rounded-xl bg-(--color-brand) px-3 text-[9px] font-black text-white active:scale-[0.98]"
+              >
+                <Plus size={13} />
+                New
+              </button>
+            </div>
+
+            {/* =============================================
+                BACKGROUND REFRESH
+            ============================================= */}
+
+            {isFetching && currentData && (
+              <div className="h-1 overflow-hidden rounded-full bg-(--color-bg-border)">
+                <div className="h-full w-1/3 animate-pulse rounded-full bg-(--color-brand)" />
+              </div>
+            )}
+
+            {/* =============================================
+                MATCH CARDS
+            ============================================= */}
+
+            <div className="space-y-3">
+              {matches.map((match) => (
+                <VolleyballMatchFeedCard
+                  key={match.matchId}
+                  match={match}
+                  onAction={() => handleMatchAction(match)}
+                />
+              ))}
+            </div>
+
+            {/* =============================================
+                LOAD MORE
+            ============================================= */}
+
+            {pagination?.hasMore && limit < 100 && (
+              <button
+                type="button"
+                disabled={isFetching}
+                onClick={handleLoadMore}
+                className="flex h-11 w-full items-center justify-center rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) text-[9px] font-black text-(--color-brand) shadow-sm disabled:opacity-50 active:scale-[0.99]"
+              >
+                {isFetching ? "Loading..." : "Load More Matches"}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
+
+/* =========================================================
+   MATCH FEED CARD
+========================================================= */
+
+function VolleyballMatchFeedCard({
+  match,
+  onAction,
+}: {
+  match: VolleyballMyMatchItem;
+
+  onAction: () => void;
+}) {
+  const isLive = match.feedStatus === VOLLEYBALL_MATCH_FEED_STATUSES.LIVE;
+
+  const isCompleted =
+    match.feedStatus === VOLLEYBALL_MATCH_FEED_STATUSES.COMPLETED;
+
+  const isUpcoming =
+    match.feedStatus === VOLLEYBALL_MATCH_FEED_STATUSES.UPCOMING;
+
+  const actionLabel = getMatchActionLabel(match);
+
+  return (
+    <article
+      className={cn(
+        "overflow-hidden rounded-2xl border bg-(--color-bg-card) shadow-sm",
+
+        isLive ? "border-red-200" : "border-(--color-bg-border)",
+      )}
+    >
+      {/* =================================================
+          TOP META
+      ================================================= */}
+
+      <div className="flex items-center justify-between gap-3 border-b border-(--color-bg-border) px-3.5 py-2.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <MatchFeedStatusBadge status={match.feedStatus} />
+
+          <span className="h-1 w-1 shrink-0 rounded-full bg-(--color-bg-border)" />
+
+          <p className="truncate text-[8px] font-bold text-(--color-text-muted)">
+            {getMatchSourceLabel(match)}
+          </p>
+        </div>
+
+        {match.scheduledAt && (
+          <div className="flex shrink-0 items-center gap-1">
+            <CalendarDays size={10} className="text-(--color-text-muted)" />
+
+            <span className="text-[8px] font-semibold text-(--color-text-muted)">
+              {formatMatchDateTime(match.scheduledAt)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* =================================================
+          TEAMS / SCORE
+      ================================================= */}
+
+      <div className="px-3.5 py-4">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          {/* TEAM A */}
+
+          <MatchFeedTeam
+            team={match.teamA}
+            score={isLive || isCompleted ? match.score.teamASetsWon : null}
+          />
+
+          {/* CENTER */}
+
+          <div className="flex min-w-[58px] flex-col items-center justify-center">
+            {isLive ? (
+              <>
+                <span className="rounded-full bg-red-50 px-2 py-1 text-[7px] font-black uppercase tracking-wide text-red-600">
+                  Live
+                </span>
+
+                {match.score.currentSetNumber !== null && (
+                  <p className="mt-1 text-[7px] font-black uppercase tracking-wide text-(--color-text-muted)">
+                    Set {match.score.currentSetNumber}
+                  </p>
+                )}
+
+                {match.score.teamACurrentSetPoints !== null &&
+                  match.score.teamBCurrentSetPoints !== null && (
+                    <p className="mt-1 font-(family-name:--font-display) text-lg font-black leading-none text-(--color-text-primary)">
+                      {match.score.teamACurrentSetPoints}
+                      <span className="mx-1 text-(--color-text-muted)">–</span>
+                      {match.score.teamBCurrentSetPoints}
+                    </p>
+                  )}
+              </>
+            ) : isCompleted ? (
+              <>
+                <p className="text-[7px] font-black uppercase tracking-wide text-(--color-text-muted)">
+                  Sets
+                </p>
+
+                <p className="mt-1 font-(family-name:--font-display) text-xl font-black leading-none text-(--color-text-primary)">
+                  {match.score.teamASetsWon}
+                  <span className="mx-1.5 text-(--color-text-muted)">–</span>
+                  {match.score.teamBSetsWon}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-(family-name:--font-display) text-sm font-black uppercase text-(--color-text-muted)">
+                  VS
+                </p>
+
+                {isUpcoming && (
+                  <p className="mt-1 text-[7px] font-bold text-(--color-text-muted)">
+                    {getUpcomingTimeLabel(match.scheduledAt)}
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
-          <p className="mt-3 text-sm font-black text-(--color-text-primary)">
-            Your matches
-          </p>
+          {/* TEAM B */}
 
-          <p className="mx-auto mt-1 max-w-[285px] text-[10px] leading-5 text-(--color-text-muted)">
-            Your standalone Volleyball matches will appear here.
-          </p>
+          <MatchFeedTeam
+            team={match.teamB}
+            score={isLive || isCompleted ? match.score.teamBSetsWon : null}
+            align="right"
+          />
+        </div>
 
-          <div className="mt-4 rounded-2xl bg-(--color-bg-base) px-3 py-3 text-left">
-            <p className="text-[8px] font-black uppercase tracking-wide text-(--color-brand)">
-              Match feed coming next
-            </p>
+        {/* =================================================
+            RESULT
+        ================================================= */}
 
-            <p className="mt-1 text-[8px] leading-4 text-(--color-text-muted)">
-              The match list is waiting for the backend to identify standalone
-              and tournament matches separately.
+        {isCompleted && match.result && (
+          <div className="mt-3 rounded-xl bg-(--color-bg-tint) px-3 py-2 text-center">
+            <p className="text-[9px] font-black text-(--color-brand)">
+              {match.result.resultText}
             </p>
           </div>
+        )}
 
+        {/* =================================================
+            TOURNAMENT CONTEXT
+        ================================================= */}
+
+        {match.sourceType === VOLLEYBALL_MY_MATCH_SOURCES.TOURNAMENT &&
+          match.tournament && (
+            <div className="mt-3 flex items-center gap-2 rounded-xl bg-(--color-bg-base) px-3 py-2.5">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-(--color-bg-tint)">
+                <Trophy size={12} className="text-(--color-brand)" />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[8px] font-black text-(--color-text-primary)">
+                  {match.tournament.name}
+                </p>
+
+                {match.fixture && (
+                  <p className="mt-0.5 truncate text-[7px] font-semibold text-(--color-text-muted)">
+                    {formatFixtureStage(match.fixture.stage)}
+                    {" · "}
+                    Match {match.fixture.roundNumber}
+                    {match.fixture.groupName
+                      ? ` · ${match.fixture.groupName}`
+                      : ""}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+      </div>
+
+      {/* =================================================
+          ACTION
+      ================================================= */}
+
+      <button
+        type="button"
+        onClick={onAction}
+        className={cn(
+          "flex h-11 w-full items-center justify-between border-t px-3.5 text-left active:bg-(--color-bg-base)",
+
+          isLive ? "border-red-100 bg-red-50/50" : "border-(--color-bg-border)",
+        )}
+      >
+        <span
+          className={cn(
+            "text-[9px] font-black",
+
+            isLive ? "text-red-600" : "text-(--color-brand)",
+          )}
+        >
+          {actionLabel}
+        </span>
+
+        <ChevronRight
+          size={14}
+          className={isLive ? "text-red-500" : "text-(--color-brand)"}
+        />
+      </button>
+    </article>
+  );
+}
+
+/* =========================================================
+   MATCH TEAM
+========================================================= */
+
+function MatchFeedTeam({
+  team,
+  score,
+  align = "left",
+}: {
+  team: VolleyballMyMatchItem["teamA"];
+
+  score: number | null;
+
+  align?: "left" | "right";
+}) {
+  const isRight = align === "right";
+
+  return (
+    <div
+      className={cn(
+        "flex min-w-0 items-center gap-2",
+
+        isRight && "flex-row-reverse",
+      )}
+    >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-(--color-bg-border) bg-(--color-bg-base)">
+        {team.logoUrl ? (
+          <S3Image
+            imageKey={team.logoUrl}
+            alt={team.name}
+            width={20}
+            height={20}
+            className="h-full w-full object-cover"
+            fallback={
+              <span className="text-[10px] font-black text-(--color-brand)">
+                {getTeamInitials(team.name)}
+              </span>
+            }
+          />
+        ) : (
+          <span className="text-[10px] font-black text-(--color-brand)">
+            {getTeamInitials(team.name)}
+          </span>
+        )}
+      </div>
+
+      <div
+        className={cn(
+          "min-w-0",
+
+          isRight && "text-right",
+        )}
+      >
+        <p className="line-clamp-2 text-[10px] font-black leading-4 text-(--color-text-primary)">
+          {team.name}
+        </p>
+
+        {score !== null && (
+          <p className="mt-1 text-[8px] font-bold text-(--color-text-muted)">
+            {score} {score === 1 ? "set" : "sets"}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   MATCH STATUS
+========================================================= */
+
+function MatchFeedStatusBadge({
+  status,
+}: {
+  status: VolleyballMyMatchItem["feedStatus"];
+}) {
+  return (
+    <span
+      className={cn(
+        "shrink-0 rounded-full px-2 py-1 text-[7px] font-black uppercase tracking-wide",
+
+        status === VOLLEYBALL_MATCH_FEED_STATUSES.LIVE &&
+          "bg-red-50 text-red-600",
+
+        status === VOLLEYBALL_MATCH_FEED_STATUSES.UPCOMING &&
+          "bg-(--color-bg-tint) text-(--color-brand)",
+
+        status === VOLLEYBALL_MATCH_FEED_STATUSES.COMPLETED &&
+          "bg-emerald-50 text-emerald-700",
+
+        status === VOLLEYBALL_MATCH_FEED_STATUSES.CANCELLED &&
+          "bg-slate-100 text-slate-500",
+      )}
+    >
+      {getMatchFeedStatusLabel(status)}
+    </span>
+  );
+}
+
+/* =========================================================
+   MATCH EMPTY
+========================================================= */
+
+function MatchesEmpty({
+  filter,
+  onCreateMatch,
+}: {
+  filter: MatchFilter;
+
+  onCreateMatch: () => void;
+}) {
+  return (
+    <section className="overflow-hidden rounded-3xl border border-(--color-bg-border) bg-(--color-bg-card) shadow-sm">
+      <div className="px-5 py-7 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-(--color-bg-tint)">
+          <CircleDot size={21} className="text-(--color-brand)" />
+        </div>
+
+        <p className="mt-3 text-sm font-black text-(--color-text-primary)">
+          {getMatchEmptyTitle(filter)}
+        </p>
+
+        <p className="mx-auto mt-1 max-w-71.25 text-[10px] leading-5 text-(--color-text-muted)">
+          {getMatchEmptyMessage(filter)}
+        </p>
+
+        {filter === "all" && (
           <Button fullWidth className="mt-5" onClick={onCreateMatch}>
             <Plus size={15} />
             Start New Match
           </Button>
-        </div>
-      </section>
-    </main>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* =========================================================
+   MATCH ERROR
+========================================================= */
+
+function MatchesError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="rounded-3xl border border-(--color-bg-border) bg-(--color-bg-card) px-5 py-7 text-center shadow-sm">
+      <CircleDot size={24} className="mx-auto text-(--color-brand)" />
+
+      <p className="mt-3 text-sm font-black text-(--color-text-primary)">
+        Unable to load matches
+      </p>
+
+      <p className="mt-1 text-[10px] leading-5 text-(--color-text-muted)">
+        We couldn&apos;t load your Volleyball matches.
+      </p>
+
+      <Button fullWidth className="mt-4" onClick={onRetry}>
+        Try Again
+      </Button>
+    </div>
+  );
+}
+
+/* =========================================================
+   MATCH SKELETON
+========================================================= */
+
+function MatchesSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[1, 2, 3].map((item) => (
+        <div
+          key={item}
+          className="h-48 animate-pulse rounded-2xl bg-(--color-bg-card)"
+        />
+      ))}
+    </div>
   );
 }
 
@@ -743,6 +1242,202 @@ function getTournamentStatus(
 
     default:
       return undefined;
+  }
+}
+
+/* =========================================================
+   MATCH HELPERS
+========================================================= */
+
+function getMatchStatusFilter(
+  filter: MatchFilter,
+): VolleyballMyMatchStatusFilter | undefined {
+  switch (filter) {
+    case "live":
+      return VOLLEYBALL_MATCH_FEED_STATUSES.LIVE;
+
+    case "upcoming":
+      return VOLLEYBALL_MATCH_FEED_STATUSES.UPCOMING;
+
+    case "completed":
+      return VOLLEYBALL_MATCH_FEED_STATUSES.COMPLETED;
+
+    default:
+      return undefined;
+  }
+}
+
+function createMatchContextQuery(match: VolleyballMyMatchItem) {
+  if (
+    match.sourceType !== VOLLEYBALL_MY_MATCH_SOURCES.TOURNAMENT ||
+    !match.tournament ||
+    !match.fixture
+  ) {
+    return "";
+  }
+
+  return new URLSearchParams({
+    tournamentId: match.tournament.id,
+
+    fixtureId: match.fixture.id,
+  }).toString();
+}
+
+function getMatchActionLabel(match: VolleyballMyMatchItem) {
+  switch (match.primaryAction) {
+    case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.SETUP_ROSTER:
+      return "Setup Rosters";
+
+    case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.START_SET:
+      return "Start Match";
+
+    case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.RESUME_SCORING:
+      return "Resume Scoring";
+
+    case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.VIEW_RESULT:
+      return "View Result";
+
+    case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.VIEW_MATCH:
+    default:
+      return "View Match";
+  }
+}
+
+function getMatchSourceLabel(match: VolleyballMyMatchItem) {
+  if (match.sourceType === VOLLEYBALL_MY_MATCH_SOURCES.TOURNAMENT) {
+    if (match.fixture) {
+      return `${formatFixtureStage(
+        match.fixture.stage,
+      )} · Match ${match.fixture.roundNumber}`;
+    }
+
+    return "Tournament Match";
+  }
+
+  return "Standalone Match";
+}
+
+function getMatchFeedStatusLabel(status: VolleyballMyMatchItem["feedStatus"]) {
+  switch (status) {
+    case VOLLEYBALL_MATCH_FEED_STATUSES.LIVE:
+      return "Live";
+
+    case VOLLEYBALL_MATCH_FEED_STATUSES.UPCOMING:
+      return "Upcoming";
+
+    case VOLLEYBALL_MATCH_FEED_STATUSES.COMPLETED:
+      return "Completed";
+
+    case VOLLEYBALL_MATCH_FEED_STATUSES.CANCELLED:
+      return "Cancelled";
+
+    default:
+      return status;
+  }
+}
+
+function formatFixtureStage(value: string) {
+  switch (value) {
+    case "LEAGUE":
+      return "League";
+
+    case "GROUP_STAGE":
+      return "Group Stage";
+
+    case "ROUND_OF_16":
+      return "Round of 16";
+
+    case "QUARTER_FINAL":
+      return "Quarter Final";
+
+    case "SEMI_FINAL":
+      return "Semi Final";
+
+    case "THIRD_PLACE":
+      return "Third Place";
+
+    case "FINAL":
+      return "Final";
+
+    default:
+      return value
+        .toLowerCase()
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+}
+
+function formatMatchDateTime(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString(undefined, {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function getUpcomingTimeLabel(scheduledAt: string | null) {
+  if (!scheduledAt) {
+    return "Scheduled";
+  }
+
+  const date = new Date(scheduledAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Scheduled";
+  }
+
+  return date.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function getTeamInitials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
+
+function getMatchEmptyTitle(filter: MatchFilter) {
+  switch (filter) {
+    case "live":
+      return "No live matches";
+
+    case "upcoming":
+      return "No upcoming matches";
+
+    case "completed":
+      return "No completed matches";
+
+    default:
+      return "No matches yet";
+  }
+}
+
+function getMatchEmptyMessage(filter: MatchFilter) {
+  switch (filter) {
+    case "live":
+      return "Matches you're currently scoring will appear here.";
+
+    case "upcoming":
+      return "Matches waiting for setup or scoring will appear here.";
+
+    case "completed":
+      return "Your finished Volleyball matches will appear here.";
+
+    default:
+      return "Start a standalone match or create a tournament match to begin.";
   }
 }
 

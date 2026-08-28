@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Plus, Users } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 
-import { Button } from "@/components/common/Button";
 import { VolleyballMemberList } from "@/components/volleyball/team/VolleyballMemberList";
 import { VolleyballMemberForm } from "@/components/volleyball/team/VolleyballMemberForm";
 
@@ -251,7 +250,7 @@ export default function VolleyballTeamPage() {
 
         {/* Minimum six players required before starting match */}
 
-        {members.length >= 6 && (
+        {/* {members.length >= 6 && (
           <div className="safe-bottom mt-6">
             <Button
               fullWidth
@@ -263,7 +262,7 @@ export default function VolleyballTeamPage() {
               Start Volleyball Match
             </Button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

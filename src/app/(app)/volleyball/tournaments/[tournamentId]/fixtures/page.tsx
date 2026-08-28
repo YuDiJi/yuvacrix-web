@@ -117,7 +117,7 @@ export default function VolleyballTournamentFixturesPage() {
     VOLLEYBALL_TOURNAMENT_STAGES.LEAGUE,
   );
 
-  const [roundNumber, setRoundNumber] = useState(1);
+  const [roundNumberInput, setRoundNumberInput] = useState("1");
 
   const [groupName, setGroupName] = useState("");
 
@@ -169,6 +169,7 @@ export default function VolleyballTournamentFixturesPage() {
     data: tournament,
     isLoading: isTournamentLoading,
     isError: isTournamentError,
+    refetch: refetchTournament,
   } = useGetVolleyballTournamentQuery(
     {
       tournamentId,
@@ -222,6 +223,12 @@ export default function VolleyballTournamentFixturesPage() {
 
   const [createMatchFromFixture] =
     useCreateVolleyballMatchFromFixtureMutation();
+
+  const canManageFixtures =
+    tournament?.viewerAccess.canManageFixtures === true;
+  const canCreateExecutionMatch =
+    tournament?.viewerAccess.canCreateExecutionMatch === true;
+  const canScoreMatches = tournament?.viewerAccess.canScoreMatches === true;
 
   /* =====================================================
      STAGES
@@ -567,6 +574,7 @@ export default function VolleyballTournamentFixturesPage() {
   ===================================================== */
 
   function handleOpenCreateSheet() {
+    if (!canManageFixtures) return;
     setError("");
 
     setEditingFixture(null);
@@ -577,6 +585,7 @@ export default function VolleyballTournamentFixturesPage() {
   }
 
   function handleOpenEditFixture(fixture: VolleyballTournamentFixture) {
+    if (!canManageFixtures) return;
     setError("");
 
     setManageFixture(null);
@@ -584,7 +593,7 @@ export default function VolleyballTournamentFixturesPage() {
     setEditingFixture(fixture);
 
     setStage(fixture.stage);
-    setRoundNumber(fixture.roundNumber);
+    setRoundNumberInput(String(fixture.roundNumber));
     setGroupName(fixture.groupName ?? "");
 
     if (fixture.teamASourceFixtureId) {
@@ -696,6 +705,7 @@ export default function VolleyballTournamentFixturesPage() {
   ===================================================== */
 
   async function handleSaveFixture() {
+    if (!canManageFixtures) return;
     if (!teamASlotReady) {
       setError("Configure Side A.");
 
@@ -734,7 +744,13 @@ export default function VolleyballTournamentFixturesPage() {
       return;
     }
 
-    if (roundNumber < 1) {
+    const parsedRoundNumber = Number(roundNumberInput);
+
+    if (
+      roundNumberInput.trim() === "" ||
+      !Number.isInteger(parsedRoundNumber) ||
+      parsedRoundNumber < 1
+    ) {
       setError("Match number must be at least 1.");
 
       return;
@@ -769,7 +785,7 @@ export default function VolleyballTournamentFixturesPage() {
     try {
       const commonBody = {
         stage,
-        roundNumber,
+        roundNumber: parsedRoundNumber,
         matchRulesPresetKey,
         ...(isCustomRules
           ? {
@@ -825,6 +841,12 @@ export default function VolleyballTournamentFixturesPage() {
       setEditingFixture(null);
       setCreateSheetOpen(false);
     } catch (err) {
+      if (isForbidden(err)) {
+        setError("Your tournament permissions have changed.");
+        setCreateSheetOpen(false);
+        void refetchTournament();
+        return;
+      }
       setError(
         getFixtureMutationError(
           err,
@@ -837,7 +859,7 @@ export default function VolleyballTournamentFixturesPage() {
   }
 
   async function handleDeleteFixture() {
-    if (!deleteFixtureTarget) {
+    if (!deleteFixtureTarget || !canManageFixtures) {
       return;
     }
 
@@ -854,6 +876,12 @@ export default function VolleyballTournamentFixturesPage() {
       setDeleteFixtureTarget(null);
       setSuccessMessage("Fixture deleted from the schedule.");
     } catch (err) {
+      if (isForbidden(err)) {
+        setDeleteFixtureTarget(null);
+        setError("Your tournament permissions have changed.");
+        void refetchTournament();
+        return;
+      }
       const message = getFixtureMutationError(err, "Failed to delete fixture.");
 
       setDeleteFixtureTarget(null);
@@ -866,6 +894,7 @@ export default function VolleyballTournamentFixturesPage() {
   ===================================================== */
 
   async function handleCreateMatch(fixture: VolleyballTournamentFixture) {
+    if (!canCreateExecutionMatch) return;
     if (fixture.status !== VOLLEYBALL_FIXTURE_STATUSES.SCHEDULED) {
       return;
     }
@@ -897,6 +926,11 @@ export default function VolleyballTournamentFixturesPage() {
         `/volleyball/matches/${match.id}/rosters?${search.toString()}`,
       );
     } catch (err) {
+      if (isForbidden(err)) {
+        setError("Your tournament permissions have changed.");
+        void refetchTournament();
+        return;
+      }
       setError(
         extractErrorMessage(err, "Failed to create match from fixture."),
       );
@@ -973,7 +1007,7 @@ export default function VolleyballTournamentFixturesPage() {
   function resetFixtureForm() {
     resetFixtureSlots();
 
-    setRoundNumber(1);
+    setRoundNumberInput("1");
 
     setGroupName("");
 
@@ -1126,7 +1160,7 @@ export default function VolleyballTournamentFixturesPage() {
                 </p>
               </div>
 
-              {fixtures.length > 0 && (
+              {fixtures.length > 0 && canManageFixtures && (
                 <button
                   type="button"
                   onClick={handleOpenCreateSheet}
@@ -1139,7 +1173,10 @@ export default function VolleyballTournamentFixturesPage() {
             </div>
 
             {fixtures.length === 0 ? (
-              <EmptySchedule onCreate={handleOpenCreateSheet} />
+              <EmptySchedule
+                canManage={canManageFixtures}
+                onCreate={handleOpenCreateSheet}
+              />
             ) : (
               <div className="space-y-5">
                 {groupedFixtures.map(([fixtureStage, stageFixtures]) => (
@@ -1149,13 +1186,16 @@ export default function VolleyballTournamentFixturesPage() {
                     fixtures={stageFixtures}
                     allFixtures={fixtures}
                     creatingMatchFixtureId={creatingMatchFixtureId}
+                    canManageFixtures={canManageFixtures}
+                    canCreateExecutionMatch={canCreateExecutionMatch}
+                    canScoreMatches={canScoreMatches}
                     onCreateMatch={handleCreateMatch}
                     onOpenMatch={handleOpenFixtureMatch}
                     onManageFixture={setManageFixture}
                   />
                 ))}
 
-                <button
+                {canManageFixtures && <button
                   type="button"
                   onClick={handleOpenCreateSheet}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-(--color-brand)/30 bg-(--color-bg-card) px-4 py-4 text-(--color-brand)"
@@ -1171,7 +1211,7 @@ export default function VolleyballTournamentFixturesPage() {
                       Add another match or knockout round.
                     </p>
                   </div>
-                </button>
+                </button>}
               </div>
             )}
           </section>
@@ -1193,7 +1233,7 @@ export default function VolleyballTournamentFixturesPage() {
           ADD FIXTURE SHEET
       ================================================= */}
 
-      {createSheetOpen && (
+      {createSheetOpen && canManageFixtures && (
         <DialogBottom
           open={createSheetOpen}
           onClose={handleCloseFixtureEditor}
@@ -1300,12 +1340,11 @@ export default function VolleyballTournamentFixturesPage() {
 
                   <input
                     type="number"
+                    inputMode="numeric"
                     min={1}
-                    value={roundNumber}
+                    value={roundNumberInput}
                     onChange={(event) => {
-                      setRoundNumber(
-                        Math.max(1, Number(event.target.value) || 1),
-                      );
+                      setRoundNumberInput(event.target.value);
                     }}
                     className={inputClassName()}
                   />
@@ -1656,7 +1695,7 @@ export default function VolleyballTournamentFixturesPage() {
         </DialogBottom>
       )}
 
-      {manageFixture && (
+      {manageFixture && canManageFixtures && (
         <DialogBottom
           open={Boolean(manageFixture)}
           onClose={() => setManageFixture(null)}
@@ -1727,7 +1766,7 @@ export default function VolleyballTournamentFixturesPage() {
         </DialogBottom>
       )}
 
-      {deleteFixtureTarget && (
+      {deleteFixtureTarget && canManageFixtures && (
         <DialogBottom
           open={Boolean(deleteFixtureTarget)}
           onClose={() => {
@@ -2167,6 +2206,9 @@ function FixtureStageSection({
   fixtures,
   allFixtures,
   creatingMatchFixtureId,
+  canManageFixtures,
+  canCreateExecutionMatch,
+  canScoreMatches,
   onCreateMatch,
   onOpenMatch,
   onManageFixture,
@@ -2178,6 +2220,12 @@ function FixtureStageSection({
   allFixtures: VolleyballTournamentFixture[];
 
   creatingMatchFixtureId: string | null;
+
+  canManageFixtures: boolean;
+
+  canCreateExecutionMatch: boolean;
+
+  canScoreMatches: boolean;
 
   onCreateMatch: (fixture: VolleyballTournamentFixture) => void;
 
@@ -2206,6 +2254,9 @@ function FixtureStageSection({
             fixture={fixture}
             allFixtures={allFixtures}
             creatingMatch={creatingMatchFixtureId === fixture.id}
+            canManageFixtures={canManageFixtures}
+            canCreateExecutionMatch={canCreateExecutionMatch}
+            canScoreMatches={canScoreMatches}
             onCreateMatch={() => onCreateMatch(fixture)}
             onOpenMatch={() => onOpenMatch(fixture)}
             onManage={() => onManageFixture(fixture)}
@@ -2224,6 +2275,9 @@ function FixtureCard({
   fixture,
   allFixtures,
   creatingMatch,
+  canManageFixtures,
+  canCreateExecutionMatch,
+  canScoreMatches,
   onCreateMatch,
   onOpenMatch,
   onManage,
@@ -2233,6 +2287,12 @@ function FixtureCard({
   allFixtures: VolleyballTournamentFixture[];
 
   creatingMatch: boolean;
+
+  canManageFixtures: boolean;
+
+  canCreateExecutionMatch: boolean;
+
+  canScoreMatches: boolean;
 
   onCreateMatch: () => void;
 
@@ -2251,6 +2311,7 @@ function FixtureCard({
   );
 
   const canCreateMatch =
+    canCreateExecutionMatch &&
     fixture.status === VOLLEYBALL_FIXTURE_STATUSES.SCHEDULED &&
     !fixture.executionMatchId &&
     teamsResolved;
@@ -2266,8 +2327,9 @@ function FixtureCard({
   const isKnockout = isKnockoutTournamentStage(fixture.stage);
 
   const canManage =
-    fixture.status === VOLLEYBALL_FIXTURE_STATUSES.SCHEDULED ||
-    fixture.status === VOLLEYBALL_FIXTURE_STATUSES.MATCH_CREATED;
+    canManageFixtures &&
+    (fixture.status === VOLLEYBALL_FIXTURE_STATUSES.SCHEDULED ||
+      fixture.status === VOLLEYBALL_FIXTURE_STATUSES.MATCH_CREATED);
 
   /* =====================================================
      SIDE LABELS
@@ -2488,11 +2550,13 @@ function FixtureCard({
                   : "border-(--color-brand)/25 bg-(--color-bg-tint) text-(--color-brand)",
             )}
           >
-            {fixture.status === VOLLEYBALL_FIXTURE_STATUSES.LIVE
-              ? "Open Live Match"
+            {fixture.status === VOLLEYBALL_FIXTURE_STATUSES.LIVE && canScoreMatches
+              ? "Resume Live Match"
               : fixture.status === VOLLEYBALL_FIXTURE_STATUSES.COMPLETED
                 ? "View Match"
-                : "Open Match"}
+                : canScoreMatches
+                  ? "Open Match"
+                  : "View Match"}
           </button>
         )}
       </div>
@@ -3065,28 +3129,35 @@ function FixtureStatusBadge({ status }: { status: string }) {
    EMPTY
 ========================================================= */
 
-function EmptySchedule({ onCreate }: { onCreate: () => void }) {
+function EmptySchedule({
+  canManage,
+  onCreate,
+}: {
+  canManage: boolean;
+  onCreate: () => void;
+}) {
   return (
     <div className="rounded-3xl border border-dashed border-(--color-bg-border) bg-(--color-bg-card) px-5 py-8 text-center">
       <CalendarDays size={24} className="mx-auto text-(--color-brand)" />
 
       <p className="mt-3 text-sm font-black text-(--color-text-primary)">
-        Build your tournament schedule
+        {canManage ? "Build your tournament schedule" : "Schedule not available"}
       </p>
 
       <p className="mx-auto mt-1 max-w-[270px] text-[10px] leading-5 text-(--color-text-muted)">
-        Add each match separately. A 4-team knockout needs two semi-finals and
-        one final.
+        {canManage
+          ? "Add each match separately. A 4-team knockout needs two semi-finals and one final."
+          : "Fixtures will appear here after the tournament organizers create them."}
       </p>
 
-      <button
+      {canManage && <button
         type="button"
         onClick={onCreate}
         className="mx-auto mt-4 flex h-10 items-center gap-2 rounded-xl bg-(--color-brand) px-4 text-xs font-black text-white"
       >
         <Plus size={15} />
         Create First Fixture
-      </button>
+      </button>}
     </div>
   );
 }
@@ -3634,6 +3705,15 @@ function getFixtureMutationError(error: unknown, fallback: string) {
   }
 
   return message;
+}
+
+function isForbidden(error: unknown) {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "status" in error &&
+      error.status === 403,
+  );
 }
 
 function extractErrorMessage(

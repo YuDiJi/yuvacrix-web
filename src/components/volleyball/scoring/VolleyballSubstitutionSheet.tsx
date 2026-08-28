@@ -17,6 +17,7 @@ import { Button } from "@/components/common/Button";
 import { S3Image } from "@/components/common/S3Image";
 
 import { cn } from "@/lib/cn";
+import { getInitials } from "@/lib/getInitials";
 
 import { useRecordVolleyballSubstitutionMutation } from "@/store/api/volleyball/volleyballMatchApi";
 
@@ -850,13 +851,13 @@ function PlayerAvatar({
           className="h-full w-full object-cover"
           fallback={
             <span className="font-(family-name:--font-display) text-xs font-black text-(--color-brand)">
-              {player.playerNameSnapshot.charAt(0).toUpperCase()}
+              {getInitials(player.playerNameSnapshot)}
             </span>
           }
         />
       ) : (
         <span className="font-(family-name:--font-display) text-xs font-black text-(--color-brand)">
-          {player.playerNameSnapshot.charAt(0).toUpperCase()}
+          {getInitials(player.playerNameSnapshot)}
         </span>
       )}
     </div>

@@ -155,11 +155,11 @@ export default function CreateVolleyballPlayersPage() {
       helperText="Find or create a player, then add their volleyball details."
       onDone={() => {
         if (returnTo) {
-          router.push(returnTo);
+          router.replace(returnTo);
           return;
         }
 
-        router.push(`/volleyball/teams/${teamId}`);
+        router.replace(`/volleyball/teams/${teamId}`);
       }}
       doneLabel={(count) =>
         `Done — ${count} Player${count > 1 ? "s" : ""} Added`

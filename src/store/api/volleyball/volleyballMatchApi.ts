@@ -3,8 +3,10 @@ import { baseApi } from "../baseApi";
 import type {
   CreateVolleyballMatchDto,
   GetVolleyballMatchRulePresetsResponse,
+  GetVolleyballMyMatchesQuery,
   UpdateVolleyballPostMatchDto,
   VolleyballMatch,
+  VolleyballMyMatchesResponse,
 } from "@/types/volleyball/match";
 
 import type {
@@ -25,6 +27,8 @@ import { StartVolleyballSetDto, VolleyballSet } from "@/types/volleyball/set";
 
 import {
   GetVolleyballMatchHistoryResponse,
+  GetVolleyballScoringHistoryQuery,
+  VolleyballScoringHistoryResponse,
   UndoLastVolleyballEventRequest,
   UndoLastVolleyballEventResponse,
   UndoVolleyballEventDto,
@@ -329,6 +333,25 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       ],
     }),
 
+    getVolleyballScoringHistory: builder.query<
+      VolleyballScoringHistoryResponse,
+      GetVolleyballScoringHistoryQuery
+    >({
+      query: ({ matchId, setId, setNumber, limit = 30, skip = 0 }) => ({
+        url: `/volleyball/matches/${matchId}/scoring-history`,
+        method: "GET",
+        params: {
+          ...(setId ? { setId } : {}),
+          ...(setNumber !== undefined ? { setNumber } : {}),
+          limit,
+          skip,
+        },
+      }),
+      providesTags: (_result, _error, { matchId }) => [
+        { type: "VolleyballScoringHistory", id: matchId },
+      ],
+    }),
+
     /* =====================================================
          UNDO
       ===================================================== */
@@ -341,7 +364,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       }
     >({
       query: ({ matchId, body }) => ({
-        url: `/volleyball/matches/${matchId}/events/undo-last`,
+        url: `/volleyball/matches/${matchId}/undo`,
         method: "POST",
         body,
       }),
@@ -351,6 +374,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
           type: "VolleyballMatch",
           id: matchId,
         },
+        { type: "VolleyballScoringHistory", id: matchId },
       ],
     }),
 
@@ -387,6 +411,19 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
 
       providesTags: ["VolleyballMatch"],
     }),
+
+    getMyVolleyballMatches: builder.query<
+      VolleyballMyMatchesResponse,
+      GetVolleyballMyMatchesQuery | void
+    >({
+      query: (params) => ({
+        url: "/volleyball/matches/me",
+        method: "GET",
+        params: params ?? undefined,
+      }),
+
+      providesTags: ["VolleyballMatch"],
+    }),
   }),
 });
 
@@ -409,6 +446,8 @@ export const {
 
   useGetCurrentVolleyballSetQuery,
 
+  useGetVolleyballScoringHistoryQuery,
+
   useRecordVolleyballRallyMutation,
 
   useRecordVolleyballSubstitutionMutation,
@@ -422,4 +461,6 @@ export const {
   useUpdateVolleyballPostMatchMutation,
 
   useGetVolleyballMatchesQuery,
+
+  useGetMyVolleyballMatchesQuery,
 } = volleyballMatchApi;

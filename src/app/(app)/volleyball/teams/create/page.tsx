@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-
+import { useRouter, useSearchParams } from "next/navigation";
 import { SPORT_TYPES } from "@/types/sport";
 
 import { useCreateTeamMutation } from "@/store/api/teamApi";
@@ -13,7 +12,9 @@ import { CreateTeamForm } from "@/components/team/CreateTeamForm";
 
 export default function CreateVolleyballTeamPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
+  const returnTo = searchParams.get("returnTo");
   const [createTeam, { isLoading: isCreating }] = useCreateTeamMutation();
 
   const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
@@ -25,9 +26,10 @@ export default function CreateVolleyballTeamPage() {
       title="Create Volleyball Team"
       subtitle="Create your team and add players to your volleyball roster."
       submitText="Create Team"
+      showTeamColor
       isLoading={isCreating || isUploading}
       error={error}
-      onSubmit={async ({ name, city, logoFile }) => {
+      onSubmit={async ({ name, city, logoFile, teamColor }) => {
         setError("");
 
         try {
@@ -49,9 +51,20 @@ export default function CreateVolleyballTeamPage() {
             ...(logoKey && {
               logoUrl: logoKey,
             }),
+            ...(teamColor && {
+              teamColor,
+            }),
           }).unwrap();
 
-          router.push(`/volleyball/teams/create/players?teamId=${team.id}`);
+          const params = new URLSearchParams({
+            teamId: team.id,
+          });
+
+          if (returnTo) {
+            params.set("returnTo", returnTo);
+          }
+
+          router.push(`/volleyball/teams/create/players?${params.toString()}`);
         } catch (err) {
           const message =
             err &&

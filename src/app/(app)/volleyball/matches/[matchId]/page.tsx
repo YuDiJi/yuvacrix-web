@@ -25,6 +25,7 @@ import {
   useGetVolleyballMatchQuery,
   useGetVolleyballMatchSetsQuery,
 } from "@/store/api/volleyball/volleyballMatchApi";
+import { useGetVolleyballTournamentQuery } from "@/store/api/volleyball/volleyballTournamentApi";
 
 import {
   VOLLEYBALL_MATCH_STATUSES,
@@ -70,10 +71,22 @@ function getPrimaryAction(
   );
 
   if (liveSet) {
+    const search = new URLSearchParams({
+      setId: liveSet.id,
+    });
+
+    if (match.tournament?.id) {
+      search.set("tournamentId", match.tournament.id);
+    }
+
+    if (match.fixture?.id) {
+      search.set("fixtureId", match.fixture.id);
+    }
+
     return {
       label: "Resume Scoring",
       description: `Continue Set ${liveSet.setNumber}`,
-      href: `/volleyball/matches/${match.id}/scoring?setId=${liveSet.id}`,
+      href: `/volleyball/matches/${match.id}/scoring?${search.toString()}`,
       type: "SCORING",
     };
   }
@@ -196,6 +209,15 @@ export default function VolleyballMatchDetailsPage() {
   } = useGetVolleyballMatchSetsQuery({
     matchId,
   });
+
+  const { data: tournament } = useGetVolleyballTournamentQuery(
+    { tournamentId: match?.tournament?.id ?? "" },
+    { skip: !match?.tournament?.id },
+  );
+
+  const canOperateMatch =
+    match?.sourceType !== "TOURNAMENT" ||
+    tournament?.viewerAccess.canScoreMatches === true;
 
   const sortedSets = useMemo(
     () => [...sets].sort((a, b) => a.setNumber - b.setNumber),
@@ -335,7 +357,7 @@ export default function VolleyballMatchDetailsPage() {
             PRIMARY CTA
         ================================= */}
 
-        {!isCompleted && primaryAction && (
+        {!isCompleted && primaryAction && canOperateMatch && (
           <PrimaryActionCard
             action={primaryAction}
             onClick={() => router.push(primaryAction.href)}

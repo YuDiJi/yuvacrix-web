@@ -3,6 +3,7 @@
 import { Hash, Pencil, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { getInitials } from "@/lib/getInitials";
 import type { VolleyballTeamMember } from "@/types/volleyball/team";
 import { S3Image } from "@/components/common/S3Image";
 
@@ -54,13 +55,13 @@ export function VolleyballMemberCard({
             className="h-full w-full object-cover"
             fallback={
               <span className="font-(family-name:--font-display) text-base font-black text-(--color-brand)">
-                {playerName.charAt(0).toUpperCase()}
+                {getInitials(playerName)}
               </span>
             }
           />
         ) : (
           <span className="font-(family-name:--font-display) text-base font-black text-(--color-brand)">
-            {playerName.charAt(0).toUpperCase()}
+            {getInitials(playerName)}
           </span>
         )}
       </div>

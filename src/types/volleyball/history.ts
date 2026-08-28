@@ -1,6 +1,6 @@
 import type { VolleyballPointType } from "@/types/volleyball/scoring";
 import type { VolleyballSet } from "@/types/volleyball/set";
-import { VolleyballMatchStatus } from "./match";
+import type { VolleyballMatch } from "./match";
 
 export const VOLLEYBALL_EVENT_TYPES = {
   RALLY: "RALLY",
@@ -122,38 +122,46 @@ export interface UndoVolleyballEventResponse {
 }
 
 export interface UndoLastVolleyballEventRequest {
-  clientEventId: string;
+  throughEventId?: string;
+  expectedRevision?: number;
 }
 
 export interface UndoLastVolleyballEventResponse {
-  event: {
-    id: string;
-    sequenceNumber: number;
-    eventType: "UNDO";
-
-    targetEventId: string;
-    targetEventType: string;
-    targetSequenceNumber: number;
-
-    isRevoked: boolean;
-
-    createdAt: string;
-  };
-
+  success: boolean;
+  undoneEventsCount: number;
+  event: VolleyballUndoEvent;
   set: VolleyballSet;
+  match: VolleyballMatch;
+  revision: number;
+}
 
-  match: {
-    id: string;
+export interface VolleyballScoringHistoryScore {
+  teamAPoints: number;
+  teamBPoints: number;
+}
 
-    status: VolleyballMatchStatus;
+export interface VolleyballScoringHistoryItem {
+  eventId: string;
+  sequence: number;
+  type: string;
+  createdAt: string;
+  description: string;
+  scoreAfter: VolleyballScoringHistoryScore | null;
+  servingTeamIdAfter: string | null;
+  reversible: boolean;
+}
 
-    teamASetsWon: number;
-    teamBSetsWon: number;
+export interface VolleyballScoringHistoryResponse {
+  matchId: string;
+  setId: string | null;
+  items: VolleyballScoringHistoryItem[];
+  total: number;
+}
 
-    winnerTeamId: string | null;
-
-    isTie: boolean;
-
-    completedAt: string | null;
-  };
+export interface GetVolleyballScoringHistoryQuery {
+  matchId: string;
+  setId?: string;
+  setNumber?: number;
+  limit?: number;
+  skip?: number;
 }
