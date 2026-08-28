@@ -5,6 +5,7 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   ArrowRightLeft,
   Ban,
+  CircleAlert,
   CircleDot,
   History,
   RotateCcw,
@@ -24,8 +25,18 @@ import { VolleyballSubstitutionSheet } from "@/components/volleyball/scoring/Vol
 import { VolleyballLiberoReplacementSheet } from "@/components/volleyball/scoring/VolleyballLiberoReplacementSheet";
 import { VolleyballHistorySheet } from "@/components/volleyball/scoring/VolleyballHistorySheet";
 import { VolleyballSetCompletedSheet } from "@/components/volleyball/scoring/VolleyballSetCompletedSheet";
+import { VolleyballUndoHistorySheet } from "@/components/volleyball/scoring/VolleyballUndoHistorySheet";
 
 import { cn } from "@/lib/cn";
+import { getInitials } from "@/lib/getInitials";
+import { VOLLEYBALL_COURT_SLOTS } from "@/lib/volleyball/courtPositions";
+import {
+  getReadableTextColor,
+  resolveVolleyballTeamColor,
+  VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  withHexAlpha,
+} from "@/lib/volleyball/teamColors";
 
 import {
   useGetCurrentVolleyballSetQuery,
@@ -139,9 +150,9 @@ export default function VolleyballScoringPage() {
   const searchParams = useSearchParams();
 
   const matchId = params.matchId as string;
-  const tournamentId = searchParams.get("tournamentId");
+  const tournamentIdFromQuery = searchParams.get("tournamentId");
 
-  const fixtureId = searchParams.get("fixtureId");
+  const fixtureIdFromQuery = searchParams.get("fixtureId");
 
   const setIdFromRoute = searchParams.get("setId");
 
@@ -151,11 +162,21 @@ export default function VolleyballScoringPage() {
 
   const [liveSet, setLiveSet] = useState<VolleyballSet | null>(null);
 
+  const [restoringSetId, setRestoringSetId] = useState<string | null>(null);
+
   const [completedSet, setCompletedSet] = useState<VolleyballSet | null>(null);
 
   const [pointTeamId, setPointTeamId] = useState<string | null>(null);
 
+  const [lastScoringTeamId, setLastScoringTeamId] = useState<string | null>(
+    null,
+  );
+
   const [pointSheetOpen, setPointSheetOpen] = useState(false);
+
+  const [pointError, setPointError] = useState("");
+
+  const [pointActionsVisible, setPointActionsVisible] = useState(false);
 
   const [substitutionOpen, setSubstitutionOpen] = useState(false);
 
@@ -164,6 +185,10 @@ export default function VolleyballScoringPage() {
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const [undoOpen, setUndoOpen] = useState(false);
+
+  const [undoError, setUndoError] = useState("");
+
+  const [undoHistoryResetKey, setUndoHistoryResetKey] = useState(0);
 
   const [isRefreshingLifecycle, setIsRefreshingLifecycle] = useState(false);
 
@@ -182,6 +207,7 @@ export default function VolleyballScoringPage() {
   const {
     data: match,
     isLoading: isMatchLoading,
+    isFetching: isMatchFetching,
     isError: isMatchError,
     refetch: refetchMatch,
   } = useGetVolleyballMatchQuery({
@@ -191,6 +217,7 @@ export default function VolleyballScoringPage() {
   const {
     data: currentSet,
     isLoading: isSetLoading,
+    isFetching: isSetFetching,
     isError: isSetError,
     refetch: refetchCurrentSet,
   } = useGetCurrentVolleyballSetQuery({
@@ -200,6 +227,7 @@ export default function VolleyballScoringPage() {
   const {
     data: sets,
     isLoading: isSetsLoading,
+    isFetching: isSetsFetching,
     isError: isSetsError,
     refetch: refetchSets,
   } = useGetVolleyballMatchSetsQuery({
@@ -212,11 +240,26 @@ export default function VolleyballScoringPage() {
   const [undoLastEvent, { isLoading: isUndoing }] =
     useUndoLastVolleyballEventMutation();
 
+  const resolvedTournamentId = match?.tournament?.id ?? tournamentIdFromQuery;
+
+  const resolvedFixtureId = match?.fixture?.id ?? fixtureIdFromQuery;
+
+  const scoreUpdatePending =
+    isRecordingRally ||
+    isUndoing ||
+    isMatchFetching ||
+    isSetFetching ||
+    isSetsFetching;
+
   /* =========================
      RESOLVE ACTIVE SET
   ========================= */
 
   useEffect(() => {
+    if (scoreUpdatePending) {
+      return;
+    }
+
     /*
      * Route set is authoritative.
      *
@@ -224,12 +267,14 @@ export default function VolleyballScoringPage() {
      * can temporarily still contain the previous
      * cached set.
      */
-    if (setIdFromRoute) {
+    const authoritativeSetId = restoringSetId ?? setIdFromRoute;
+
+    if (authoritativeSetId) {
       if (!sets?.length) {
         return;
       }
 
-      const routeSet = sets.find((set) => set.id === setIdFromRoute);
+      const routeSet = sets.find((set) => set.id === authoritativeSetId);
 
       if (!routeSet) {
         /*
@@ -261,9 +306,19 @@ export default function VolleyballScoringPage() {
           : null,
       );
     }
-  }, [setIdFromRoute, sets, currentSet]);
+  }, [setIdFromRoute, restoringSetId, sets, currentSet, scoreUpdatePending]);
 
-  const setId = setIdFromRoute ?? liveSet?.id;
+  const setId = restoringSetId ?? setIdFromRoute ?? liveSet?.id;
+
+  useEffect(() => {
+    if (restoringSetId && setIdFromRoute === restoringSetId) {
+      setRestoringSetId(null);
+    }
+  }, [restoringSetId, setIdFromRoute]);
+
+  useEffect(() => {
+    setLastScoringTeamId(null);
+  }, [liveSet?.id]);
 
   /* =========================
      DERIVED STATE
@@ -321,14 +376,32 @@ export default function VolleyballScoringPage() {
     );
   }, [pointRoster, pointRotation]);
 
-  const teamAIsServing = liveSet?.servingTeamId === match?.teamAId;
+  const teamAColor = resolveVolleyballTeamColor(
+    match?.teamASnapshot.teamColor,
+    VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  );
 
-  const teamBIsServing = liveSet?.servingTeamId === match?.teamBId;
+  const teamBColor = resolveVolleyballTeamColor(
+    match?.teamBSnapshot.teamColor,
+    VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  );
+
+  const servingTeam =
+    match && liveSet?.servingTeamId === match.teamAId
+      ? {
+          name: match.teamASnapshot.name,
+          color: teamAColor,
+        }
+      : match && liveSet?.servingTeamId === match.teamBId
+        ? {
+            name: match.teamBSnapshot.name,
+            color: teamBColor,
+          }
+        : null;
 
   const actionsDisabled =
     !liveSet ||
-    isRecordingRally ||
-    isUndoing ||
+    scoreUpdatePending ||
     liveSet.status !== VOLLEYBALL_SET_STATUSES.LIVE;
 
   /* =========================
@@ -341,6 +414,8 @@ export default function VolleyballScoringPage() {
     }
 
     setError("");
+
+    setPointError("");
 
     setPointTeamId(teamId);
 
@@ -358,7 +433,11 @@ export default function VolleyballScoringPage() {
       return;
     }
 
+    const scoringTeamId = pointTeamId;
+
     setError("");
+
+    setPointError("");
 
     try {
       const response = await recordRally({
@@ -371,7 +450,7 @@ export default function VolleyballScoringPage() {
 
           expectedVersion: liveSet.version,
 
-          winningTeamId: pointTeamId,
+          winningTeamId: scoringTeamId,
 
           pointType,
 
@@ -388,15 +467,25 @@ export default function VolleyballScoringPage() {
        */
       setLiveSet(response.set);
 
+      setPointError("");
+
+      setLastScoringTeamId(scoringTeamId);
+
       setPointSheetOpen(false);
 
       setPointTeamId(null);
+
+      setPointActionsVisible(false);
 
       if (response.set.status === VOLLEYBALL_SET_STATUSES.COMPLETED) {
         setCompletedSet(response.set);
       }
     } catch (err) {
-      setError(extractErrorMessage(err));
+      const message = extractErrorMessage(err);
+
+      setError(message);
+
+      setPointError(message);
 
       void refetchSets();
     }
@@ -406,10 +495,10 @@ export default function VolleyballScoringPage() {
      UNDO
   ========================= */
 
-  async function handleUndo() {
+  async function handleUndo(throughEventId?: string) {
     const targetSet = completedSet ?? liveSet;
 
-    if (!targetSet) {
+    if (!targetSet || !match) {
       return;
     }
 
@@ -420,14 +509,30 @@ export default function VolleyballScoringPage() {
         matchId,
 
         body: {
-          clientEventId: crypto.randomUUID(),
+          ...(throughEventId ? { throughEventId } : {}),
+          expectedRevision: match.version,
         },
       }).unwrap();
+
+      const restoredSetId = response.set.id;
+      const restoredDifferentSet = setIdFromRoute !== restoredSetId;
+
+      if (restoredDifferentSet) {
+        setRestoringSetId(restoredSetId);
+      }
 
       /*
        * Backend-authoritative state.
        */
       setLiveSet(response.set);
+
+      setLastScoringTeamId(null);
+
+      setPointTeamId(null);
+
+      setPointSheetOpen(false);
+
+      setPointActionsVisible(false);
 
       /*
        * If a completed set/match was reopened,
@@ -445,7 +550,25 @@ export default function VolleyballScoringPage() {
 
       setUndoOpen(false);
 
+      setUndoError("");
+
       setError("");
+
+      if (restoredDifferentSet) {
+        const query = new URLSearchParams({ setId: restoredSetId });
+
+        if (resolvedTournamentId) {
+          query.set("tournamentId", resolvedTournamentId);
+        }
+
+        if (resolvedFixtureId) {
+          query.set("fixtureId", resolvedFixtureId);
+        }
+
+        router.replace(
+          `/volleyball/matches/${matchId}/scoring?${query.toString()}`,
+        );
+      }
 
       /*
        * Still refetch lifecycle resources because
@@ -453,7 +576,23 @@ export default function VolleyballScoringPage() {
        */
       await Promise.all([refetchMatch(), refetchSets(), refetchCurrentSet()]);
     } catch (err) {
+      if (isScoringStateChangedError(err)) {
+        setUndoError(
+          "The score changed while you were reviewing it. Please choose the correction again.",
+        );
+        setUndoHistoryResetKey((value) => value + 1);
+        await Promise.all([refetchMatch(), refetchSets(), refetchCurrentSet()]);
+        return;
+      }
+
+      if (isForbiddenError(err)) {
+        setUndoError("Your tournament permissions have changed.");
+        await refetchMatch();
+        return;
+      }
+
       setError(extractErrorMessage(err));
+      setUndoError(extractErrorMessage(err));
     }
   }
 
@@ -527,7 +666,7 @@ export default function VolleyballScoringPage() {
       setCompletedSet(null);
 
       router.replace(
-        `/volleyball/matches/${matchId}/sets/setup?setNumber=${nextSet.setNumber}&tournamentId=${tournamentId}&fixtureId=${fixtureId}`,
+        `/volleyball/matches/${matchId}/sets/setup?setNumber=${nextSet.setNumber}&tournamentId=${resolvedTournamentId}&fixtureId=${resolvedFixtureId}`,
       );
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -537,7 +676,8 @@ export default function VolleyballScoringPage() {
   }
 
   const isWaitingForRouteSet = Boolean(
-    setIdFromRoute && !sets?.some((set) => set.id === setIdFromRoute),
+    (restoringSetId ?? setIdFromRoute) &&
+      !sets?.some((set) => set.id === (restoringSetId ?? setIdFromRoute)),
   );
 
   /* =========================
@@ -652,17 +792,20 @@ export default function VolleyballScoringPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="grid min-w-0 max-w-[62%] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
             <TopTeamIdentity
               imageKey={match.teamASnapshot.logoUrl}
-              name={match.teamASnapshot.shortName ?? match.teamASnapshot.name}
+              name={match.teamASnapshot.name}
+              teamColor={teamAColor}
             />
 
             <span className="text-[10px] font-black text-white/35">VS</span>
 
             <TopTeamIdentity
               imageKey={match.teamBSnapshot.logoUrl}
-              name={match.teamBSnapshot.shortName ?? match.teamBSnapshot.name}
+              name={match.teamBSnapshot.name}
+              teamColor={teamBColor}
+              right
             />
           </div>
         </div>
@@ -676,8 +819,10 @@ export default function VolleyballScoringPage() {
           teamBRoster={match.teamBRoster}
           teamARotation={liveSet.teamACurrentRotation}
           teamBRotation={liveSet.teamBCurrentRotation}
-          teamAName={match.teamASnapshot.shortName ?? match.teamASnapshot.name}
-          teamBName={match.teamBSnapshot.shortName ?? match.teamBSnapshot.name}
+          teamAName={match.teamASnapshot.name}
+          teamBName={match.teamBSnapshot.name}
+          teamAColor={teamAColor}
+          teamBColor={teamBColor}
           teamAId={match.teamAId}
           teamBId={match.teamBId}
           servingTeamId={liveSet.servingTeamId}
@@ -689,39 +834,52 @@ export default function VolleyballScoringPage() {
         ================================= */}
 
         <ScoreStrip
-          teamAName={match.teamASnapshot.shortName ?? match.teamASnapshot.name}
-          teamBName={match.teamBSnapshot.shortName ?? match.teamBSnapshot.name}
+          teamAId={match.teamAId}
+          teamBId={match.teamBId}
+          teamAName={match.teamASnapshot.name}
+          teamBName={match.teamBSnapshot.name}
+          teamAColor={teamAColor}
+          teamBColor={teamBColor}
           teamAPoints={liveSet.teamAPoints}
           teamBPoints={liveSet.teamBPoints}
           teamASets={match.teamASetsWon}
           teamBSets={match.teamBSetsWon}
           setNumber={liveSet.setNumber}
-          teamAIsServing={teamAIsServing}
-          teamBIsServing={teamBIsServing}
+          lastScoringTeamId={lastScoringTeamId}
           server={currentServer}
+          pending={scoreUpdatePending}
         />
 
         {/* =================================
             LARGE POINT ACTIONS
         ================================= */}
 
-        <div className="grid shrink-0 grid-cols-2 gap-2">
-          <PointActionButton
-            teamName={match.teamASnapshot.shortName ?? match.teamASnapshot.name}
-            currentScore={liveSet.teamAPoints}
-            side="A"
-            disabled={actionsDisabled}
-            onClick={() => openPointSheet(match.teamAId)}
-          />
+        {pointActionsVisible ? (
+          <div className="grid shrink-0 grid-cols-2 gap-2">
+            <PointActionButton
+              teamName={match.teamASnapshot.name}
+              currentScore={liveSet.teamAPoints}
+              teamColor={teamAColor}
+              disabled={actionsDisabled}
+              onClick={() => openPointSheet(match.teamAId)}
+            />
 
-          <PointActionButton
-            teamName={match.teamBSnapshot.shortName ?? match.teamBSnapshot.name}
-            currentScore={liveSet.teamBPoints}
-            side="B"
-            disabled={actionsDisabled}
-            onClick={() => openPointSheet(match.teamBId)}
+            <PointActionButton
+              teamName={match.teamBSnapshot.name}
+              currentScore={liveSet.teamBPoints}
+              teamColor={teamBColor}
+              disabled={actionsDisabled}
+              onClick={() => openPointSheet(match.teamBId)}
+            />
+          </div>
+        ) : (
+          <ServeActionButton
+            teamName={servingTeam?.name ?? "Serving team"}
+            teamColor={servingTeam?.color ?? teamAColor}
+            disabled={actionsDisabled || !servingTeam}
+            onClick={() => setPointActionsVisible(true)}
           />
-        </div>
+        )}
 
         {/* =================================
             SECONDARY ACTIONS
@@ -751,9 +909,12 @@ export default function VolleyballScoringPage() {
 
           <SmallActionButton
             icon={<RotateCcw size={18} />}
-            title={isUndoing ? "Wait" : "Undo"}
+            title={isUndoing ? "Wait" : "Correct"}
             disabled={actionsDisabled}
-            onClick={() => setUndoOpen(true)}
+            onClick={() => {
+              setUndoError("");
+              setUndoOpen(true);
+            }}
           />
         </div>
       </div>
@@ -770,19 +931,24 @@ export default function VolleyballScoringPage() {
             name: match.teamASnapshot.name,
             shortName: match.teamASnapshot.shortName,
             logoUrl: match.teamASnapshot.logoUrl,
+            teamColor: teamAColor,
           }}
           teamB={{
             id: match.teamBId,
             name: match.teamBSnapshot.name,
             shortName: match.teamBSnapshot.shortName,
             logoUrl: match.teamBSnapshot.logoUrl,
+            teamColor: teamBColor,
           }}
           selectedTeamId={pointTeamId}
           players={pointPlayers}
           isSubmitting={isRecordingRally}
+          error={pointError}
           onChangeTeam={(teamId) => {
+            setPointError("");
             setPointTeamId(teamId);
           }}
+          onClearError={() => setPointError("")}
           onClose={() => {
             if (isRecordingRally) {
               return;
@@ -790,7 +956,11 @@ export default function VolleyballScoringPage() {
 
             setPointSheetOpen(false);
 
+            setPointError("");
+
             setPointTeamId(null);
+
+            setPointActionsVisible(false);
           }}
           onSubmit={submitRally}
         />
@@ -841,11 +1011,19 @@ export default function VolleyballScoringPage() {
       {/* UNDO */}
 
       {undoOpen && (
-        <UndoSheet
+        <VolleyballUndoHistorySheet
           open={undoOpen}
+          match={match}
+          liveSet={completedSet ?? liveSet}
           loading={isUndoing}
-          onClose={() => setUndoOpen(false)}
-          onConfirm={() => void handleUndo()}
+          error={undoError}
+          resetKey={undoHistoryResetKey}
+          onClose={() => {
+            if (isUndoing) return;
+            setUndoOpen(false);
+            setUndoError("");
+          }}
+          onUndo={(throughEventId) => void handleUndo(throughEventId)}
         />
       )}
 
@@ -869,8 +1047,18 @@ export default function VolleyballScoringPage() {
           onUndoLastPoint={() => {
             setEndMatchOpen(false);
 
+            setUndoError("");
             setUndoOpen(true);
           }}
+          onBackToFixtures={
+            resolvedTournamentId
+              ? () => {
+                  router.replace(
+                    `/volleyball/tournaments/${resolvedTournamentId}/fixtures`,
+                  );
+                }
+              : undefined
+          }
           onClose={() => {
             setEndMatchOpen(false);
 
@@ -881,9 +1069,9 @@ export default function VolleyballScoringPage() {
 
             setEndMatchOpen(false);
 
-            if (tournamentId) {
+            if (resolvedTournamentId) {
               router.replace(
-                `/volleyball/tournaments/${tournamentId}/fixtures`,
+                `/volleyball/tournaments/${resolvedTournamentId}/fixtures`,
               );
 
               return;
@@ -910,6 +1098,8 @@ type CompactVolleyballCourtProps = {
 
   teamAName: string;
   teamBName: string;
+  teamAColor: string;
+  teamBColor: string;
 
   teamAId: string;
   teamBId: string;
@@ -926,28 +1116,28 @@ function CompactVolleyballCourt({
   teamBRotation,
   teamAName,
   teamBName,
+  teamAColor,
+  teamBColor,
   teamAId,
   teamBId,
   servingTeamId,
   currentServerPlayerId,
 }: CompactVolleyballCourtProps) {
-  const teamALabel = getTeamDisplayLabel(teamAName);
-
-  const teamBLabel = getTeamDisplayLabel(teamBName);
-
   return (
     <div className="shrink-0 overflow-hidden rounded-2xl bg-(--color-navy) p-2.5 shadow-(--shadow-card)">
       {/* TEAM LABELS */}
 
       <div className="mb-1.5 flex items-center justify-between px-1">
         <CourtTeamLabel
-          label={teamALabel}
+          label={teamAName}
+          teamColor={teamAColor}
           side="A"
           serving={servingTeamId === teamAId}
         />
 
         <CourtTeamLabel
-          label={teamBLabel}
+          label={teamBName}
+          teamColor={teamBColor}
           side="B"
           serving={servingTeamId === teamBId}
         />
@@ -955,7 +1145,7 @@ function CompactVolleyballCourt({
 
       {/* COURT */}
 
-      <div className="relative aspect-[2.2/1] w-full overflow-hidden rounded-xl border-[3px] border-white bg-[#3479c7]">
+      <div className="relative aspect-[2/1] w-full overflow-hidden rounded-xl border-[3px] border-white bg-[#3479c7]">
         {/* PLAYING SURFACE */}
 
         <div className="absolute inset-[6%] border-2 border-white/95 bg-[#edc990]" />
@@ -985,6 +1175,7 @@ function CompactVolleyballCourt({
             side="A"
             roster={teamARoster}
             rotation={teamARotation}
+            teamColor={teamAColor}
             currentServerPlayerId={currentServerPlayerId}
           />
         </div>
@@ -994,6 +1185,7 @@ function CompactVolleyballCourt({
             side="B"
             roster={teamBRoster}
             rotation={teamBRotation}
+            teamColor={teamBColor}
             currentServerPlayerId={currentServerPlayerId}
           />
         </div>
@@ -1016,26 +1208,39 @@ function CompactVolleyballCourt({
 function CourtTeamLabel({
   label,
   side,
+  teamColor,
   serving,
 }: {
   label: string;
   side: "A" | "B";
+  teamColor: string;
   serving: boolean;
 }) {
   return (
     <div className="flex items-center gap-1.5">
       {side === "A" && (
-        <span className="h-2.5 w-2.5 rounded-full bg-[#f59e0b]" />
+        <span
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
+          style={{ backgroundColor: teamColor }}
+        />
       )}
 
-      <span className="font-(family-name:--font-display) text-sm font-black uppercase tracking-[0.12em] text-white">
+      <span
+        className={cn(
+          "min-w-0 max-w-[125px] truncate font-(family-name:--font-display) text-xs font-black text-white min-[380px]:max-w-[150px] min-[380px]:text-sm",
+          side === "B" && "text-right",
+        )}
+      >
         {label}
       </span>
 
       {serving && <CircleDot size={10} className="text-white" />}
 
       {side === "B" && (
-        <span className="h-2.5 w-2.5 rounded-full bg-[#ef3b2d]" />
+        <span
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
+          style={{ backgroundColor: teamColor }}
+        />
       )}
     </div>
   );
@@ -1047,6 +1252,7 @@ type CourtHalfProps = {
   roster: VolleyballMatchRoster;
 
   rotation: VolleyballRotationPosition[];
+  teamColor: string;
 
   currentServerPlayerId: string | null;
 };
@@ -1055,104 +1261,19 @@ function CourtHalf({
   side,
   roster,
   rotation,
+  teamColor,
   currentServerPlayerId,
 }: CourtHalfProps) {
-  /*
-   * Each half:
-   *
-   * 3 front-row players
-   * 3 back-row players
-   *
-   * We use percentages RELATIVE
-   * TO THAT TEAM'S HALF.
-   */
-
-  const positions: {
-    position: VolleyballCourtPosition;
-    left: string;
-    top: string;
-  }[] =
-    side === "A"
-      ? [
-          {
-            position: 4,
-            left: "18%",
-            top: "26%",
-          },
-          {
-            position: 3,
-            left: "50%",
-            top: "26%",
-          },
-          {
-            position: 2,
-            left: "82%",
-            top: "26%",
-          },
-
-          {
-            position: 5,
-            left: "18%",
-            top: "74%",
-          },
-          {
-            position: 6,
-            left: "50%",
-            top: "74%",
-          },
-          {
-            position: 1,
-            left: "82%",
-            top: "74%",
-          },
-        ]
-      : [
-          /*
-           * Visually mirrored.
-           */
-          {
-            position: 2,
-            left: "18%",
-            top: "26%",
-          },
-          {
-            position: 3,
-            left: "50%",
-            top: "26%",
-          },
-          {
-            position: 4,
-            left: "82%",
-            top: "26%",
-          },
-
-          {
-            position: 1,
-            left: "18%",
-            top: "74%",
-          },
-          {
-            position: 6,
-            left: "50%",
-            top: "74%",
-          },
-          {
-            position: 5,
-            left: "82%",
-            top: "74%",
-          },
-        ];
-
   return (
     <div className="relative h-full w-full">
-      {positions.map((slot) => {
+      {VOLLEYBALL_COURT_SLOTS.map((slot) => {
         const player = getPlayerAtPosition(roster, rotation, slot.position);
 
         return (
           <CourtPlayerMarker
             key={`${side}-${slot.position}`}
             player={player}
-            side={side}
+            teamColor={teamColor}
             isServer={player?.playerId === currentServerPlayerId}
             left={slot.left}
             top={slot.top}
@@ -1165,14 +1286,14 @@ function CourtHalf({
 
 function CourtPlayerMarker({
   player,
-  side,
+  teamColor,
   isServer,
   left,
   top,
 }: {
   player: VolleyballMatchRosterPlayer | null;
 
-  side: "A" | "B";
+  teamColor: string;
 
   isServer: boolean;
 
@@ -1191,15 +1312,20 @@ function CourtPlayerMarker({
         className={cn(
           "relative flex h-10 w-10 items-center justify-center rounded-full shadow-[0_5px_12px_rgba(0,0,0,0.2)]",
           "min-[380px]:h-11 min-[380px]:w-11",
-          side === "A"
-            ? "bg-[linear-gradient(145deg,#fbbf24,#f59e0b)]"
-            : "bg-[linear-gradient(145deg,#fb5746,#ef3025)]",
           isServer && "ring-[3px] ring-white",
         )}
+        style={{
+          backgroundColor: teamColor,
+          boxShadow: `0 5px 12px ${withHexAlpha(teamColor, "4D")}`,
+        }}
       >
-        <span className="font-(family-name:--font-display) text-lg font-black text-white min-[380px]:text-xl">
-          {player?.jerseyNumberSnapshot ?? "–"}
-        </span>
+        {player ? (
+          <PlayerPhoto player={player} size={40} />
+        ) : (
+          <span className="font-(family-name:--font-display) text-lg font-black text-white min-[380px]:text-xl">
+            –
+          </span>
+        )}
 
         {isServer && (
           <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-(--color-brand)">
@@ -1216,32 +1342,35 @@ function CourtPlayerMarker({
 ========================================================= */
 
 function ScoreStrip({
+  teamAId,
+  teamBId,
   teamAName,
   teamBName,
+  teamAColor,
+  teamBColor,
   teamAPoints,
   teamBPoints,
   teamASets,
   teamBSets,
   setNumber,
-  teamAIsServing,
-  teamBIsServing,
   server,
+  pending,
+  lastScoringTeamId,
 }: {
+  teamAId: string;
+  teamBId: string;
   teamAName: string;
   teamBName: string;
-
+  teamAColor: string;
+  teamBColor: string;
   teamAPoints: number;
   teamBPoints: number;
-
   teamASets: number;
   teamBSets: number;
-
   setNumber: number;
-
-  teamAIsServing: boolean;
-  teamBIsServing: boolean;
-
   server: VolleyballMatchRosterPlayer | null;
+  pending: boolean;
+  lastScoringTeamId: string | null;
 }) {
   return (
     <div className="shrink-0 overflow-hidden rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) shadow-(--shadow-card)">
@@ -1250,8 +1379,8 @@ function ScoreStrip({
           name={teamAName}
           points={teamAPoints}
           sets={teamASets}
-          serving={teamAIsServing}
-          side="A"
+          scoredLastPoint={lastScoringTeamId === teamAId}
+          teamColor={teamAColor}
         />
 
         <div className="px-1 text-center">
@@ -1266,19 +1395,30 @@ function ScoreStrip({
           name={teamBName}
           points={teamBPoints}
           sets={teamBSets}
-          serving={teamBIsServing}
-          side="B"
+          scoredLastPoint={lastScoringTeamId === teamBId}
+          teamColor={teamBColor}
           align="right"
         />
       </div>
 
       <div className="border-t border-(--color-bg-border) bg-(--color-bg-tint) px-3 py-1.5 text-center">
-        <p className="truncate text-[10px] text-(--color-text-secondary)">
-          Serving{" "}
-          <span className="font-bold text-(--color-text-primary)">
-            {server ? server.playerNameSnapshot : "—"}
-          </span>
-        </p>
+        {pending ? (
+          <div
+            className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-(--color-brand)"
+            role="status"
+            aria-live="polite"
+          >
+            <span className="h-2.5 w-2.5 animate-spin rounded-full border-2 border-(--color-brand)/25 border-t-(--color-brand)" />
+            Saving score…
+          </div>
+        ) : (
+          <p className="truncate text-[10px] text-(--color-text-secondary)">
+            Serving{" "}
+            <span className="font-bold text-(--color-text-primary)">
+              {server ? server.playerNameSnapshot : "—"}
+            </span>
+          </p>
+        )}
       </div>
     </div>
   );
@@ -1288,19 +1428,15 @@ function ScoreTeam({
   name,
   points,
   sets,
-  serving,
-  side,
+  scoredLastPoint,
+  teamColor,
   align = "left",
 }: {
   name: string;
-
   points: number;
   sets: number;
-
-  serving: boolean;
-
-  side: "A" | "B";
-
+  scoredLastPoint: boolean;
+  teamColor: string;
   align?: "left" | "right";
 }) {
   return (
@@ -1311,24 +1447,37 @@ function ScoreTeam({
       )}
     >
       <div
-        className={cn(
-          "flex h-9 min-w-9 items-center justify-center rounded-xl px-2 font-(family-name:--font-display) text-2xl font-black",
-          serving
-            ? side === "A"
-              ? "bg-[#f59e0b] text-white"
-              : "bg-[#ef3b2d] text-white"
-            : "bg-(--color-bg-base) text-(--color-text-primary)",
-        )}
+        className="flex h-10 min-w-10 items-center justify-center rounded-xl border-2 px-2 font-(family-name:--font-display) text-2xl font-black transition-colors"
+        style={{
+          borderColor: scoredLastPoint ? teamColor : "var(--color-bg-border)",
+
+          backgroundColor: scoredLastPoint
+            ? teamColor
+            : "var(--color-bg-border)",
+
+          color: scoredLastPoint
+            ? getReadableTextColor(teamColor)
+            : "var(--color-text-muted)",
+
+          boxShadow: scoredLastPoint
+            ? `0 0 0 2px ${withHexAlpha(teamColor, "33")}`
+            : undefined,
+        }}
       >
         {points}
       </div>
 
       <div className="min-w-0">
-        <p className="truncate text-[10px] font-black uppercase text-(--color-text-primary)">
-          {getTeamDisplayLabel(name)}
+        <p
+          className="truncate text-[10px] font-black text-(--color-text-primary)"
+          title={name}
+        >
+          {name}
         </p>
 
-        <p className="text-[9px] text-(--color-text-muted)">Sets {sets}</p>
+        <p className="text-[9px] text-(--color-text-muted)">
+          <span style={{ color: teamColor }}>●</span> Sets {sets}
+        </p>
       </div>
     </div>
   );
@@ -1338,10 +1487,79 @@ function ScoreTeam({
    PRIMARY POINT ACTIONS
 ========================================================= */
 
+function ServeActionButton({
+  teamName,
+  teamColor,
+  disabled,
+  onClick,
+}: {
+  teamName: string;
+  teamColor: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const foreground = getReadableTextColor(teamColor);
+
+  return (
+    <div
+      className="shrink-0 rounded-2xl border p-2"
+      style={{
+        borderColor: withHexAlpha(teamColor, "66"),
+        backgroundColor: withHexAlpha(teamColor, "14"),
+      }}
+    >
+      <p className="mb-1.5 truncate px-1 text-center text-xs font-bold text-(--color-text-primary)">
+        {teamName} serving
+      </p>
+
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onClick}
+        className={cn(
+          "flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-(family-name:--font-display) text-xl font-black shadow-lg transition-transform",
+          !disabled && "active:scale-[0.98]",
+          disabled && "cursor-not-allowed opacity-45",
+        )}
+        style={{ backgroundColor: teamColor, color: foreground }}
+      >
+        <Volleyball size={22} />
+        Serve
+      </button>
+    </div>
+  );
+}
+
+function getApiErrorCode(error: unknown) {
+  if (!error || typeof error !== "object" || !("data" in error)) return null;
+  const data = error.data;
+  if (!data || typeof data !== "object" || !("code" in data)) return null;
+  return typeof data.code === "string" ? data.code : null;
+}
+
+function isScoringStateChangedError(error: unknown) {
+  return Boolean(
+    error &&
+    typeof error === "object" &&
+    "status" in error &&
+    error.status === 409 &&
+    getApiErrorCode(error) === "VOLLEYBALL_SCORING_STATE_CHANGED",
+  );
+}
+
+function isForbiddenError(error: unknown) {
+  return Boolean(
+    error &&
+    typeof error === "object" &&
+    "status" in error &&
+    error.status === 403,
+  );
+}
+
 function PointActionButton({
   teamName,
   currentScore,
-  side,
+  teamColor,
   disabled,
   onClick,
 }: {
@@ -1349,13 +1567,13 @@ function PointActionButton({
 
   currentScore: number;
 
-  side: "A" | "B";
+  teamColor: string;
 
   disabled: boolean;
 
   onClick: () => void;
 }) {
-  const teamA = side === "A";
+  const foreground = getReadableTextColor(teamColor);
 
   return (
     <button
@@ -1363,13 +1581,11 @@ function PointActionButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "relative overflow-hidden rounded-2xl px-3 py-3 text-left text-white shadow-lg transition-transform",
-        teamA
-          ? "bg-[linear-gradient(135deg,#f59e0b,#ea580c)]"
-          : "bg-[linear-gradient(135deg,#fb4938,#dc2626)]",
+        "relative overflow-hidden rounded-2xl px-3 py-3 text-left shadow-lg transition-transform",
         !disabled && "active:scale-[0.98]",
         disabled && "cursor-not-allowed opacity-45",
       )}
+      style={{ backgroundColor: teamColor, color: foreground }}
     >
       {/* LARGE DECORATIVE BALL */}
 
@@ -1380,21 +1596,27 @@ function PointActionButton({
       />
 
       <div className="relative flex items-center gap-2">
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/18">
+        <div
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+          style={{ backgroundColor: withHexAlpha(foreground, "24") }}
+        >
           <Volleyball size={23} />
 
-          <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-base font-black text-(--color-navy)">
+          <span
+            className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-base font-black"
+            style={{ backgroundColor: foreground, color: teamColor }}
+          >
             +
           </span>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[9px] font-black uppercase tracking-[0.13em] text-white/75">
+          <p className="text-[9px] font-black uppercase tracking-[0.13em] opacity-75">
             Award Point
           </p>
 
-          <p className="mt-0.5 truncate font-(family-name:--font-display) text-xl font-black uppercase tracking-wide">
-            {getTeamDisplayLabel(teamName)}
+          <p className="mt-0.5 line-clamp-2 font-(family-name:--font-display) text-base leading-tight font-black">
+            {teamName}
           </p>
         </div>
 
@@ -1403,8 +1625,11 @@ function PointActionButton({
         </span>
       </div>
 
-      <div className="relative mt-2 flex items-center justify-between border-t border-white/20 pt-1.5">
-        <span className="text-[9px] text-white/75">Current score</span>
+      <div
+        className="relative mt-2 flex items-center justify-between border-t pt-1.5"
+        style={{ borderColor: withHexAlpha(foreground, "33") }}
+      >
+        <span className="text-[9px] opacity-75">Current score</span>
 
         <span className="text-sm font-black">{currentScore}</span>
       </div>
@@ -1461,6 +1686,7 @@ type PointTeam = {
   name: string;
   shortName?: string | null;
   logoUrl?: string | null;
+  teamColor: string;
 };
 
 function VolleyballPointSheet({
@@ -1470,7 +1696,9 @@ function VolleyballPointSheet({
   selectedTeamId,
   players,
   isSubmitting,
+  error,
   onChangeTeam,
+  onClearError,
   onClose,
   onSubmit,
 }: {
@@ -1485,7 +1713,11 @@ function VolleyballPointSheet({
 
   isSubmitting: boolean;
 
+  error?: string;
+
   onChangeTeam: (teamId: string) => void;
+
+  onClearError: () => void;
 
   onClose: () => void;
 
@@ -1548,7 +1780,7 @@ function VolleyballPointSheet({
             <TeamBadge
               imageKey={selectedTeam.logoUrl ?? null}
               name={selectedTeam.shortName ?? selectedTeam.name}
-              tone={selectedTeam.id === teamA.id ? "orange" : "red"}
+              teamColor={selectedTeam.teamColor}
             />
 
             <button
@@ -1575,7 +1807,6 @@ function VolleyballPointSheet({
             <TeamChoiceCard
               team={teamA}
               selected={selectedTeam.id === teamA.id}
-              tone="orange"
               disabled={isSubmitting}
               onClick={() => onChangeTeam(teamA.id)}
             />
@@ -1583,7 +1814,6 @@ function VolleyballPointSheet({
             <TeamChoiceCard
               team={teamB}
               selected={selectedTeam.id === teamB.id}
-              tone="red"
               disabled={isSubmitting}
               onClick={() => onChangeTeam(teamB.id)}
             />
@@ -1603,6 +1833,8 @@ function VolleyballPointSheet({
                 disabled={isSubmitting}
                 visual={<ServeVisual />}
                 onClick={() => {
+                  onClearError();
+
                   setPointType(VOLLEYBALL_POINT_TYPES.SERVE);
 
                   setPlayerId(null);
@@ -1615,6 +1847,8 @@ function VolleyballPointSheet({
                 disabled={isSubmitting}
                 visual={<AttackVisual />}
                 onClick={() => {
+                  onClearError();
+
                   setPointType(VOLLEYBALL_POINT_TYPES.ATTACK);
 
                   setPlayerId(null);
@@ -1627,6 +1861,8 @@ function VolleyballPointSheet({
                 disabled={isSubmitting}
                 visual={<BlockVisual />}
                 onClick={() => {
+                  onClearError();
+
                   setPointType(VOLLEYBALL_POINT_TYPES.BLOCK);
 
                   setPlayerId(null);
@@ -1644,6 +1880,8 @@ function VolleyballPointSheet({
               type="button"
               disabled={isSubmitting}
               onClick={() => {
+                onClearError();
+
                 setPointType(VOLLEYBALL_POINT_TYPES.OPPONENT_ERROR);
 
                 setPlayerId(null);
@@ -1694,7 +1932,10 @@ function VolleyballPointSheet({
                       key={player.playerId}
                       type="button"
                       disabled={isSubmitting}
-                      onClick={() => setPlayerId(player.playerId)}
+                      onClick={() => {
+                        onClearError();
+                        setPlayerId(player.playerId);
+                      }}
                       className={cn(
                         "flex items-center gap-3 rounded-2xl border bg-(--color-bg-card) p-2.5 text-left shadow-(--shadow-card)",
                         selected
@@ -1742,7 +1983,16 @@ function VolleyballPointSheet({
             FIXED CONFIRM
         ========================= */}
 
-        <div className="safe-bottom shrink-0 bg-(--color-bg-card) pb-2 pt-3">
+        <div className="safe-bottom shrink-0 bg-(--color-bg-card) px-4 pb-2 pt-3">
+          {error && (
+            <div className="mb-2 flex min-w-0 items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-red-700">
+              <CircleAlert size={16} className="mt-0.5 shrink-0" />
+              <p className="min-w-0 break-words text-xs font-semibold leading-4">
+                {error}
+              </p>
+            </div>
+          )}
+
           <Button
             fullWidth
             loading={isSubmitting}
@@ -1751,6 +2001,8 @@ function VolleyballPointSheet({
               if (!pointType) {
                 return;
               }
+
+              onClearError();
 
               void onSubmit({
                 pointType,
@@ -1919,15 +2171,12 @@ function ScoringTypeCard({
 function TeamChoiceCard({
   team,
   selected,
-  tone,
   disabled,
   onClick,
 }: {
   team: PointTeam;
 
   selected: boolean;
-
-  tone: "orange" | "red";
 
   disabled: boolean;
 
@@ -1940,19 +2189,25 @@ function TeamChoiceCard({
       onClick={onClick}
       className={cn(
         "flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2.5 text-left shadow-sm transition-all",
-        selected && tone === "orange" && "border-orange-400 bg-orange-50",
-        selected && tone === "red" && "border-red-400 bg-red-50",
         !selected && "border-(--color-bg-border) bg-(--color-bg-card)",
       )}
+      style={
+        selected
+          ? {
+              borderColor: team.teamColor,
+              backgroundColor: withHexAlpha(team.teamColor, "14"),
+            }
+          : undefined
+      }
     >
       <TeamBadge
         imageKey={team.logoUrl ?? null}
         name={team.shortName ?? team.name}
-        tone={tone}
+        teamColor={team.teamColor}
       />
 
       <span className="truncate text-sm font-black text-(--color-text-primary)">
-        {getTeamDisplayLabel(team.shortName ?? team.name)}
+        {team.shortName ?? team.name}
       </span>
     </button>
   );
@@ -1961,20 +2216,21 @@ function TeamChoiceCard({
 function TeamBadge({
   imageKey,
   name,
-  tone = "orange",
+  teamColor,
 }: {
   imageKey: string | null;
 
   name: string;
 
-  tone?: "orange" | "red";
+  teamColor: string;
 }) {
   return (
     <div
-      className={cn(
-        "flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl text-white",
-        tone === "orange" ? "bg-[#f59e0b]" : "bg-[#ef3b2d]",
-      )}
+      className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl"
+      style={{
+        backgroundColor: teamColor,
+        color: getReadableTextColor(teamColor),
+      }}
     >
       {imageKey ? (
         <S3Image
@@ -1995,70 +2251,6 @@ function TeamBadge({
         </span>
       )}
     </div>
-  );
-}
-
-/* =========================================================
-   UNDO
-========================================================= */
-
-function UndoSheet({
-  open,
-  loading,
-  onClose,
-  onConfirm,
-}: {
-  open: boolean;
-
-  loading: boolean;
-
-  onClose: () => void;
-
-  onConfirm: () => void;
-}) {
-  return (
-    <DialogBottom
-      open={open}
-      onClose={onClose}
-      className="rounded-t-3xl bg-(--color-bg-card)"
-    >
-      <div className="px-4 pb-4 pt-5">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-(--color-bg-tint)">
-          <RotateCcw size={22} className="text-(--color-brand)" />
-        </div>
-
-        <div className="mt-3 text-center">
-          <h2 className="text-lg font-black text-(--color-text-primary)">
-            Undo last action?
-          </h2>
-
-          <p className="mx-auto mt-1 max-w-xs text-xs leading-5 text-(--color-text-secondary)">
-            Score, rotation and serving state will be rebuilt from match
-            history.
-          </p>
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            disabled={loading}
-            onClick={onClose}
-            className="h-11 rounded-xl border border-(--color-bg-border) bg-(--color-bg-base) text-sm font-bold text-(--color-text-primary)"
-          >
-            Cancel
-          </button>
-
-          <Button
-            fullWidth
-            loading={loading}
-            disabled={loading}
-            onClick={onConfirm}
-          >
-            Undo
-          </Button>
-        </div>
-      </div>
-    </DialogBottom>
   );
 }
 
@@ -2101,7 +2293,7 @@ function PlayerPhoto({
 function PlayerInitial({ name }: { name: string }) {
   return (
     <span className="font-(family-name:--font-display) text-sm font-black text-(--color-brand)">
-      {name.charAt(0).toUpperCase()}
+      {getInitials(name)}
     </span>
   );
 }
@@ -2113,16 +2305,31 @@ function PlayerInitial({ name }: { name: string }) {
 function TopTeamIdentity({
   imageKey,
   name,
+  teamColor,
+  right = false,
 }: {
   imageKey: string | null;
 
   name: string;
+  teamColor: string;
+  right?: boolean;
 }) {
   const label = getTeamDisplayLabel(name);
 
   return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/10">
+    <div
+      className={cn(
+        "flex min-w-0 items-center gap-1.5",
+        right && "flex-row-reverse text-right",
+      )}
+    >
+      <div
+        className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-lg"
+        style={{
+          backgroundColor: teamColor,
+          color: getReadableTextColor(teamColor),
+        }}
+      >
         {imageKey ? (
           <S3Image
             imageKey={imageKey}
@@ -2130,17 +2337,18 @@ function TopTeamIdentity({
             width={24}
             height={24}
             className="h-full w-full object-cover"
-            fallback={
-              <span className="text-[9px] font-black text-white">{label}</span>
-            }
+            fallback={<span className="text-[9px] font-black">{label}</span>}
           />
         ) : (
-          <span className="text-[9px] font-black text-white">{label}</span>
+          <span className="text-[9px] font-black">{label}</span>
         )}
       </div>
 
-      <span className="font-(family-name:--font-display) text-xs font-black uppercase text-white">
-        {label}
+      <span
+        className="min-w-0 truncate font-(family-name:--font-display) text-[10px] font-black text-white min-[380px]:text-xs"
+        title={name}
+      >
+        {name}
       </span>
     </div>
   );

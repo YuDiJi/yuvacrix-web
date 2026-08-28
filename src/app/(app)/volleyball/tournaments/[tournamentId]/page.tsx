@@ -7,6 +7,7 @@ import {
   CircleDot,
   Clock3,
   Play,
+  ShieldCheck,
   Trophy,
   Users,
   Volleyball,
@@ -125,6 +126,13 @@ export default function VolleyballTournamentOverviewPage() {
 
   const totalFixtures = fixtures.length;
 
+  const canManageTournament =
+    tournament?.viewerAccess.canManageTournament === true;
+  const canManageAdmins = tournament?.viewerAccess.canManageAdmins === true;
+  const canCreateExecutionMatch =
+    tournament?.viewerAccess.canCreateExecutionMatch === true;
+  const canScoreMatches = tournament?.viewerAccess.canScoreMatches === true;
+
   /* =====================================================
      PRIMARY FIXTURE / NEXT ACTION
   ===================================================== */
@@ -167,6 +175,9 @@ export default function VolleyballTournamentOverviewPage() {
   ===================================================== */
 
   async function handleCreateMatch(fixture: VolleyballTournamentFixture) {
+    if (!canCreateExecutionMatch) {
+      return;
+    }
     if (
       fixture.status !== VOLLEYBALL_FIXTURE_STATUSES.SCHEDULED ||
       fixture.executionMatchId
@@ -198,6 +209,11 @@ export default function VolleyballTournamentOverviewPage() {
         `/volleyball/matches/${match.id}/rosters?${search.toString()}`,
       );
     } catch (err) {
+      if (isForbidden(err)) {
+        setError("Your tournament permissions have changed.");
+        void refetchTournament();
+        return;
+      }
       setError(
         extractErrorMessage(
           err,
@@ -315,6 +331,7 @@ export default function VolleyballTournamentOverviewPage() {
           {!primaryFixture ? (
             <NoFixturesAction
               teamCount={registeredTeams.length}
+              canManage={canManageTournament}
               onTeams={goToTeams}
               onFixtures={goToFixtures}
             />
@@ -323,6 +340,8 @@ export default function VolleyballTournamentOverviewPage() {
               fixture={primaryFixture}
               allFixtures={fixtures}
               creating={creatingFixtureId === primaryFixture.id}
+              canCreateMatch={canCreateExecutionMatch}
+              canScoreMatches={canScoreMatches}
               onCreateMatch={() => void handleCreateMatch(primaryFixture)}
               onOpenMatch={() => handleOpenFixtureMatch(primaryFixture)}
               onFixtures={goToFixtures}
@@ -419,6 +438,20 @@ export default function VolleyballTournamentOverviewPage() {
                 description="Knockout"
                 onClick={() =>
                   router.push(`/volleyball/tournaments/${tournamentId}/bracket`)
+                }
+              />
+            )}
+
+            {canManageAdmins && (
+              <ManageCard
+                icon={ShieldCheck}
+                label="Admins"
+                value="Manage"
+                description="Access"
+                onClick={() =>
+                  router.push(
+                    `/volleyball/tournaments/${tournamentId}/admins`,
+                  )
                 }
               />
             )}
@@ -540,6 +573,8 @@ function PrimaryFixtureCard({
   fixture,
   allFixtures,
   creating,
+  canCreateMatch: hasCreatePermission,
+  canScoreMatches,
   onCreateMatch,
   onOpenMatch,
   onFixtures,
@@ -549,6 +584,10 @@ function PrimaryFixtureCard({
   allFixtures: VolleyballTournamentFixture[];
 
   creating: boolean;
+
+  canCreateMatch: boolean;
+
+  canScoreMatches: boolean;
 
   onCreateMatch: () => void;
 
@@ -567,6 +606,7 @@ function PrimaryFixtureCard({
     !teamsResolved;
 
   const canCreateMatch =
+    hasCreatePermission &&
     fixture.status === VOLLEYBALL_FIXTURE_STATUSES.SCHEDULED &&
     !fixture.executionMatchId &&
     teamsResolved;
@@ -676,7 +716,8 @@ function PrimaryFixtureCard({
                 : "bg-(--color-brand) text-white",
             )}
           >
-            {fixture.status === VOLLEYBALL_FIXTURE_STATUSES.LIVE ? (
+            {fixture.status === VOLLEYBALL_FIXTURE_STATUSES.LIVE &&
+            canScoreMatches ? (
               <>
                 <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
                 Resume Live Match
@@ -716,10 +757,13 @@ function PrimaryFixtureCard({
 
 function NoFixturesAction({
   teamCount,
+  canManage,
   onTeams,
   onFixtures,
 }: {
   teamCount: number;
+
+  canManage: boolean;
 
   onTeams: () => void;
 
@@ -753,18 +797,19 @@ function NoFixturesAction({
 
       <Button
         fullWidth
+        variant={canManage ? "primary" : "outline"}
         className="mt-4"
         onClick={needsTeams ? onTeams : onFixtures}
       >
         {needsTeams ? (
           <>
             <Users size={15} />
-            Manage Teams
+            {canManage ? "Manage Teams" : "View Teams"}
           </>
         ) : (
           <>
             <CalendarDays size={15} />
-            Create Fixtures
+            {canManage ? "Create Fixtures" : "View Fixtures"}
           </>
         )}
       </Button>
@@ -1577,4 +1622,13 @@ function extractErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback;
+}
+
+function isForbidden(error: unknown) {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "status" in error &&
+      error.status === 403,
+  );
 }

@@ -8,6 +8,7 @@ export interface Team {
   city?: string | null;
 
   logoUrl?: string;
+  teamColor?: string | null;
   description?: string;
   sportType: string;
   memberCount?: number;
@@ -19,6 +20,11 @@ export interface CreateTeamDto {
   shortName?: string;
   city?: string;
   logoUrl?: string;
+  teamColor?: string;
   description?: string;
   sportType: SportType;
+}
+
+export interface UpdateTeamDto {
+  teamColor?: string | null;
 }

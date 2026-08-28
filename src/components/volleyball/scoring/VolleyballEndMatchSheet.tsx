@@ -17,6 +17,7 @@ import { DialogBottom } from "@/components/common/DialogBottom";
 import { S3Image } from "@/components/common/S3Image";
 
 import { cn } from "@/lib/cn";
+import { getInitials } from "@/lib/getInitials";
 
 import { useUpdateVolleyballPostMatchMutation } from "@/store/api/volleyball/volleyballMatchApi";
 
@@ -34,6 +35,8 @@ type Props = {
   onFinished: (match: VolleyballMatch) => void;
 
   onUndoLastPoint: () => void;
+
+  onBackToFixtures?: () => void;
 
   isUndoing?: boolean;
 };
@@ -95,6 +98,7 @@ export function VolleyballEndMatchSheet({
   onClose,
   onFinished,
   onUndoLastPoint,
+  onBackToFixtures,
   isUndoing = false,
 }: Props) {
   const [bestPlayerId, setBestPlayerId] = useState<string | null>(
@@ -381,14 +385,27 @@ export function VolleyballEndMatchSheet({
           {/* FOOTER */}
 
           <div className="safe-bottom shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3 shadow-[0_-8px_24px_rgba(13,27,62,0.06)]">
-            <Button
-              fullWidth
-              loading={isSaving}
-              disabled={isSaving}
-              onClick={handleSubmit}
-            >
-              Save & Finish Match
-            </Button>
+            <div className="space-y-2">
+              <Button
+                fullWidth
+                loading={isSaving}
+                disabled={isSaving}
+                onClick={handleSubmit}
+              >
+                Save & Finish Match
+              </Button>
+
+              {onBackToFixtures && (
+                <Button
+                  fullWidth
+                  variant="secondary"
+                  disabled={isSaving || isUndoing}
+                  onClick={onBackToFixtures}
+                >
+                  Back to Fixtures
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="mt-3 border-t border-(--color-bg-border) pt-3">
@@ -649,13 +666,13 @@ function PlayerAvatar({
           className="h-full w-full object-cover"
           fallback={
             <span className="font-(family-name:--font-display) text-sm font-black text-(--color-brand)">
-              {player.playerNameSnapshot.charAt(0).toUpperCase()}
+              {getInitials(player.playerNameSnapshot)}
             </span>
           }
         />
       ) : (
         <span className="font-(family-name:--font-display) text-sm font-black text-(--color-brand)">
-          {player.playerNameSnapshot.charAt(0).toUpperCase()}
+          {getInitials(player.playerNameSnapshot)}
         </span>
       )}
     </div>

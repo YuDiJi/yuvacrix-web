@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Users, MapPin } from "lucide-react";
+import { MapPin, Palette, Users, X } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
 import { ImageUploader } from "@/components/common/ImageUploader";
@@ -10,6 +10,7 @@ type CreateTeamFormValues = {
   name: string;
   city: string;
   logoFile: File | null;
+  teamColor?: string;
 };
 
 type CreateTeamFormProps = {
@@ -18,8 +19,12 @@ type CreateTeamFormProps = {
   submitText?: string;
   isLoading?: boolean;
   error?: string;
+  showTeamColor?: boolean;
   onSubmit: (values: CreateTeamFormValues) => void | Promise<void>;
 };
+
+const DEFAULT_VOLLEYBALL_COLOR_INPUT = "#EA580C";
+const HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 
 export function CreateTeamForm({
   title = "Create New Team",
@@ -27,13 +32,18 @@ export function CreateTeamForm({
   submitText = "Save Team",
   isLoading = false,
   error,
+  showTeamColor = false,
   onSubmit,
 }: CreateTeamFormProps) {
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [teamColor, setTeamColor] = useState<string | null>(null);
 
-  const isValid = name.trim().length >= 2 && city.trim().length >= 2;
+  const isValid =
+    name.trim().length >= 2 &&
+    city.trim().length >= 2 &&
+    (!teamColor || HEX_COLOR_PATTERN.test(teamColor));
 
   return (
     <div className="flex min-h-full flex-col items-center bg-(--color-bg-base) p-4">
@@ -87,6 +97,58 @@ export function CreateTeamForm({
             />
           </div>
         </div>
+
+        {showTeamColor && (
+          <div className="rounded-xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+            <label
+              htmlFor="teamColor"
+              className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-(--color-text-muted)"
+            >
+              Team Color
+            </label>
+
+            <div className="flex items-center gap-3">
+              <Palette size={18} className="shrink-0 text-(--color-text-muted)" />
+
+              <input
+                id="teamColor"
+                type="color"
+                value={teamColor ?? DEFAULT_VOLLEYBALL_COLOR_INPUT}
+                onChange={(event) => setTeamColor(event.target.value.toUpperCase())}
+                className="h-10 w-12 cursor-pointer rounded-lg border border-(--color-bg-border) bg-transparent p-1"
+                aria-label="Choose team color"
+              />
+
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-(--color-text-primary)">
+                  {teamColor ?? "No color selected"}
+                </p>
+                <p className="text-[10px] text-(--color-text-muted)">
+                  Optional team identity color
+                </p>
+              </div>
+
+              {teamColor ? (
+                <button
+                  type="button"
+                  onClick={() => setTeamColor(null)}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-(--color-bg-base) text-(--color-text-muted)"
+                  aria-label="Clear team color"
+                >
+                  <X size={15} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setTeamColor(DEFAULT_VOLLEYBALL_COLOR_INPUT)}
+                  className="rounded-lg bg-(--color-bg-tint) px-3 py-2 text-[10px] font-black text-(--color-brand)"
+                >
+                  Use Color
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -101,6 +163,7 @@ export function CreateTeamForm({
             name,
             city,
             logoFile,
+            ...(showTeamColor && teamColor ? { teamColor } : {}),
           })
         }
         disabled={!isValid || isLoading}

@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import { CreateTeamDto, Team } from "@/types/team";
+import { CreateTeamDto, Team, UpdateTeamDto } from "@/types/team";
 
 export const teamApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -9,6 +9,27 @@ export const teamApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
+    }),
+
+    updateTeam: builder.mutation<
+      Team,
+      {
+        teamId: string;
+        body: UpdateTeamDto;
+      }
+    >({
+      query: ({ teamId, body }) => ({
+        url: `/teams/${teamId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { teamId }) => [
+        "Team",
+        {
+          type: "Team",
+          id: teamId,
+        },
+      ],
     }),
 
     getOwnedTeam: builder.query<Team[], void>({
@@ -29,6 +50,8 @@ export const teamApi = baseApi.injectEndpoints({
 
 export const {
   useCreateTeamMutation,
+
+  useUpdateTeamMutation,
   useGetOwnedTeamQuery,
   useGetTeamDetailQuery,
 } = teamApi;

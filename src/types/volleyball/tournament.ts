@@ -59,6 +59,17 @@ export const VOLLEYBALL_FIXTURE_STATUSES = {
 export type VolleyballFixtureStatus =
   (typeof VOLLEYBALL_FIXTURE_STATUSES)[keyof typeof VOLLEYBALL_FIXTURE_STATUSES];
 
+export type VolleyballTournamentViewerRole = "OWNER" | "ADMIN" | "VIEWER";
+
+export interface VolleyballTournamentViewerAccess {
+  role: VolleyballTournamentViewerRole;
+  canManageTournament: boolean;
+  canManageAdmins: boolean;
+  canManageFixtures: boolean;
+  canCreateExecutionMatch: boolean;
+  canScoreMatches: boolean;
+}
+
 /* =========================================================
    POINTS
 ========================================================= */
@@ -115,6 +126,39 @@ export interface VolleyballTournament {
 
   createdAt: string;
   updatedAt: string;
+}
+
+export interface VolleyballTournamentDetail extends VolleyballTournament {
+  viewerAccess: VolleyballTournamentViewerAccess;
+}
+
+export interface VolleyballTournamentAdminOwner {
+  userId: string;
+  playerId: string | null;
+  fullName: string | null;
+  profileImageUrl: string | null;
+}
+
+export interface VolleyballTournamentAdminPlayer {
+  playerId: string;
+  fullName: string;
+  profileImageUrl: string | null;
+}
+
+export interface VolleyballTournamentAdmin {
+  id: string;
+  userId: string;
+  player: VolleyballTournamentAdminPlayer;
+  createdAt: string;
+}
+
+export interface VolleyballTournamentAdminsResponse {
+  owner: VolleyballTournamentAdminOwner;
+  admins: VolleyballTournamentAdmin[];
+}
+
+export interface AddVolleyballTournamentAdminDto {
+  playerId: string;
 }
 
 /* =========================================================

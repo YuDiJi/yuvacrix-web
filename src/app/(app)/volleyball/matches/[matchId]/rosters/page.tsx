@@ -20,6 +20,14 @@ import { Button } from "@/components/common/Button";
 import { S3Image } from "@/components/common/S3Image";
 
 import { cn } from "@/lib/cn";
+import { getInitials } from "@/lib/getInitials";
+import {
+  getReadableTextColor,
+  resolveVolleyballTeamColor,
+  VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  withHexAlpha,
+} from "@/lib/volleyball/teamColors";
 
 import {
   useConfirmVolleyballRostersMutation,
@@ -220,6 +228,16 @@ export default function VolleyballRosterPage() {
 
   const teamBMembers = teamBMembersResponse?.members ?? [];
 
+  const teamAColor = resolveVolleyballTeamColor(
+    match?.teamASnapshot.teamColor,
+    VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  );
+
+  const teamBColor = resolveVolleyballTeamColor(
+    match?.teamBSnapshot.teamColor,
+    VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  );
+
   /* =====================================================
      INITIALIZE EXISTING ROSTERS
   ===================================================== */
@@ -255,7 +273,7 @@ export default function VolleyballRosterPage() {
 
         roster: match.teamARoster,
 
-        tone: "orange" as const,
+        color: teamAColor,
       };
     }
 
@@ -268,9 +286,9 @@ export default function VolleyballRosterPage() {
 
       roster: match.teamBRoster,
 
-      tone: "red" as const,
+      color: teamBColor,
     };
-  }, [activeSide, match, teamAMembers, teamBMembers]);
+  }, [activeSide, match, teamAMembers, teamBMembers, teamAColor, teamBColor]);
 
   const currentRosterState =
     activeSide === "TEAM_A" ? teamARosterState : teamBRosterState;
@@ -689,9 +707,9 @@ export default function VolleyballRosterPage() {
 
         <div className="grid grid-cols-2 gap-2">
           <TeamTab
-            name={match.teamASnapshot.shortName ?? match.teamASnapshot.name}
+            name={match.teamASnapshot.name}
             imageKey={match.teamASnapshot.logoUrl}
-            tone="orange"
+            teamColor={teamAColor}
             active={activeSide === "TEAM_A"}
             selectedCount={teamASelectedCount}
             submitted={Boolean(match.teamARoster)}
@@ -703,9 +721,9 @@ export default function VolleyballRosterPage() {
           />
 
           <TeamTab
-            name={match.teamBSnapshot.shortName ?? match.teamBSnapshot.name}
+            name={match.teamBSnapshot.name}
             imageKey={match.teamBSnapshot.logoUrl}
-            tone="red"
+            teamColor={teamBColor}
             active={activeSide === "TEAM_B"}
             selectedCount={teamBSelectedCount}
             submitted={Boolean(match.teamBRoster)}
@@ -726,7 +744,7 @@ export default function VolleyballRosterPage() {
             <TeamLogo
               imageKey={currentTeam.snapshot.logoUrl}
               name={currentTeam.snapshot.name}
-              tone={currentTeam.tone}
+              teamColor={currentTeam.color}
             />
 
             <div className="min-w-0 flex-1">
@@ -776,14 +794,13 @@ export default function VolleyballRosterPage() {
             }).map((_, index) => (
               <span
                 key={index}
-                className={cn(
-                  "h-1.5 flex-1 rounded-full",
-                  index < selectedCount
-                    ? currentTeam.tone === "orange"
-                      ? "bg-orange-500"
-                      : "bg-red-500"
-                    : "bg-(--color-bg-base)",
-                )}
+                className="h-1.5 flex-1 rounded-full"
+                style={{
+                  backgroundColor:
+                    index < selectedCount
+                      ? currentTeam.color
+                      : "var(--color-bg-base)",
+                }}
               />
             ))}
 
@@ -800,8 +817,20 @@ export default function VolleyballRosterPage() {
         =============================================== */}
 
         {memberCount < 6 && (
-          <div className="flex items-center gap-3 rounded-2xl border border-orange-200 bg-orange-50 p-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
+          <div
+            className="flex items-center gap-3 rounded-2xl border p-3"
+            style={{
+              borderColor: withHexAlpha(currentTeam.color, "4D"),
+              backgroundColor: withHexAlpha(currentTeam.color, "12"),
+            }}
+          >
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+              style={{
+                backgroundColor: withHexAlpha(currentTeam.color, "24"),
+                color: currentTeam.color,
+              }}
+            >
               <Users size={17} />
             </div>
 
@@ -819,7 +848,8 @@ export default function VolleyballRosterPage() {
             <button
               type="button"
               onClick={handleAddPlayer}
-              className="text-[10px] font-black text-orange-600"
+              className="text-[10px] font-black"
+              style={{ color: currentTeam.color }}
             >
               Add
             </button>
@@ -869,7 +899,7 @@ export default function VolleyballRosterPage() {
                   selected={selected}
                   captain={isCaptain}
                   libero={isLibero}
-                  tone={currentTeam.tone}
+                  teamColor={currentTeam.color}
                   locked={isRosterLocked}
                   last={index === currentTeam.members.length - 1}
                   onTogglePlayer={() => handleTogglePlayer(member)}
@@ -916,11 +946,7 @@ export default function VolleyballRosterPage() {
                 }
                 onClick={handleSubmitRoster}
               >
-                Update{" "}
-                {getTeamLabel(
-                  currentTeam.snapshot.shortName ?? currentTeam.snapshot.name,
-                )}{" "}
-                Roster
+                Update {currentTeam.snapshot.name} Roster
               </Button>
 
               <Button
@@ -942,12 +968,8 @@ export default function VolleyballRosterPage() {
               onClick={handleSubmitRoster}
             >
               {currentRosterSubmitted
-                ? `Update ${getTeamLabel(
-                    currentTeam.snapshot.shortName ?? currentTeam.snapshot.name,
-                  )} Roster`
-                : `Save ${getTeamLabel(
-                    currentTeam.snapshot.shortName ?? currentTeam.snapshot.name,
-                  )} Roster`}
+                ? `Update ${currentTeam.snapshot.name} Roster`
+                : `Save ${currentTeam.snapshot.name} Roster`}
             </Button>
           )}
         </div>
@@ -963,7 +985,7 @@ export default function VolleyballRosterPage() {
 function TeamTab({
   name,
   imageKey,
-  tone,
+  teamColor,
   active,
   selectedCount,
   submitted,
@@ -973,7 +995,7 @@ function TeamTab({
 
   imageKey: string | null;
 
-  tone: "orange" | "red";
+  teamColor: string;
 
   active: boolean;
 
@@ -989,16 +1011,28 @@ function TeamTab({
       onClick={onClick}
       className={cn(
         "relative flex min-w-0 items-center gap-2 rounded-2xl border p-2.5 text-left transition-all",
-        active && tone === "orange" && "border-orange-400 bg-orange-50",
-        active && tone === "red" && "border-red-400 bg-red-50",
         !active && "border-(--color-bg-border) bg-(--color-bg-card)",
       )}
+      style={
+        active
+          ? {
+              borderColor: teamColor,
+              backgroundColor: withHexAlpha(teamColor, "14"),
+              boxShadow: `0 0 0 1px ${withHexAlpha(teamColor, "26")}`,
+            }
+          : undefined
+      }
     >
-      <TeamLogo imageKey={imageKey} name={name} tone={tone} size={34} />
+      <TeamLogo
+        imageKey={imageKey}
+        name={name}
+        teamColor={teamColor}
+        size={34}
+      />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-black text-(--color-text-primary)">
-          {getTeamLabel(name)}
+        <p className="line-clamp-2 break-words pr-3 text-xs leading-tight font-black text-(--color-text-primary)">
+          {name}
         </p>
 
         <p className="mt-0.5 text-[9px] font-semibold text-(--color-text-muted)">
@@ -1022,7 +1056,7 @@ function RosterPlayerRow({
   selected,
   captain,
   libero,
-  tone,
+  teamColor,
   locked,
   last,
   onTogglePlayer,
@@ -1035,7 +1069,7 @@ function RosterPlayerRow({
   captain: boolean;
   libero: boolean;
 
-  tone: "orange" | "red";
+  teamColor: string;
 
   locked: boolean;
   last: boolean;
@@ -1049,9 +1083,12 @@ function RosterPlayerRow({
       className={cn(
         "flex min-h-[62px] items-center gap-2.5 px-3 py-2 transition-all",
         !last && "border-b border-(--color-bg-border)",
-        selected && tone === "orange" && "bg-orange-50/40",
-        selected && tone === "red" && "bg-red-50/40",
       )}
+      style={
+        selected
+          ? { backgroundColor: withHexAlpha(teamColor, "0F") }
+          : undefined
+      }
     >
       {/* SELECT */}
 
@@ -1066,13 +1103,21 @@ function RosterPlayerRow({
         }
         className={cn(
           "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all",
-          selected && tone === "orange" && "border-orange-500 bg-orange-500",
-          selected && tone === "red" && "border-red-500 bg-red-500",
           !selected && "border-(--color-bg-border) bg-(--color-bg-base)",
           locked && "cursor-default",
         )}
+        style={
+          selected
+            ? { borderColor: teamColor, backgroundColor: teamColor }
+            : undefined
+        }
       >
-        {selected && <Check size={13} className="text-white" />}
+        {selected && (
+          <Check
+            size={13}
+            style={{ color: getReadableTextColor(teamColor) }}
+          />
+        )}
       </button>
 
       {/* AVATAR */}
@@ -1093,13 +1138,25 @@ function RosterPlayerRow({
           </p>
 
           {captain && (
-            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-100 px-1 text-[7px] font-black text-amber-700">
+            <span
+              className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[7px] font-black"
+              style={{
+                backgroundColor: withHexAlpha(teamColor, "24"),
+                color: teamColor,
+              }}
+            >
               C
             </span>
           )}
 
           {libero && (
-            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-(--color-bg-tint) px-1 text-[7px] font-black text-(--color-brand)">
+            <span
+              className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[7px] font-black"
+              style={{
+                backgroundColor: withHexAlpha(teamColor, "24"),
+                color: teamColor,
+              }}
+            >
               L
             </span>
           )}
@@ -1125,7 +1182,7 @@ function RosterPlayerRow({
             icon={<Crown size={11} />}
             active={captain}
             disabled={false}
-            tone="captain"
+            teamColor={teamColor}
             onClick={onCaptain}
           />
 
@@ -1135,7 +1192,7 @@ function RosterPlayerRow({
             icon={<Shield size={11} />}
             active={libero}
             disabled={false}
-            tone="libero"
+            teamColor={teamColor}
             onClick={onLibero}
           />
         </div>
@@ -1154,7 +1211,7 @@ function RoleButton({
   icon,
   active,
   disabled,
-  tone,
+  teamColor,
   onClick,
 }: {
   label: string;
@@ -1167,7 +1224,7 @@ function RoleButton({
 
   disabled: boolean;
 
-  tone: "captain" | "libero";
+  teamColor: string;
 
   onClick: () => void;
 }) {
@@ -1183,16 +1240,17 @@ function RoleButton({
         !active &&
           "border-(--color-bg-border) bg-(--color-bg-base) text-(--color-text-secondary)",
 
-        active &&
-          tone === "captain" &&
-          "border-amber-300 bg-amber-100 text-amber-700",
-
-        active &&
-          tone === "libero" &&
-          "border-(--color-brand)/30 bg-(--color-bg-tint) text-(--color-brand)",
-
         disabled && "cursor-not-allowed opacity-35",
       )}
+      style={
+        active
+          ? {
+              borderColor: teamColor,
+              backgroundColor: withHexAlpha(teamColor, "1F"),
+              color: teamColor,
+            }
+          : undefined
+      }
     >
       {active ? <Check size={10} /> : icon}
 
@@ -1208,26 +1266,25 @@ function RoleButton({
 function TeamLogo({
   imageKey,
   name,
-  tone,
+  teamColor,
   size = 40,
 }: {
   imageKey: string | null;
 
   name: string;
 
-  tone: "orange" | "red";
+  teamColor: string;
 
   size?: number;
 }) {
   return (
     <div
-      className={cn(
-        "flex shrink-0 items-center justify-center overflow-hidden rounded-xl text-white",
-        tone === "orange" ? "bg-orange-500" : "bg-red-500",
-      )}
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded-xl"
       style={{
         width: size,
         height: size,
+        backgroundColor: teamColor,
+        color: getReadableTextColor(teamColor),
       }}
     >
       {imageKey ? (
@@ -1278,7 +1335,7 @@ function MemberAvatar({ member }: { member: VolleyballTeamMember }) {
 function MemberInitial({ name }: { name: string }) {
   return (
     <span className="font-(family-name:--font-display) text-sm font-black text-(--color-brand)">
-      {name.charAt(0).toUpperCase()}
+      {getInitials(name)}
     </span>
   );
 }

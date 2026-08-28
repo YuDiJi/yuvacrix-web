@@ -59,6 +59,7 @@ export default function VolleyballTournamentTeamsPage() {
     data: tournament,
     isLoading: isTournamentLoading,
     isError: isTournamentError,
+    refetch: refetchTournament,
   } = useGetVolleyballTournamentQuery(
     {
       tournamentId,
@@ -67,6 +68,9 @@ export default function VolleyballTournamentTeamsPage() {
       skip: !tournamentId,
     },
   );
+
+  const canManageTournament =
+    tournament?.viewerAccess.canManageTournament === true;
 
   const {
     data: registeredTeams = [],
@@ -85,7 +89,7 @@ export default function VolleyballTournamentTeamsPage() {
     data: ownedTeams = [],
     isLoading: areOwnedTeamsLoading,
     isError: areOwnedTeamsError,
-  } = useGetOwnedTeamQuery();
+  } = useGetOwnedTeamQuery(undefined, { skip: !canManageTournament });
 
   const [registerTeam] = useRegisterVolleyballTournamentTeamMutation();
 
@@ -138,6 +142,7 @@ export default function VolleyballTournamentTeamsPage() {
   ===================================================== */
 
   async function handleRegisterTeam(team: Team) {
+    if (!canManageTournament) return;
     if (isGroupKnockout && !effectiveGroupName) {
       setError("Select or enter a pool before adding this team.");
 
@@ -163,6 +168,11 @@ export default function VolleyballTournamentTeamsPage() {
         },
       }).unwrap();
     } catch (err) {
+      if (isForbidden(err)) {
+        setError("Your tournament permissions have changed.");
+        void refetchTournament();
+        return;
+      }
       setError(extractErrorMessage(err, "Failed to add team to tournament."));
     } finally {
       setAddingTeamId(null);
@@ -190,7 +200,7 @@ export default function VolleyballTournamentTeamsPage() {
   if (
     isTournamentLoading ||
     areRegisteredTeamsLoading ||
-    areOwnedTeamsLoading
+    (canManageTournament && areOwnedTeamsLoading)
   ) {
     return (
       <div className="min-h-full bg-(--color-bg-base) px-4 py-5">
@@ -214,7 +224,7 @@ export default function VolleyballTournamentTeamsPage() {
   if (
     isTournamentError ||
     areRegisteredTeamsError ||
-    areOwnedTeamsError ||
+    (canManageTournament && areOwnedTeamsError) ||
     !tournament
   ) {
     return (
@@ -253,7 +263,9 @@ export default function VolleyballTournamentTeamsPage() {
           </h1>
 
           <p className="mt-1 text-sm text-(--color-text-secondary)">
-            Add the volleyball teams participating in this tournament.
+            {canManageTournament
+              ? "Add the volleyball teams participating in this tournament."
+              : "Teams participating in this tournament."}
           </p>
         </div>
 
@@ -311,7 +323,7 @@ export default function VolleyballTournamentTeamsPage() {
             GROUP SELECTION
         =============================================== */}
 
-        {isGroupKnockout && (
+        {isGroupKnockout && canManageTournament && (
           <section>
             <SectionHeader
               title="Assign Pool"
@@ -430,7 +442,7 @@ export default function VolleyballTournamentTeamsPage() {
             AVAILABLE TEAMS
         =============================================== */}
 
-        <section>
+        {canManageTournament && <section>
           <SectionHeader
             title="Add Teams"
             description="Choose from your existing volleyball teams."
@@ -455,7 +467,7 @@ export default function VolleyballTournamentTeamsPage() {
               totalCount={volleyballTeams.length}
             />
           )}
-        </section>
+        </section>}
 
         {/* ===============================================
             INFO
@@ -486,7 +498,7 @@ export default function VolleyballTournamentTeamsPage() {
           FOOTER
       =============================================== */}
 
-      <div className="safe-bottom sticky bottom-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3 shadow-[0_-8px_24px_rgba(13,27,62,0.06)]">
+      {canManageTournament && <div className="safe-bottom sticky bottom-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3 shadow-[0_-8px_24px_rgba(13,27,62,0.06)]">
         <div className="flex items-center justify-between gap-3">
           <div className="shrink-0">
             <p className="text-[8px] font-black uppercase tracking-wide text-(--color-text-muted)">
@@ -502,7 +514,7 @@ export default function VolleyballTournamentTeamsPage() {
             Continue to Fixtures
           </Button>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
@@ -849,4 +861,13 @@ function extractErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback;
+}
+
+function isForbidden(error: unknown) {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "status" in error &&
+      error.status === 403,
+  );
 }

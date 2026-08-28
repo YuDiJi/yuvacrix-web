@@ -19,6 +19,14 @@ import { DialogBottom } from "@/components/common/DialogBottom";
 import { S3Image } from "@/components/common/S3Image";
 
 import { cn } from "@/lib/cn";
+import { getInitials } from "@/lib/getInitials";
+import { VOLLEYBALL_COURT_SLOTS } from "@/lib/volleyball/courtPositions";
+import {
+  resolveVolleyballTeamColor,
+  VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  withHexAlpha,
+} from "@/lib/volleyball/teamColors";
 
 import {
   useGetVolleyballMatchQuery,
@@ -224,6 +232,16 @@ export default function VolleyballSetSetupPage() {
     teamBAssignedCount === 6 &&
     Boolean(initialServingTeamId);
 
+  const teamAColor = resolveVolleyballTeamColor(
+    match?.teamASnapshot.teamColor,
+    VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  );
+
+  const teamBColor = resolveVolleyballTeamColor(
+    match?.teamBSnapshot.teamColor,
+    VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  );
+
   const sheetRoster = useMemo(() => {
     if (!match) {
       return null;
@@ -321,7 +339,7 @@ export default function VolleyballSetSetupPage() {
      * Move automatically to the
      * next unfilled position.
      */
-    const courtOrder: VolleyballCourtPosition[] = [4, 3, 2, 5, 6, 1];
+    const courtOrder = VOLLEYBALL_COURT_SLOTS.map((slot) => slot.position);
 
     const currentIndex = courtOrder.indexOf(position);
 
@@ -540,8 +558,10 @@ export default function VolleyballSetSetupPage() {
           teamBRoster={teamBRoster}
           teamARotation={teamARotation}
           teamBRotation={teamBRotation}
-          teamAName={match.teamASnapshot.shortName ?? match.teamASnapshot.name}
-          teamBName={match.teamBSnapshot.shortName ?? match.teamBSnapshot.name}
+          teamAName={match.teamASnapshot.name}
+          teamBName={match.teamBSnapshot.name}
+          teamAColor={teamAColor}
+          teamBColor={teamBColor}
           servingTeamId={initialServingTeamId}
           teamAId={match.teamAId}
           teamBId={match.teamBId}
@@ -557,7 +577,7 @@ export default function VolleyballSetSetupPage() {
             name={match.teamASnapshot.name}
             logoUrl={match.teamASnapshot.logoUrl}
             count={teamAAssignedCount}
-            tone="orange"
+            teamColor={teamAColor}
             onClick={() => openLineup("TEAM_A")}
           />
 
@@ -565,7 +585,7 @@ export default function VolleyballSetSetupPage() {
             name={match.teamBSnapshot.name}
             logoUrl={match.teamBSnapshot.logoUrl}
             count={teamBAssignedCount}
-            tone="red"
+            teamColor={teamBColor}
             onClick={() => openLineup("TEAM_B")}
           />
         </div>
@@ -591,7 +611,7 @@ export default function VolleyballSetSetupPage() {
             <ServingTeamButton
               name={match.teamASnapshot.name}
               logoUrl={match.teamASnapshot.logoUrl}
-              tone="orange"
+              teamColor={teamAColor}
               selected={initialServingTeamId === match.teamAId}
               disabled={isStartingSet}
               onClick={() => {
@@ -604,7 +624,7 @@ export default function VolleyballSetSetupPage() {
             <ServingTeamButton
               name={match.teamBSnapshot.name}
               logoUrl={match.teamBSnapshot.logoUrl}
-              tone="red"
+              teamColor={teamBColor}
               selected={initialServingTeamId === match.teamBId}
               disabled={isStartingSet}
               onClick={() => {
@@ -688,7 +708,9 @@ export default function VolleyballSetSetupPage() {
           selectedPosition={lineupSheet.position}
           teamName={sheetTeamSnapshot.name}
           logoUrl={sheetTeamSnapshot.logoUrl}
-          tone={lineupSheet.side === "TEAM_A" ? "orange" : "red"}
+          teamColor={
+            lineupSheet.side === "TEAM_A" ? teamAColor : teamBColor
+          }
           disabled={isStartingSet}
           onClose={closeLineup}
           onSelectPosition={selectPosition}
@@ -713,6 +735,8 @@ function SetupVolleyballCourt({
   teamBRotation,
   teamAName,
   teamBName,
+  teamAColor,
+  teamBColor,
   teamAId,
   teamBId,
   servingTeamId,
@@ -730,6 +754,9 @@ function SetupVolleyballCourt({
 
   teamBName: string;
 
+  teamAColor: string;
+  teamBColor: string;
+
   teamAId: string;
 
   teamBId: string;
@@ -746,19 +773,21 @@ function SetupVolleyballCourt({
         <CourtTeamName
           name={teamAName}
           side="A"
+          teamColor={teamAColor}
           serving={servingTeamId === teamAId}
         />
 
         <CourtTeamName
           name={teamBName}
           side="B"
+          teamColor={teamBColor}
           serving={servingTeamId === teamBId}
         />
       </div>
 
       {/* COURT */}
 
-      <div className="relative aspect-[2.2/1] overflow-hidden rounded-xl border-[3px] border-white bg-[#3479c7]">
+      <div className="relative aspect-[2/1] overflow-hidden rounded-xl border-[3px] border-white bg-[#3479c7]">
         <div className="absolute inset-[6%] border-2 border-white/95 bg-[#edc990]" />
 
         <div className="absolute bottom-[6%] left-1/2 top-[6%] z-10 w-[3px] -translate-x-1/2 bg-white" />
@@ -769,22 +798,30 @@ function SetupVolleyballCourt({
 
         {/* TEAM A HALF */}
 
-        <div className="absolute inset-y-[6%] left-[6%] right-1/2">
+        <div
+          className="absolute inset-y-[6%] left-[6%] right-1/2"
+          style={{ backgroundColor: withHexAlpha(teamAColor, "12") }}
+        >
           <SetupCourtHalf
             side="TEAM_A"
             roster={teamARoster}
             rotation={teamARotation}
+            teamColor={teamAColor}
             onPositionClick={onPositionClick}
           />
         </div>
 
         {/* TEAM B HALF */}
 
-        <div className="absolute inset-y-[6%] left-1/2 right-[6%]">
+        <div
+          className="absolute inset-y-[6%] left-1/2 right-[6%]"
+          style={{ backgroundColor: withHexAlpha(teamBColor, "12") }}
+        >
           <SetupCourtHalf
             side="TEAM_B"
             roster={teamBRoster}
             rotation={teamBRotation}
+            teamColor={teamBColor}
             onPositionClick={onPositionClick}
           />
         </div>
@@ -814,6 +851,7 @@ function SetupCourtHalf({
   side,
   roster,
   rotation,
+  teamColor,
   onPositionClick,
 }: {
   side: TeamSide;
@@ -822,84 +860,13 @@ function SetupCourtHalf({
 
   rotation: RotationState;
 
+  teamColor: string;
+
   onPositionClick: (side: TeamSide, position: VolleyballCourtPosition) => void;
 }) {
-  const markerSide = side === "TEAM_A" ? "A" : "B";
-
-  const positions: {
-    position: VolleyballCourtPosition;
-    left: string;
-    top: string;
-  }[] =
-    markerSide === "A"
-      ? [
-          {
-            position: 4,
-            left: "18%",
-            top: "26%",
-          },
-          {
-            position: 3,
-            left: "50%",
-            top: "26%",
-          },
-          {
-            position: 2,
-            left: "82%",
-            top: "26%",
-          },
-          {
-            position: 5,
-            left: "18%",
-            top: "74%",
-          },
-          {
-            position: 6,
-            left: "50%",
-            top: "74%",
-          },
-          {
-            position: 1,
-            left: "82%",
-            top: "74%",
-          },
-        ]
-      : [
-          {
-            position: 2,
-            left: "18%",
-            top: "26%",
-          },
-          {
-            position: 3,
-            left: "50%",
-            top: "26%",
-          },
-          {
-            position: 4,
-            left: "82%",
-            top: "26%",
-          },
-          {
-            position: 1,
-            left: "18%",
-            top: "74%",
-          },
-          {
-            position: 6,
-            left: "50%",
-            top: "74%",
-          },
-          {
-            position: 5,
-            left: "82%",
-            top: "74%",
-          },
-        ];
-
   return (
     <div className="relative h-full w-full">
-      {positions.map(({ position, left, top }) => {
+      {VOLLEYBALL_COURT_SLOTS.map(({ position, left, top }) => {
         const player = getPlayerForPosition(roster, rotation, position);
 
         return (
@@ -917,16 +884,16 @@ function SetupCourtHalf({
               className={cn(
                 "relative flex h-10 w-10 items-center justify-center rounded-full shadow-[0_5px_12px_rgba(0,0,0,0.18)] min-[380px]:h-11 min-[380px]:w-11",
                 player
-                  ? markerSide === "A"
-                    ? "bg-[linear-gradient(145deg,#fbbf24,#f59e0b)]"
-                    : "bg-[linear-gradient(145deg,#fb5746,#ef3025)]"
+                  ? "bg-white"
                   : "border-2 border-dashed border-white/80 bg-white/25",
               )}
             >
               {player ? (
-                <span className="font-(family-name:--font-display) text-lg font-black text-white">
-                  {player.jerseyNumberSnapshot}
-                </span>
+                <PlayerAvatar
+                  player={player}
+                  size={40}
+                  accentColor={teamColor}
+                />
               ) : (
                 <span className="font-(family-name:--font-display) text-[10px] font-black text-white">
                   P{position}
@@ -947,28 +914,42 @@ function SetupCourtHalf({
 function CourtTeamName({
   name,
   side,
+  teamColor,
   serving,
 }: {
   name: string;
 
   side: "A" | "B";
 
+  teamColor: string;
+
   serving: boolean;
 }) {
   return (
     <div className="flex items-center gap-1.5">
       {side === "A" && (
-        <span className="h-2.5 w-2.5 rounded-full bg-[#f59e0b]" />
+        <span
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
+          style={{ backgroundColor: teamColor }}
+        />
       )}
 
-      <span className="font-(family-name:--font-display) text-sm font-black uppercase tracking-[0.12em] text-white">
-        {getTeamLabel(name)}
+      <span
+        className={cn(
+          "line-clamp-2 max-w-[120px] font-(family-name:--font-display) text-xs leading-tight font-black text-white",
+          side === "B" && "text-right",
+        )}
+      >
+        {name}
       </span>
 
       {serving && <CircleDot size={9} className="text-white" />}
 
       {side === "B" && (
-        <span className="h-2.5 w-2.5 rounded-full bg-[#ef3b2d]" />
+        <span
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
+          style={{ backgroundColor: teamColor }}
+        />
       )}
     </div>
   );
@@ -982,7 +963,7 @@ function LineupTeamCard({
   name,
   logoUrl,
   count,
-  tone,
+  teamColor,
   onClick,
 }: {
   name: string;
@@ -991,7 +972,7 @@ function LineupTeamCard({
 
   count: number;
 
-  tone: "orange" | "red";
+  teamColor: string;
 
   onClick: () => void;
 }) {
@@ -1001,13 +982,18 @@ function LineupTeamCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-w-0 items-center gap-2 rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-3 text-left shadow-(--shadow-card)"
+      className="flex min-w-0 items-center gap-2 rounded-2xl border bg-(--color-bg-card) p-3 text-left shadow-(--shadow-card)"
+      style={{ borderColor: withHexAlpha(teamColor, "66") }}
     >
-      <TeamBadge imageKey={logoUrl} name={name} tone={tone} />
+      <TeamBadge
+        imageKey={logoUrl}
+        name={name}
+        teamColor={teamColor}
+      />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-black text-(--color-text-primary)">
-          {getTeamLabel(name)}
+          {name}
         </p>
 
         <div className="mt-0.5 flex items-center gap-1">
@@ -1036,7 +1022,7 @@ function LineupTeamCard({
 function ServingTeamButton({
   name,
   logoUrl,
-  tone,
+  teamColor,
   selected,
   disabled,
   onClick,
@@ -1045,7 +1031,7 @@ function ServingTeamButton({
 
   logoUrl: string | null;
 
-  tone: "orange" | "red";
+  teamColor: string;
 
   selected: boolean;
 
@@ -1060,19 +1046,28 @@ function ServingTeamButton({
       onClick={onClick}
       className={cn(
         "relative flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-all",
-        selected
-          ? tone === "orange"
-            ? "border-orange-400 bg-orange-50"
-            : "border-red-400 bg-red-50"
-          : "border-(--color-bg-border) bg-(--color-bg-base)",
+        !selected && "border-(--color-bg-border) bg-(--color-bg-base)",
         disabled && "opacity-50",
       )}
+      style={
+        selected
+          ? {
+              borderColor: teamColor,
+              backgroundColor: withHexAlpha(teamColor, "14"),
+            }
+          : undefined
+      }
     >
-      <TeamBadge imageKey={logoUrl} name={name} tone={tone} size={32} />
+      <TeamBadge
+        imageKey={logoUrl}
+        name={name}
+        teamColor={teamColor}
+        size={32}
+      />
 
       <div className="min-w-0">
         <p className="truncate text-xs font-black text-(--color-text-primary)">
-          {getTeamLabel(name)}
+          {name}
         </p>
 
         <p className="text-[9px] text-(--color-text-muted)">
@@ -1082,10 +1077,8 @@ function ServingTeamButton({
 
       {selected && (
         <span
-          className={cn(
-            "absolute right-2 top-2 h-2 w-2 rounded-full",
-            tone === "orange" ? "bg-orange-500" : "bg-red-500",
-          )}
+          className="absolute right-2 top-2 h-2 w-2 rounded-full"
+          style={{ backgroundColor: teamColor }}
         />
       )}
     </button>
@@ -1104,7 +1097,7 @@ function LineupSelectionSheet({
   selectedPosition,
   teamName,
   logoUrl,
-  tone,
+  teamColor,
   disabled,
   onClose,
   onSelectPosition,
@@ -1125,7 +1118,7 @@ function LineupSelectionSheet({
 
   logoUrl: string | null;
 
-  tone: "orange" | "red";
+  teamColor: string;
 
   disabled: boolean;
 
@@ -1151,7 +1144,7 @@ function LineupSelectionSheet({
       player.playerId === selectedPlayerId,
   );
 
-  const positionOrder: VolleyballCourtPosition[] = [4, 3, 2, 5, 6, 1];
+  const positionOrder = VOLLEYBALL_COURT_SLOTS.map((slot) => slot.position);
 
   return (
     <DialogBottom
@@ -1167,7 +1160,7 @@ function LineupSelectionSheet({
             <TeamBadge
               imageKey={logoUrl}
               name={teamName}
-              tone={tone}
+              teamColor={teamColor}
               size={40}
             />
 
@@ -1207,7 +1200,7 @@ function LineupSelectionSheet({
               </span>
             </div>
 
-            <div className="mt-2 grid grid-cols-3 gap-2">
+            <div className="mt-2 grid grid-cols-2 gap-2">
               {positionOrder.map((position) => {
                 const player = getPlayerForPosition(roster, rotation, position);
 
@@ -1221,21 +1214,35 @@ function LineupSelectionSheet({
                     onClick={() => onSelectPosition(position)}
                     className={cn(
                       "relative rounded-2xl border p-2.5 text-center transition-all",
-                      selected
-                        ? tone === "orange"
-                          ? "border-orange-400 bg-orange-50 ring-2 ring-orange-100"
-                          : "border-red-400 bg-red-50 ring-2 ring-red-100"
-                        : "border-(--color-bg-border) bg-(--color-bg-card)",
+                      !selected &&
+                        "border-(--color-bg-border) bg-(--color-bg-card)",
                     )}
+                    style={
+                      selected
+                        ? {
+                            borderColor: teamColor,
+                            backgroundColor: withHexAlpha(teamColor, "14"),
+                            boxShadow: `0 0 0 2px ${withHexAlpha(teamColor, "26")}`,
+                          }
+                        : undefined
+                    }
                   >
-                    <span
-                      className={cn(
-                        "mx-auto flex h-8 w-8 items-center justify-center rounded-full font-(family-name:--font-display) text-sm font-black text-white",
-                        tone === "orange" ? "bg-orange-500" : "bg-red-500",
-                      )}
-                    >
-                      {player?.jerseyNumberSnapshot ?? position}
-                    </span>
+                    {player ? (
+                      <div className="flex justify-center">
+                        <PlayerAvatar
+                          player={player}
+                          size={32}
+                          accentColor={teamColor}
+                        />
+                      </div>
+                    ) : (
+                      <span
+                        className="mx-auto flex h-8 w-8 items-center justify-center rounded-full font-(family-name:--font-display) text-sm font-black text-white"
+                        style={{ backgroundColor: teamColor }}
+                      >
+                        {position}
+                      </span>
+                    )}
 
                     <p className="mt-1 text-[9px] font-black uppercase text-(--color-text-muted)">
                       Position {position}
@@ -1291,14 +1298,22 @@ function LineupSelectionSheet({
                         onClick={() => onSelectPlayer(player)}
                         className={cn(
                           "flex items-center gap-3 rounded-2xl border bg-(--color-bg-card) p-2.5 text-left shadow-(--shadow-card)",
-                          selected
-                            ? tone === "orange"
-                              ? "border-orange-400 bg-orange-50"
-                              : "border-red-400 bg-red-50"
-                            : "border-(--color-bg-border)",
+                          !selected && "border-(--color-bg-border)",
                         )}
+                        style={
+                          selected
+                            ? {
+                                borderColor: teamColor,
+                                backgroundColor: withHexAlpha(teamColor, "14"),
+                              }
+                            : undefined
+                        }
                       >
-                        <PlayerAvatar player={player} size={42} />
+                        <PlayerAvatar
+                          player={player}
+                          size={42}
+                          accentColor={teamColor}
+                        />
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -1328,12 +1343,8 @@ function LineupSelectionSheet({
 
                         {selected ? (
                           <div
-                            className={cn(
-                              "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white",
-                              tone === "orange"
-                                ? "bg-orange-500"
-                                : "bg-red-500",
-                            )}
+                            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white"
+                            style={{ backgroundColor: teamColor }}
                           >
                             <Check size={13} />
                           </div>
@@ -1385,26 +1396,24 @@ function LineupSelectionSheet({
 function TeamBadge({
   imageKey,
   name,
-  tone,
+  teamColor,
   size = 36,
 }: {
   imageKey: string | null;
 
   name: string;
 
-  tone: "orange" | "red";
+  teamColor: string;
 
   size?: number;
 }) {
   return (
     <div
-      className={cn(
-        "flex shrink-0 items-center justify-center overflow-hidden rounded-xl text-white",
-        tone === "orange" ? "bg-orange-500" : "bg-red-500",
-      )}
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded-xl text-white"
       style={{
         width: size,
         height: size,
+        backgroundColor: teamColor,
       }}
     >
       {imageKey ? (
@@ -1436,10 +1445,13 @@ function TeamBadge({
 function PlayerAvatar({
   player,
   size = 40,
+  accentColor,
 }: {
   player: VolleyballMatchRosterPlayer;
 
   size?: number;
+
+  accentColor?: string;
 }) {
   return (
     <div
@@ -1447,6 +1459,10 @@ function PlayerAvatar({
       style={{
         width: size,
         height: size,
+        backgroundColor: accentColor
+          ? withHexAlpha(accentColor, "24")
+          : undefined,
+        boxShadow: accentColor ? `0 0 0 3px ${accentColor}` : undefined,
       }}
     >
       {player.playerProfileImageSnapshot ? (
@@ -1456,19 +1472,27 @@ function PlayerAvatar({
           width={size}
           height={size}
           className="h-full w-full object-cover"
-          fallback={<PlayerInitial name={player.playerNameSnapshot} />}
+          fallback={
+            <PlayerInitial
+              name={player.playerNameSnapshot}
+              color={accentColor}
+            />
+          }
         />
       ) : (
-        <PlayerInitial name={player.playerNameSnapshot} />
+        <PlayerInitial name={player.playerNameSnapshot} color={accentColor} />
       )}
     </div>
   );
 }
 
-function PlayerInitial({ name }: { name: string }) {
+function PlayerInitial({ name, color }: { name: string; color?: string }) {
   return (
-    <span className="font-(family-name:--font-display) text-sm font-black text-(--color-brand)">
-      {name.charAt(0).toUpperCase()}
+    <span
+      className="font-(family-name:--font-display) text-sm font-black text-(--color-brand)"
+      style={{ color }}
+    >
+      {getInitials(name)}
     </span>
   );
 }

@@ -31,6 +31,41 @@ export const VOLLEYBALL_MATCH_STATUSES = {
 export type VolleyballMatchStatus =
   (typeof VOLLEYBALL_MATCH_STATUSES)[keyof typeof VOLLEYBALL_MATCH_STATUSES];
 
+export const VOLLEYBALL_MY_MATCH_SOURCES = {
+  ALL: "ALL",
+  STANDALONE: "STANDALONE",
+  TOURNAMENT: "TOURNAMENT",
+} as const;
+
+export type VolleyballMyMatchSource =
+  (typeof VOLLEYBALL_MY_MATCH_SOURCES)[keyof typeof VOLLEYBALL_MY_MATCH_SOURCES];
+
+export const VOLLEYBALL_MATCH_FEED_STATUSES = {
+  LIVE: "LIVE",
+  UPCOMING: "UPCOMING",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
+} as const;
+
+export type VolleyballMatchFeedStatus =
+  (typeof VOLLEYBALL_MATCH_FEED_STATUSES)[keyof typeof VOLLEYBALL_MATCH_FEED_STATUSES];
+
+export const VOLLEYBALL_MATCH_PRIMARY_ACTIONS = {
+  SETUP_ROSTER: "SETUP_ROSTER",
+  START_SET: "START_SET",
+  RESUME_SCORING: "RESUME_SCORING",
+  VIEW_RESULT: "VIEW_RESULT",
+  VIEW_MATCH: "VIEW_MATCH",
+} as const;
+
+export type VolleyballMatchPrimaryAction =
+  (typeof VOLLEYBALL_MATCH_PRIMARY_ACTIONS)[keyof typeof VOLLEYBALL_MATCH_PRIMARY_ACTIONS];
+
+export type VolleyballMyMatchStatusFilter = Exclude<
+  VolleyballMatchFeedStatus,
+  "CANCELLED"
+>;
+
 export interface VolleyballMatchRulesConfiguration {
   formatType: VolleyballRuleFormatType;
   maxSets: number | null;
@@ -86,11 +121,6 @@ export interface CreateVolleyballMatchRules {
   overrides?: VolleyballMatchRulesOverrides;
 }
 
-export interface CreateVolleyballMatchRules {
-  presetKey: VolleyballMatchRulePreset;
-  customRules?: VolleyballMatchRulesOverrides;
-}
-
 export interface CreateVolleyballMatchDto {
   teamAId: string;
   teamBId: string;
@@ -103,6 +133,7 @@ export interface VolleyballMatchTeamSnapshot {
   name: string;
   shortName: string | null;
   logoUrl: string | null;
+  teamColor: string | null;
 }
 
 /* =========================================================
@@ -143,6 +174,12 @@ export interface UpdateVolleyballPostMatchDto {
 export interface VolleyballMatch {
   id: string;
 
+  sourceType: Exclude<VolleyballMyMatchSource, "ALL">;
+
+  tournament: VolleyballMyMatchTournament | null;
+
+  fixture: VolleyballMyMatchFixture | null;
+
   teamAId: string;
   teamBId: string;
 
@@ -181,4 +218,91 @@ export interface VolleyballMatch {
 
   createdAt: string;
   updatedAt: string;
+}
+
+export interface VolleyballMyMatchTeam {
+  teamId: string;
+  name: string;
+  shortName: string | null;
+  logoUrl: string | null;
+}
+
+export interface VolleyballMyMatchScore {
+  teamASetsWon: number;
+  teamBSetsWon: number;
+
+  currentSetNumber: number | null;
+
+  teamACurrentSetPoints: number | null;
+  teamBCurrentSetPoints: number | null;
+}
+
+export interface VolleyballMyMatchTournament {
+  id: string;
+  name: string;
+  shortName: string | null;
+}
+
+export interface VolleyballMyMatchFixture {
+  id: string;
+  stage: string;
+  roundNumber: number;
+  groupName: string | null;
+}
+
+export interface VolleyballMyMatchResult {
+  winnerTeamId: string;
+  winnerTeamName: string;
+  resultText: string;
+}
+
+export interface VolleyballMyMatchItem {
+  matchId: string;
+
+  status: VolleyballMatchStatus;
+
+  feedStatus: VolleyballMatchFeedStatus;
+
+  sourceType: Exclude<VolleyballMyMatchSource, "ALL">;
+
+  createdByUserId?: string;
+
+  scheduledAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+
+  teamA: VolleyballMyMatchTeam;
+  teamB: VolleyballMyMatchTeam;
+
+  score: VolleyballMyMatchScore;
+
+  rules: VolleyballMatchRulesConfiguration;
+
+  result: VolleyballMyMatchResult | null;
+
+  tournament: VolleyballMyMatchTournament | null;
+
+  fixture: VolleyballMyMatchFixture | null;
+
+  primaryAction: VolleyballMatchPrimaryAction;
+
+  updatedAt: string;
+}
+
+export interface VolleyballMyMatchesResponse {
+  items: VolleyballMyMatchItem[];
+
+  pagination: {
+    skip: number;
+    limit: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
+
+export interface GetVolleyballMyMatchesQuery {
+  status?: VolleyballMyMatchStatusFilter;
+  source?: VolleyballMyMatchSource;
+  skip?: number;
+  limit?: number;
 }

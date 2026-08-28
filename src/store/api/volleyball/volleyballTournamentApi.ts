@@ -7,6 +7,7 @@ import type {
   CreateVolleyballTournamentFixtureDto,
   RegisterVolleyballTournamentTeamDto,
   VolleyballTournament,
+  VolleyballTournamentDetail,
   VolleyballTournamentFixture,
   VolleyballTournamentStandingsResponse,
   VolleyballTournamentStatus,
@@ -15,6 +16,9 @@ import type {
   VolleyballFixtureStatus,
   UpdateVolleyballTournamentFixtureDto,
   DeleteVolleyballTournamentFixtureResponse,
+  AddVolleyballTournamentAdminDto,
+  VolleyballTournamentAdmin,
+  VolleyballTournamentAdminsResponse,
 } from "@/types/volleyball/tournament";
 
 export const volleyballTournamentApi = baseApi.injectEndpoints({
@@ -52,7 +56,7 @@ export const volleyballTournamentApi = baseApi.injectEndpoints({
     }),
 
     getVolleyballTournament: builder.query<
-      VolleyballTournament,
+      VolleyballTournamentDetail,
       {
         tournamentId: string;
       }
@@ -64,6 +68,46 @@ export const volleyballTournamentApi = baseApi.injectEndpoints({
           type: "VolleyballTournament",
           id: tournamentId,
         },
+      ],
+    }),
+
+    getVolleyballTournamentAdmins: builder.query<
+      VolleyballTournamentAdminsResponse,
+      { tournamentId: string }
+    >({
+      query: ({ tournamentId }) =>
+        `/volleyball/tournaments/${tournamentId}/admins`,
+      providesTags: (_result, _error, { tournamentId }) => [
+        { type: "VolleyballTournamentAdmins", id: tournamentId },
+      ],
+    }),
+
+    addVolleyballTournamentAdmin: builder.mutation<
+      VolleyballTournamentAdmin,
+      { tournamentId: string; body: AddVolleyballTournamentAdminDto }
+    >({
+      query: ({ tournamentId, body }) => ({
+        url: `/volleyball/tournaments/${tournamentId}/admins`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { tournamentId }) => [
+        { type: "VolleyballTournamentAdmins", id: tournamentId },
+        { type: "VolleyballTournament", id: tournamentId },
+      ],
+    }),
+
+    removeVolleyballTournamentAdmin: builder.mutation<
+      { success: boolean },
+      { tournamentId: string; userId: string }
+    >({
+      query: ({ tournamentId, userId }) => ({
+        url: `/volleyball/tournaments/${tournamentId}/admins/${userId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, { tournamentId }) => [
+        { type: "VolleyballTournamentAdmins", id: tournamentId },
+        { type: "VolleyballTournament", id: tournamentId },
       ],
     }),
 
@@ -346,6 +390,20 @@ export const volleyballTournamentApi = baseApi.injectEndpoints({
         },
       ],
     }),
+
+    getMyVolleyballTournaments: builder.query<
+      VolleyballTournament[],
+      {
+        status?: VolleyballTournamentStatus;
+      } | void
+    >({
+      query: (params) => ({
+        url: "/volleyball/tournaments/me",
+        params: params ?? undefined,
+      }),
+
+      providesTags: ["VolleyballTournaments"],
+    }),
   }),
 });
 
@@ -355,6 +413,12 @@ export const {
   useGetVolleyballTournamentsQuery,
 
   useGetVolleyballTournamentQuery,
+
+  useGetVolleyballTournamentAdminsQuery,
+
+  useAddVolleyballTournamentAdminMutation,
+
+  useRemoveVolleyballTournamentAdminMutation,
 
   useRegisterVolleyballTournamentTeamMutation,
 
@@ -373,4 +437,6 @@ export const {
   useUpdateVolleyballTournamentFixtureMutation,
 
   useDeleteVolleyballTournamentFixtureMutation,
+
+  useGetMyVolleyballTournamentsQuery,
 } = volleyballTournamentApi;
