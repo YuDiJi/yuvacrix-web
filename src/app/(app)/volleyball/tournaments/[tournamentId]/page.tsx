@@ -20,6 +20,11 @@ import { Button } from "@/components/common/Button";
 import { S3Image } from "@/components/common/S3Image";
 
 import { cn } from "@/lib/cn";
+import {
+  formatLeaguePlayoffConfig,
+  formatVolleyballTournamentFormat,
+  formatVolleyballTournamentStage,
+} from "@/lib/volleyball/tournamentFormat";
 
 import {
   useCreateVolleyballMatchFromFixtureMutation,
@@ -276,7 +281,7 @@ export default function VolleyballTournamentOverviewPage() {
                   </span>
 
                   <span className="rounded-full bg-(--color-brand) px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-white">
-                    {formatTournamentFormat(tournament.format)}
+                    {formatVolleyballTournamentFormat(tournament.format)}
                   </span>
                 </div>
 
@@ -287,6 +292,20 @@ export default function VolleyballTournamentOverviewPage() {
                 <p className="mt-1 text-[10px] font-medium text-white/55">
                   Tournament control centre
                 </p>
+
+                {tournament.format ===
+                  VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF &&
+                  tournament.formatConfig && (
+                    <p className="mt-2 text-[9px] leading-4 text-white/65">
+                      {formatLeaguePlayoffConfig(tournament.formatConfig)}
+                    </p>
+                  )}
+
+                {tournament.currentStage && (
+                  <p className="mt-1 text-[9px] font-bold text-orange-300">
+                    {formatVolleyballTournamentStage(tournament.currentStage)}
+                  </p>
+                )}
               </div>
 
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10">
@@ -1491,25 +1510,6 @@ function formatStage(stage: VolleyballTournamentStage) {
 /* =========================================================
    FORMAT
 ========================================================= */
-
-function formatTournamentFormat(format: string) {
-  switch (format) {
-    case VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE:
-      return "League";
-
-    case VOLLEYBALL_TOURNAMENT_FORMATS.KNOCKOUT:
-      return "Knockout";
-
-    case VOLLEYBALL_TOURNAMENT_FORMATS.GROUP_KNOCKOUT:
-      return "Group + Knockout";
-
-    default:
-      return format
-        .replaceAll("_", " ")
-        .toLowerCase()
-        .replace(/\b\w/g, (character) => character.toUpperCase());
-  }
-}
 
 /* =========================================================
    STATUS

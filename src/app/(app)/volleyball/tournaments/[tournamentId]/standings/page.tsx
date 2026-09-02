@@ -159,6 +159,13 @@ export default function VolleyballTournamentStandingsPage() {
       ================================================= */}
 
       <div className="space-y-4 px-4 py-5">
+        {tournament.format ===
+          VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF && (
+          <p className="rounded-xl border border-(--color-brand)/15 bg-(--color-bg-tint) px-3 py-2.5 text-[10px] text-(--color-text-secondary)">
+            League standings determine playoff qualification.
+          </p>
+        )}
+
         {/* GENERATED INFO */}
 
         <div className="flex items-center justify-between gap-3">

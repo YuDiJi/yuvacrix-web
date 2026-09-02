@@ -4,6 +4,12 @@ import { ArrowRightLeft, RotateCcw, Shield, Trophy, X } from "lucide-react";
 
 import { DialogBottom } from "@/components/common/DialogBottom";
 import { cn } from "@/lib/cn";
+import {
+  resolveVolleyballTeamColor,
+  VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  withHexAlpha,
+} from "@/lib/volleyball/teamColors";
 
 import { useGetVolleyballMatchHistoryQuery } from "@/store/api/volleyball/volleyballMatchApi";
 
@@ -250,21 +256,33 @@ function RallyRow({
   const player = findPlayer(match, event.rally.creditedPlayerId);
 
   const pointType = formatEventLabel(event.rally.pointType);
+  const teamAColor = resolveVolleyballTeamColor(
+    match.teamASnapshot.teamColor,
+    VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  );
+  const teamBColor = resolveVolleyballTeamColor(
+    match.teamBSnapshot.teamColor,
+    VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  );
+  const teamColor = isTeamA ? teamAColor : teamBColor;
 
   return (
     <div className="grid min-h-[58px] grid-cols-[62px_1fr_auto] items-center gap-2 px-2 py-1.5">
-      <HistoryScore score={event.scoreAfter} highlight={isTeamA ? "A" : "B"} />
+      <HistoryScore
+        score={event.scoreAfter}
+        highlight={isTeamA ? "A" : "B"}
+        teamAColor={teamAColor}
+        teamBColor={teamBColor}
+      />
 
       <div className="flex min-w-0 items-center gap-2">
-        <EventIcon type="POINT" side={isTeamA ? "A" : "B"} />
+        <EventIcon type="POINT" color={teamColor} />
 
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <span
-              className={cn(
-                "text-[9px] font-black uppercase tracking-wide",
-                isTeamA ? "text-[#d97706]" : "text-[#dc2626]",
-              )}
+              className="text-[9px] font-black uppercase tracking-wide"
+              style={{ color: teamColor }}
             >
               Point
             </span>
@@ -319,13 +337,22 @@ function SubstitutionRow({
   const incoming = findPlayer(match, event.substitution.incomingPlayerId);
 
   const isTeamA = event.substitution.teamId === match.teamAId;
+  const teamAColor = resolveVolleyballTeamColor(
+    match.teamASnapshot.teamColor,
+    VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  );
+  const teamBColor = resolveVolleyballTeamColor(
+    match.teamBSnapshot.teamColor,
+    VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  );
+  const teamColor = isTeamA ? teamAColor : teamBColor;
 
   return (
     <div className="grid min-h-[56px] grid-cols-[62px_1fr_auto] items-center gap-2 px-2 py-1.5">
-      <HistoryScore score={event.scoreAfter} highlight={isTeamA ? "A" : "B"} />
+      <HistoryScore score={event.scoreAfter} highlight={isTeamA ? "A" : "B"} teamAColor={teamAColor} teamBColor={teamBColor} />
 
       <div className="flex min-w-0 items-center gap-2">
-        <EventIcon type="SUB" side={isTeamA ? "A" : "B"} />
+        <EventIcon type="SUB" color={teamColor} />
 
         <div className="min-w-0">
           <p className="text-[9px] font-black uppercase tracking-wide text-(--color-brand)">
@@ -373,13 +400,22 @@ function LiberoRow({
   const incoming = findPlayer(match, event.liberoReplacement.incomingPlayerId);
 
   const isTeamA = event.liberoReplacement.teamId === match.teamAId;
+  const teamAColor = resolveVolleyballTeamColor(
+    match.teamASnapshot.teamColor,
+    VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  );
+  const teamBColor = resolveVolleyballTeamColor(
+    match.teamBSnapshot.teamColor,
+    VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  );
+  const teamColor = isTeamA ? teamAColor : teamBColor;
 
   return (
     <div className="grid min-h-[56px] grid-cols-[62px_1fr_auto] items-center gap-2 px-2 py-1.5">
-      <HistoryScore score={event.scoreAfter} highlight={isTeamA ? "A" : "B"} />
+      <HistoryScore score={event.scoreAfter} highlight={isTeamA ? "A" : "B"} teamAColor={teamAColor} teamBColor={teamBColor} />
 
       <div className="flex min-w-0 items-center gap-2">
-        <EventIcon type="LIBERO" side={isTeamA ? "A" : "B"} />
+        <EventIcon type="LIBERO" color={teamColor} />
 
         <div className="min-w-0">
           <p className="text-[9px] font-black uppercase tracking-wide text-(--color-brand)">
@@ -450,6 +486,8 @@ function UndoRow({
 function HistoryScore({
   score,
   highlight,
+  teamAColor,
+  teamBColor,
 }: {
   score?: {
     teamAPoints: number;
@@ -457,6 +495,8 @@ function HistoryScore({
   } | null;
 
   highlight?: "A" | "B";
+  teamAColor?: string;
+  teamBColor?: string;
 }) {
   if (!score) {
     return (
@@ -473,7 +513,7 @@ function HistoryScore({
       <ScoreNumber
         value={score.teamAPoints}
         active={highlight === "A"}
-        side="A"
+        color={teamAColor}
       />
 
       <span className="text-[10px] font-black text-(--color-text-muted)">
@@ -483,7 +523,7 @@ function HistoryScore({
       <ScoreNumber
         value={score.teamBPoints}
         active={highlight === "B"}
-        side="B"
+        color={teamBColor}
       />
     </div>
   );
@@ -492,19 +532,19 @@ function HistoryScore({
 function ScoreNumber({
   value,
   active,
-  side,
+  color,
 }: {
   value: number;
   active: boolean;
-  side: "A" | "B";
+  color?: string;
 }) {
   return (
     <span
       className={cn(
         "flex h-8 min-w-6 items-center justify-center rounded-md bg-(--color-bg-base) px-1 font-(family-name:--font-display) text-sm font-black text-(--color-text-primary)",
-        active && side === "A" && "border-b-2 border-[#f59e0b]",
-        active && side === "B" && "border-b-2 border-[#ef3b2d]",
+        active && "border-b-2",
       )}
+      style={active && color ? { borderBottomColor: color } : undefined}
     >
       {value}
     </span>
@@ -517,20 +557,17 @@ function ScoreNumber({
 
 function EventIcon({
   type,
-  side,
+  color,
 }: {
   type: "POINT" | "SUB" | "LIBERO";
-
-  side: "A" | "B";
+  color: string;
 }) {
-  const common = cn(
-    "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
-    side === "A" ? "bg-orange-100 text-orange-600" : "bg-red-100 text-red-600",
-  );
+  const common = "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg";
+  const style = { color, backgroundColor: withHexAlpha(color, "1A") };
 
   if (type === "POINT") {
     return (
-      <div className={common}>
+      <div className={common} style={style}>
         <Trophy size={14} />
       </div>
     );
@@ -538,14 +575,14 @@ function EventIcon({
 
   if (type === "SUB") {
     return (
-      <div className={common}>
+      <div className={common} style={style}>
         <ArrowRightLeft size={14} />
       </div>
     );
   }
 
   return (
-    <div className={common}>
+    <div className={common} style={style}>
       <Shield size={14} />
     </div>
   );

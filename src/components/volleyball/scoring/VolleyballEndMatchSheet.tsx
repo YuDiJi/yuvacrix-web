@@ -18,6 +18,12 @@ import { S3Image } from "@/components/common/S3Image";
 
 import { cn } from "@/lib/cn";
 import { getInitials } from "@/lib/getInitials";
+import {
+  resolveVolleyballTeamColor,
+  VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  withHexAlpha,
+} from "@/lib/volleyball/teamColors";
 
 import { useUpdateVolleyballPostMatchMutation } from "@/store/api/volleyball/volleyballMatchApi";
 
@@ -150,6 +156,16 @@ export function VolleyballEndMatchSheet({
         ? match.teamBSnapshot
         : null;
 
+  const teamAColor = resolveVolleyballTeamColor(
+    match.teamASnapshot.teamColor,
+    VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  );
+
+  const teamBColor = resolveVolleyballTeamColor(
+    match.teamBSnapshot.teamColor,
+    VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  );
+
   function handleSpectators(value: string) {
     const numeric = value.replace(/\D/g, "");
 
@@ -252,7 +268,7 @@ export function VolleyballEndMatchSheet({
                     }
                     score={match.teamASetsWon}
                     winner={match.winnerTeamId === match.teamAId}
-                    tone="orange"
+                    color={teamAColor}
                   />
 
                   <span className="text-lg font-black text-white/30">:</span>
@@ -263,7 +279,7 @@ export function VolleyballEndMatchSheet({
                     }
                     score={match.teamBSetsWon}
                     winner={match.winnerTeamId === match.teamBId}
-                    tone="red"
+                    color={teamBColor}
                   />
                 </div>
               </div>
@@ -450,6 +466,8 @@ export function VolleyballEndMatchSheet({
       <BestPlayerPickerSheet
         open={playerPickerOpen}
         players={players}
+        teamAColor={teamAColor}
+        teamBColor={teamBColor}
         selectedPlayerId={bestPlayerId}
         onClose={() => setPlayerPickerOpen(false)}
         onSelect={(player) => {
@@ -468,24 +486,21 @@ function ResultTeam({
   name,
   score,
   winner,
-  tone,
+  color,
 }: {
   name: string;
   score: number;
   winner: boolean;
-  tone: "orange" | "red";
+  color: string;
 }) {
   return (
     <div>
       <p
         className={cn(
           "text-[10px] font-black uppercase",
-          winner
-            ? tone === "orange"
-              ? "text-orange-400"
-              : "text-red-400"
-            : "text-white/55",
+          !winner && "text-white/55",
         )}
+        style={winner ? { color } : undefined}
       >
         {getTeamLabel(name)}
       </p>
@@ -500,6 +515,8 @@ function ResultTeam({
 function BestPlayerPickerSheet({
   open,
   players,
+  teamAColor,
+  teamBColor,
   selectedPlayerId,
   onClose,
   onSelect,
@@ -507,6 +524,8 @@ function BestPlayerPickerSheet({
   open: boolean;
 
   players: PlayerWithTeam[];
+  teamAColor: string;
+  teamBColor: string;
 
   selectedPlayerId: string | null;
 
@@ -548,7 +567,7 @@ function BestPlayerPickerSheet({
         <div className="min-h-0 flex-1 overflow-y-auto bg-(--color-bg-base) px-4 py-3">
           <PlayerTeamSection
             label={teamAPlayers[0]?.teamName ?? "Team A"}
-            tone="orange"
+            color={teamAColor}
             players={teamAPlayers}
             selectedPlayerId={selectedPlayerId}
             onSelect={onSelect}
@@ -557,7 +576,7 @@ function BestPlayerPickerSheet({
           <div className="mt-5">
             <PlayerTeamSection
               label={teamBPlayers[0]?.teamName ?? "Team B"}
-              tone="red"
+              color={teamBColor}
               players={teamBPlayers}
               selectedPlayerId={selectedPlayerId}
               onSelect={onSelect}
@@ -571,14 +590,14 @@ function BestPlayerPickerSheet({
 
 function PlayerTeamSection({
   label,
-  tone,
+  color,
   players,
   selectedPlayerId,
   onSelect,
 }: {
   label: string;
 
-  tone: "orange" | "red";
+  color: string;
 
   players: PlayerWithTeam[];
 
@@ -590,10 +609,8 @@ function PlayerTeamSection({
     <section>
       <div className="flex items-center gap-2">
         <span
-          className={cn(
-            "h-2.5 w-2.5 rounded-full",
-            tone === "orange" ? "bg-orange-500" : "bg-red-500",
-          )}
+          className="h-2.5 w-2.5 rounded-full"
+          style={{ backgroundColor: color }}
         />
 
         <p className="text-section-label">{label}</p>
@@ -607,12 +624,17 @@ function PlayerTeamSection({
             onClick={() => onSelect(player)}
             className={cn(
               "relative flex min-w-0 items-center gap-2 rounded-2xl border bg-(--color-bg-card) p-2.5 text-left",
-              selectedPlayerId === player.playerId
-                ? tone === "orange"
-                  ? "border-orange-400 bg-orange-50"
-                  : "border-red-400 bg-red-50"
-                : "border-(--color-bg-border)",
+              selectedPlayerId !== player.playerId &&
+                "border-(--color-bg-border)",
             )}
+            style={
+              selectedPlayerId === player.playerId
+                ? {
+                    borderColor: color,
+                    backgroundColor: withHexAlpha(color, "12"),
+                  }
+                : undefined
+            }
           >
             <PlayerAvatar player={player} size={38} />
 
@@ -629,10 +651,8 @@ function PlayerTeamSection({
             {selectedPlayerId === player.playerId && (
               <Check
                 size={13}
-                className={cn(
-                  "absolute right-2 top-2",
-                  tone === "orange" ? "text-orange-600" : "text-red-600",
-                )}
+                className="absolute right-2 top-2"
+                style={{ color }}
               />
             )}
           </button>

@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
@@ -101,8 +101,17 @@ function createRosterStateFromExistingRoster(
 
     captainPlayerId: roster.captainPlayerId,
 
-    liberoPlayerIds: roster.liberoPlayerIds,
+    liberoPlayerIds:
+      roster.selectionSource === "MATCH" ? roster.liberoPlayerIds : [],
   };
+}
+
+function createRosterHydrationKey(
+  matchId: string,
+  teamId: string,
+  roster: VolleyballMatchRoster | null,
+) {
+  return `${matchId}:${teamId}:${roster?.selectionSource ?? "NO_ROSTER"}`;
 }
 
 function extractErrorMessage(error: unknown, fallback: string) {
@@ -176,7 +185,9 @@ export default function VolleyballRosterPage() {
     ...EMPTY_ROSTER_STATE,
   });
 
-  const [initialized, setInitialized] = useState(false);
+  const teamAHydrationKeyRef = useRef<string | null>(null);
+
+  const teamBHydrationKeyRef = useRef<string | null>(null);
 
   const [error, setError] = useState("");
 
@@ -243,16 +254,36 @@ export default function VolleyballRosterPage() {
   ===================================================== */
 
   useEffect(() => {
-    if (!match || initialized) {
+    if (!match) {
       return;
     }
 
-    setTeamARosterState(createRosterStateFromExistingRoster(match.teamARoster));
+    const teamAHydrationKey = createRosterHydrationKey(
+      match.id,
+      match.teamAId,
+      match.teamARoster,
+    );
 
-    setTeamBRosterState(createRosterStateFromExistingRoster(match.teamBRoster));
+    if (teamAHydrationKeyRef.current !== teamAHydrationKey) {
+      setTeamARosterState(
+        createRosterStateFromExistingRoster(match.teamARoster),
+      );
+      teamAHydrationKeyRef.current = teamAHydrationKey;
+    }
 
-    setInitialized(true);
-  }, [match, initialized]);
+    const teamBHydrationKey = createRosterHydrationKey(
+      match.id,
+      match.teamBId,
+      match.teamBRoster,
+    );
+
+    if (teamBHydrationKeyRef.current !== teamBHydrationKey) {
+      setTeamBRosterState(
+        createRosterStateFromExistingRoster(match.teamBRoster),
+      );
+      teamBHydrationKeyRef.current = teamBHydrationKey;
+    }
+  }, [match]);
 
   /* =====================================================
      DERIVED

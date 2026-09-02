@@ -364,6 +364,26 @@ export default function VolleyballMatchDetailsPage() {
           />
         )}
 
+        {match.tournament?.id &&
+          tournament?.viewerAccess.canManageAdmins === true && (
+            <Button
+              fullWidth
+              variant="outline"
+              leftIcon={<ShieldCheck size={16} />}
+              onClick={() => {
+                const query = new URLSearchParams({
+                  returnTo: `/volleyball/matches/${matchId}`,
+                });
+
+                router.push(
+                  `/volleyball/tournaments/${match.tournament!.id}/admins?${query.toString()}`,
+                );
+              }}
+            >
+              Manage Tournament Admins
+            </Button>
+          )}
+
         {/* =================================
             SET RESULTS
         ================================= */}
@@ -439,7 +459,7 @@ function MatchHero({
           name={match.teamASnapshot.name}
           shortName={match.teamASnapshot.shortName}
           imageKey={match.teamASnapshot.logoUrl}
-          tone="orange"
+          tone={match.teamASnapshot.teamColor ?? "orange"}
           winner={match.winnerTeamId === match.teamAId}
         />
 
@@ -465,7 +485,7 @@ function MatchHero({
           name={match.teamBSnapshot.name}
           shortName={match.teamBSnapshot.shortName}
           imageKey={match.teamBSnapshot.logoUrl}
-          tone="red"
+          tone={match.teamBSnapshot.teamColor ?? "red"}
           winner={match.winnerTeamId === match.teamBId}
         />
       </div>
@@ -484,23 +504,22 @@ function MatchHero({
 
           <div className="grid grid-cols-[1fr_auto_1fr] items-center">
             <LiveScoreTeam
-              label={getTeamLabel(
-                match.teamASnapshot.shortName ?? match.teamASnapshot.name,
-              )}
+              // label={getTeamLabel(
+              //   match.teamASnapshot.shortName ?? match.teamASnapshot.name,
+              // )}
+              label={match.teamASnapshot.shortName ?? match.teamASnapshot.name}
               score={liveSet.teamAPoints}
               serving={liveSet.servingTeamId === match.teamAId}
-              tone="orange"
+              tone={match.teamASnapshot.teamColor ?? "orange"}
             />
 
             <span className="px-4 text-sm font-black text-white/30">:</span>
 
             <LiveScoreTeam
-              label={getTeamLabel(
-                match.teamBSnapshot.shortName ?? match.teamBSnapshot.name,
-              )}
+              label={match.teamBSnapshot.shortName ?? match.teamBSnapshot.name}
               score={liveSet.teamBPoints}
               serving={liveSet.servingTeamId === match.teamBId}
-              tone="red"
+              tone={match.teamBSnapshot.teamColor ?? "red"}
             />
           </div>
         </div>
@@ -522,7 +541,7 @@ function HeroTeam({
 
   imageKey: string | null;
 
-  tone: "orange" | "red";
+  tone: string;
 
   winner: boolean;
 }) {
@@ -531,10 +550,11 @@ function HeroTeam({
       <div
         className={cn(
           "mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl",
-          tone === "orange" ? "bg-orange-500" : "bg-red-500",
+
           winner &&
             "ring-2 ring-white ring-offset-2 ring-offset-(--color-navy)",
         )}
+        style={{ backgroundColor: tone }}
       >
         {imageKey ? (
           <S3Image
@@ -557,7 +577,7 @@ function HeroTeam({
       </div>
 
       <p className="mt-2 truncate font-(family-name:--font-display) text-sm font-black uppercase tracking-wide">
-        {getTeamLabel(shortName ?? name)}
+        {shortName ?? name}
       </p>
 
       {winner && (
@@ -582,17 +602,12 @@ function LiveScoreTeam({
 
   serving: boolean;
 
-  tone: "orange" | "red";
+  tone: string;
 }) {
   return (
     <div className="text-center">
       <div className="flex items-center justify-center gap-1">
-        {serving && (
-          <Volleyball
-            size={11}
-            className={tone === "orange" ? "text-orange-400" : "text-red-400"}
-          />
-        )}
+        {serving && <Volleyball size={11} style={{ color: tone }} />}
 
         <span className="text-[10px] font-black text-white/65">{label}</span>
       </div>
@@ -600,9 +615,11 @@ function LiveScoreTeam({
       <p
         className={cn(
           "mt-0.5 font-(family-name:--font-display) text-3xl font-black",
-          serving && tone === "orange" && "text-orange-400",
-          serving && tone === "red" && "text-red-400",
+          serving && "font-bold",
         )}
+        style={{
+          color: serving ? tone : undefined,
+        }}
       >
         {score}
       </p>

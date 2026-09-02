@@ -19,6 +19,9 @@ import type {
   AddVolleyballTournamentAdminDto,
   VolleyballTournamentAdmin,
   VolleyballTournamentAdminsResponse,
+  RemoveVolleyballTournamentTeamResponse,
+  GetMyVolleyballTournamentsQuery,
+  VolleyballMyTournamentsResponse,
 } from "@/types/volleyball/tournament";
 
 export const volleyballTournamentApi = baseApi.injectEndpoints({
@@ -136,6 +139,20 @@ export const volleyballTournamentApi = baseApi.injectEndpoints({
       ],
     }),
 
+    removeVolleyballTournamentTeam: builder.mutation<
+      RemoveVolleyballTournamentTeamResponse,
+      { tournamentId: string; teamId: string }
+    >({
+      query: ({ tournamentId, teamId }) => ({
+        url: `/volleyball/tournaments/${tournamentId}/teams/${teamId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, { tournamentId }) => [
+        { type: "VolleyballTournament", id: tournamentId },
+        { type: "VolleyballTournamentTeams", id: tournamentId },
+      ],
+    }),
+
     getVolleyballTournamentTeams: builder.query<
       VolleyballTournamentTeam[],
       {
@@ -182,6 +199,21 @@ export const volleyballTournamentApi = baseApi.injectEndpoints({
           type: "VolleyballTournamentFixtures",
           id: tournamentId,
         },
+      ],
+    }),
+
+    generateVolleyballLeagueFixtures: builder.mutation<
+      unknown,
+      { tournamentId: string }
+    >({
+      query: ({ tournamentId }) => ({
+        url: `/volleyball/tournaments/${tournamentId}/fixtures/generate-league`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, { tournamentId }) => [
+        { type: "VolleyballTournamentFixtures", id: tournamentId },
+        { type: "VolleyballTournament", id: tournamentId },
+        { type: "VolleyballTournamentStandings", id: tournamentId },
       ],
     }),
 
@@ -392,10 +424,8 @@ export const volleyballTournamentApi = baseApi.injectEndpoints({
     }),
 
     getMyVolleyballTournaments: builder.query<
-      VolleyballTournament[],
-      {
-        status?: VolleyballTournamentStatus;
-      } | void
+      VolleyballMyTournamentsResponse,
+      GetMyVolleyballTournamentsQuery | void
     >({
       query: (params) => ({
         url: "/volleyball/tournaments/me",
@@ -422,9 +452,13 @@ export const {
 
   useRegisterVolleyballTournamentTeamMutation,
 
+  useRemoveVolleyballTournamentTeamMutation,
+
   useGetVolleyballTournamentTeamsQuery,
 
   useCreateVolleyballTournamentFixtureMutation,
+
+  useGenerateVolleyballLeagueFixturesMutation,
 
   useGetVolleyballTournamentFixturesQuery,
 

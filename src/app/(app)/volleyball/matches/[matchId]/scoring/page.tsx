@@ -665,8 +665,20 @@ export default function VolleyballScoringPage() {
 
       setCompletedSet(null);
 
+      const query = new URLSearchParams({
+        setNumber: String(nextSet.setNumber),
+      });
+
+      if (resolvedTournamentId) {
+        query.set("tournamentId", resolvedTournamentId);
+      }
+
+      if (resolvedFixtureId) {
+        query.set("fixtureId", resolvedFixtureId);
+      }
+
       router.replace(
-        `/volleyball/matches/${matchId}/sets/setup?setNumber=${nextSet.setNumber}&tournamentId=${resolvedTournamentId}&fixtureId=${resolvedFixtureId}`,
+        `/volleyball/matches/${matchId}/sets/setup?${query.toString()}`,
       );
     } catch (err) {
       setError(extractErrorMessage(err));

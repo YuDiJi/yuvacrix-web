@@ -3,6 +3,10 @@ import type {
   VolleyballMatchRulesConfiguration,
   VolleyballMatchRulesOverrides,
 } from "./match";
+import type {
+  VolleyballMyScope,
+  VolleyballViewerRelation,
+} from "./myVolleyball";
 
 /* =========================================================
    TOURNAMENT ENUMS
@@ -12,10 +16,26 @@ export const VOLLEYBALL_TOURNAMENT_FORMATS = {
   LEAGUE: "LEAGUE",
   KNOCKOUT: "KNOCKOUT",
   GROUP_KNOCKOUT: "GROUP_KNOCKOUT",
+  LEAGUE_PLAYOFF: "LEAGUE_PLAYOFF",
+  CUSTOM: "CUSTOM",
 } as const;
 
 export type VolleyballTournamentFormat =
   (typeof VOLLEYBALL_TOURNAMENT_FORMATS)[keyof typeof VOLLEYBALL_TOURNAMENT_FORMATS];
+
+export const VOLLEYBALL_PLAYOFF_STRUCTURES = {
+  TOP_2_FINAL: "TOP_2_FINAL",
+  SEMIFINAL_FINAL: "SEMIFINAL_FINAL",
+} as const;
+
+export type VolleyballPlayoffStructure =
+  (typeof VOLLEYBALL_PLAYOFF_STRUCTURES)[keyof typeof VOLLEYBALL_PLAYOFF_STRUCTURES];
+
+export interface VolleyballLeaguePlayoffFormatConfig {
+  roundRobinCycles: 1;
+  qualifyingTeamCount: 2 | 4;
+  playoffStructure: VolleyballPlayoffStructure;
+}
 
 export const VOLLEYBALL_TOURNAMENT_VISIBILITIES = {
   PUBLIC: "PUBLIC",
@@ -110,7 +130,13 @@ export interface VolleyballTournament {
 
   format: VolleyballTournamentFormat;
 
+  formatConfig: VolleyballLeaguePlayoffFormatConfig | null;
+
   status: VolleyballTournamentStatus;
+
+  currentStage: VolleyballTournamentStage | null;
+
+  leaguePhaseComplete: boolean;
 
   pointsConfig: VolleyballTournamentPointsConfig;
 
@@ -130,6 +156,27 @@ export interface VolleyballTournament {
 
 export interface VolleyballTournamentDetail extends VolleyballTournament {
   viewerAccess: VolleyballTournamentViewerAccess;
+}
+
+export interface VolleyballMyTournamentItem extends VolleyballTournament {
+  viewerRelation: VolleyballViewerRelation;
+}
+
+export interface VolleyballMyTournamentsResponse {
+  items: VolleyballMyTournamentItem[];
+  pagination: {
+    skip: number;
+    limit: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
+
+export interface GetMyVolleyballTournamentsQuery {
+  scope?: VolleyballMyScope;
+  status?: VolleyballTournamentStatus;
+  skip?: number;
+  limit?: number;
 }
 
 export interface VolleyballTournamentAdminOwner {
@@ -176,6 +223,8 @@ export interface CreateVolleyballTournamentDto {
 
   format: VolleyballTournamentFormat;
 
+  formatConfig?: VolleyballLeaguePlayoffFormatConfig | null;
+
   pointsConfig?: Partial<VolleyballTournamentPointsConfig>;
 
   startDate?: string;
@@ -206,6 +255,12 @@ export interface RegisterVolleyballTournamentTeamDto {
   teamId: string;
 
   groupName?: string;
+}
+
+export interface RemoveVolleyballTournamentTeamResponse {
+  success: boolean;
+  tournamentId: string;
+  teamId: string;
 }
 
 /* =========================================================

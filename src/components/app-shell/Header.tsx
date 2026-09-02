@@ -53,6 +53,16 @@ function Header({
   // const showNotifications = header.showNotifications;
 
   const handleBack = () => {
+    const resolvedBackHref = config?.getBackHref?.({
+      pathname,
+      searchParams,
+    });
+
+    if (resolvedBackHref) {
+      router.push(resolvedBackHref);
+      return;
+    }
+
     const backConfig = config?.back;
 
     if (!backConfig || backConfig.type === "history") {

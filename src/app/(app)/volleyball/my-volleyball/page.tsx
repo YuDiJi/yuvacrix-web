@@ -13,11 +13,17 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/common/Button";
+import { MyVolleyballScopeTabs } from "@/components/volleyball/MyVolleyballScopeTabs";
 import { cn } from "@/lib/cn";
+import {
+  getVolleyballMatchActionHref,
+  getVolleyballMatchActionLabel,
+} from "@/lib/volleyball/matchNavigation";
 
 import {
   VOLLEYBALL_TOURNAMENT_STATUSES,
   type VolleyballTournament,
+  type VolleyballMyTournamentItem,
   type VolleyballTournamentStatus,
 } from "@/types/volleyball/tournament";
 
@@ -27,13 +33,16 @@ import { useGetMyVolleyballMatchesQuery } from "@/store/api/volleyball/volleybal
 
 import {
   VOLLEYBALL_MATCH_FEED_STATUSES,
-  VOLLEYBALL_MATCH_PRIMARY_ACTIONS,
   VOLLEYBALL_MY_MATCH_SOURCES,
   type VolleyballMyMatchItem,
   type VolleyballMyMatchStatusFilter,
 } from "@/types/volleyball/match";
 
 import { useGetMyVolleyballTournamentsQuery } from "@/store/api/volleyball/volleyballTournamentApi";
+import {
+  VOLLEYBALL_MY_SCOPES,
+  type VolleyballMyScope,
+} from "@/types/volleyball/myVolleyball";
 
 /* =========================================================
    LOCAL TYPES
@@ -62,6 +71,8 @@ export default function MyVolleyballPage() {
 
   const requestedFilter = searchParams.get("filter");
 
+  const requestedScope = searchParams.get("scope");
+
   const activeTab: MyVolleyballTab =
     requestedTab === "tournaments" ? "tournaments" : "matches";
 
@@ -73,6 +84,23 @@ export default function MyVolleyballPage() {
     ? requestedFilter
     : "all";
 
+  const scope = getMyVolleyballScope(requestedScope);
+
+  const [tournamentLimit, setTournamentLimit] = useState(20);
+
+  useEffect(() => {
+    if (
+      requestedScope === null ||
+      isMyVolleyballScopeUrlValue(requestedScope)
+    ) {
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("scope", "all");
+    router.replace(`/volleyball/my-volleyball?${params.toString()}`);
+  }, [requestedScope, router, searchParams]);
+
   /* =====================================================
      TOURNAMENT API
   ===================================================== */
@@ -80,21 +108,31 @@ export default function MyVolleyballPage() {
   const tournamentStatus = getTournamentStatus(tournamentFilter);
 
   const {
-    currentData: tournaments = [],
+    currentData: tournamentResponse,
     isLoading: isTournamentsLoading,
     isFetching: isTournamentsFetching,
     isError: isTournamentsError,
     refetch: refetchTournaments,
   } = useGetMyVolleyballTournamentsQuery(
-    tournamentStatus
-      ? {
-          status: tournamentStatus,
-        }
-      : undefined,
+    {
+      scope,
+      ...(tournamentStatus ? { status: tournamentStatus } : {}),
+      skip: 0,
+      limit: tournamentLimit,
+    },
     {
       skip: activeTab !== "tournaments",
     },
   );
+
+  const tournaments = useMemo(
+    () => tournamentResponse?.items ?? [],
+    [tournamentResponse?.items],
+  );
+
+  useEffect(() => {
+    setTournamentLimit(20);
+  }, [scope, tournamentFilter]);
 
   const sortedTournaments = useMemo(() => {
     return [...tournaments].sort(
@@ -108,16 +146,17 @@ export default function MyVolleyballPage() {
   ===================================================== */
 
   function changeTab(tab: MyVolleyballTab) {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
 
     params.set("tab", tab);
     params.set("filter", "all");
+    params.set("scope", scope.toLowerCase());
 
     router.replace(`/volleyball/my-volleyball?${params.toString()}`);
   }
 
   function changeMatchFilter(filter: MatchFilter) {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
 
     params.set("tab", "matches");
 
@@ -127,11 +166,20 @@ export default function MyVolleyballPage() {
   }
 
   function changeTournamentFilter(filter: TournamentFilter) {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
 
     params.set("tab", "tournaments");
 
     params.set("filter", filter);
+
+    router.replace(`/volleyball/my-volleyball?${params.toString()}`);
+  }
+
+  function changeScope(nextScope: VolleyballMyScope) {
+    const params = new URLSearchParams(searchParams.toString());
+
+    params.set("tab", activeTab);
+    params.set("scope", nextScope.toLowerCase());
 
     router.replace(`/volleyball/my-volleyball?${params.toString()}`);
   }
@@ -141,7 +189,7 @@ export default function MyVolleyballPage() {
   ===================================================== */
 
   return (
-    <div className="min-h-full bg-(--color-bg-base) pb-24">
+    <div className="min-h-full bg-(--color-bg-base)">
       {/* =================================================
           HERO
       ================================================= */}
@@ -189,11 +237,20 @@ export default function MyVolleyballPage() {
       </div>
 
       {/* =================================================
+          RELATIONSHIP SCOPE
+      ================================================= */}
+
+      <div className="sticky top-12 z-20 border-b border-(--color-bg-border) bg-(--color-bg-base) px-4 py-3">
+        <MyVolleyballScopeTabs value={scope} onChange={changeScope} />
+      </div>
+
+      {/* =================================================
           MATCHES
       ================================================= */}
 
       {activeTab === "matches" && (
         <MatchesTab
+          scope={scope}
           filter={matchFilter}
           onFilterChange={changeMatchFilter}
           onCreateMatch={() => router.push("/volleyball/matches/create")}
@@ -206,6 +263,7 @@ export default function MyVolleyballPage() {
 
       {activeTab === "tournaments" && (
         <TournamentsTab
+          scope={scope}
           filter={tournamentFilter}
           tournaments={sortedTournaments}
           loading={
@@ -214,11 +272,15 @@ export default function MyVolleyballPage() {
           }
           fetching={isTournamentsFetching}
           error={isTournamentsError}
+          pagination={tournamentResponse?.pagination}
           onFilterChange={changeTournamentFilter}
           onRetry={() => void refetchTournaments()}
           onCreate={() => router.push("/volleyball/tournaments/create")}
           onOpen={(tournamentId) =>
             router.push(`/volleyball/tournaments/${tournamentId}`)
+          }
+          onLoadMore={() =>
+            setTournamentLimit((current) => Math.min(current + 20, 100))
           }
         />
       )}
@@ -235,10 +297,13 @@ export default function MyVolleyballPage() {
 ========================================================= */
 
 function MatchesTab({
+  scope,
   filter,
   onFilterChange,
   onCreateMatch,
 }: {
+  scope: VolleyballMyScope;
+
   filter: MatchFilter;
 
   onFilterChange: (filter: MatchFilter) => void;
@@ -253,10 +318,11 @@ function MatchesTab({
 
   useEffect(() => {
     setLimit(20);
-  }, [filter]);
+  }, [filter, scope]);
 
   const { currentData, isLoading, isFetching, isError, refetch } =
     useGetMyVolleyballMatchesQuery({
+      scope,
       ...(status ? { status } : {}),
       skip: 0,
       limit,
@@ -267,36 +333,7 @@ function MatchesTab({
   const pagination = currentData?.pagination;
 
   function handleMatchAction(match: VolleyballMyMatchItem) {
-    const query = createMatchContextQuery(match);
-
-    const suffix = query ? `?${query}` : "";
-
-    switch (match.primaryAction) {
-      case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.SETUP_ROSTER:
-        router.push(`/volleyball/matches/${match.matchId}/rosters${suffix}`);
-
-        return;
-
-      case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.START_SET:
-        router.push(`/volleyball/matches/${match.matchId}/sets/setup${suffix}`);
-
-        return;
-
-      /*
-       * The scorer route needs the active setId.
-       *
-       * My Matches intentionally returns compact score data,
-       * not the VolleyballSet id.
-       *
-       * The existing Match Details page already resolves the
-       * live set and creates the correct scoring URL.
-       */
-      case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.RESUME_SCORING:
-      case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.VIEW_RESULT:
-      case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.VIEW_MATCH:
-      default:
-        router.push(`/volleyball/matches/${match.matchId}${suffix}`);
-    }
+    router.push(getVolleyballMatchActionHref(match));
   }
 
   function handleLoadMore() {
@@ -304,40 +341,42 @@ function MatchesTab({
   }
 
   return (
-    <main className="px-4 py-4">
+    <main className="px-4 pb-8 pt-3">
       {/* =================================================
           FILTERS
       ================================================= */}
 
-      <HorizontalFilters>
-        <FilterChip
-          selected={filter === "all"}
-          onClick={() => onFilterChange("all")}
-        >
-          All
-        </FilterChip>
+      <div>
+        <HorizontalFilters>
+          <FilterChip
+            selected={filter === "all"}
+            onClick={() => onFilterChange("all")}
+          >
+            All
+          </FilterChip>
 
-        <FilterChip
-          selected={filter === "live"}
-          onClick={() => onFilterChange("live")}
-        >
-          Live
-        </FilterChip>
+          <FilterChip
+            selected={filter === "live"}
+            onClick={() => onFilterChange("live")}
+          >
+            Live
+          </FilterChip>
 
-        <FilterChip
-          selected={filter === "upcoming"}
-          onClick={() => onFilterChange("upcoming")}
-        >
-          Upcoming
-        </FilterChip>
+          <FilterChip
+            selected={filter === "upcoming"}
+            onClick={() => onFilterChange("upcoming")}
+          >
+            Upcoming
+          </FilterChip>
 
-        <FilterChip
-          selected={filter === "completed"}
-          onClick={() => onFilterChange("completed")}
-        >
-          Completed
-        </FilterChip>
-      </HorizontalFilters>
+          <FilterChip
+            selected={filter === "completed"}
+            onClick={() => onFilterChange("completed")}
+          >
+            Completed
+          </FilterChip>
+        </HorizontalFilters>
+      </div>
 
       {/* =================================================
           CONTENT
@@ -353,7 +392,11 @@ function MatchesTab({
             }}
           />
         ) : matches.length === 0 ? (
-          <MatchesEmpty filter={filter} onCreateMatch={onCreateMatch} />
+          <MatchesEmpty
+            scope={scope}
+            filter={filter}
+            onCreateMatch={onCreateMatch}
+          />
         ) : (
           <div className="space-y-3">
             {/* =============================================
@@ -449,7 +492,7 @@ function VolleyballMatchFeedCard({
   const isUpcoming =
     match.feedStatus === VOLLEYBALL_MATCH_FEED_STATUSES.UPCOMING;
 
-  const actionLabel = getMatchActionLabel(match);
+  const actionLabel = getVolleyballMatchActionLabel(match);
 
   return (
     <article
@@ -500,7 +543,7 @@ function VolleyballMatchFeedCard({
 
           {/* CENTER */}
 
-          <div className="flex min-w-[58px] flex-col items-center justify-center">
+          <div className="flex min-w-14.5 flex-col items-center justify-center">
             {isLive ? (
               <>
                 <span className="rounded-full bg-red-50 px-2 py-1 text-[7px] font-black uppercase tracking-wide text-red-600">
@@ -737,9 +780,12 @@ function MatchFeedStatusBadge({
 ========================================================= */
 
 function MatchesEmpty({
+  scope,
   filter,
   onCreateMatch,
 }: {
+  scope: VolleyballMyScope;
+
   filter: MatchFilter;
 
   onCreateMatch: () => void;
@@ -752,14 +798,14 @@ function MatchesEmpty({
         </div>
 
         <p className="mt-3 text-sm font-black text-(--color-text-primary)">
-          {getMatchEmptyTitle(filter)}
+          {getMatchEmptyTitle(scope, filter)}
         </p>
 
         <p className="mx-auto mt-1 max-w-71.25 text-[10px] leading-5 text-(--color-text-muted)">
-          {getMatchEmptyMessage(filter)}
+          {getMatchEmptyMessage(scope, filter)}
         </p>
 
-        {filter === "all" && (
+        {scope === VOLLEYBALL_MY_SCOPES.ALL && filter === "all" && (
           <Button fullWidth className="mt-5" onClick={onCreateMatch}>
             <Plus size={15} />
             Start New Match
@@ -816,25 +862,35 @@ function MatchesSkeleton() {
 ========================================================= */
 
 function TournamentsTab({
+  scope,
   filter,
   tournaments,
   loading,
   fetching,
   error,
+  pagination,
   onFilterChange,
   onRetry,
   onCreate,
   onOpen,
+  onLoadMore,
 }: {
+  scope: VolleyballMyScope;
+
   filter: TournamentFilter;
 
-  tournaments: VolleyballTournament[];
+  tournaments: VolleyballMyTournamentItem[];
 
   loading: boolean;
 
   fetching: boolean;
 
   error: boolean;
+
+  pagination?: {
+    total: number;
+    hasMore: boolean;
+  };
 
   onFilterChange: (filter: TournamentFilter) => void;
 
@@ -843,40 +899,44 @@ function TournamentsTab({
   onCreate: () => void;
 
   onOpen: (tournamentId: string) => void;
+
+  onLoadMore: () => void;
 }) {
   return (
-    <main className="px-4 py-4">
+    <main className="px-4 pb-20 pt-3">
       {/* FILTERS */}
 
-      <HorizontalFilters>
-        <FilterChip
-          selected={filter === "all"}
-          onClick={() => onFilterChange("all")}
-        >
-          All
-        </FilterChip>
+      <div>
+        <HorizontalFilters>
+          <FilterChip
+            selected={filter === "all"}
+            onClick={() => onFilterChange("all")}
+          >
+            All
+          </FilterChip>
 
-        <FilterChip
-          selected={filter === "active"}
-          onClick={() => onFilterChange("active")}
-        >
-          Active
-        </FilterChip>
+          <FilterChip
+            selected={filter === "active"}
+            onClick={() => onFilterChange("active")}
+          >
+            Active
+          </FilterChip>
 
-        <FilterChip
-          selected={filter === "draft"}
-          onClick={() => onFilterChange("draft")}
-        >
-          Draft
-        </FilterChip>
+          <FilterChip
+            selected={filter === "draft"}
+            onClick={() => onFilterChange("draft")}
+          >
+            Draft
+          </FilterChip>
 
-        <FilterChip
-          selected={filter === "completed"}
-          onClick={() => onFilterChange("completed")}
-        >
-          Completed
-        </FilterChip>
-      </HorizontalFilters>
+          <FilterChip
+            selected={filter === "completed"}
+            onClick={() => onFilterChange("completed")}
+          >
+            Completed
+          </FilterChip>
+        </HorizontalFilters>
+      </div>
 
       <div className="mt-5">
         {loading ? (
@@ -884,7 +944,7 @@ function TournamentsTab({
         ) : error ? (
           <TournamentError onRetry={onRetry} />
         ) : tournaments.length === 0 ? (
-          <TournamentEmpty filter={filter} onCreate={onCreate} />
+          <TournamentEmpty scope={scope} filter={filter} onCreate={onCreate} />
         ) : (
           <div className="space-y-3">
             {/* SECTION HEADING */}
@@ -896,8 +956,10 @@ function TournamentsTab({
                 </p>
 
                 <p className="mt-0.5 text-[8px] text-(--color-text-muted)">
-                  {tournaments.length}{" "}
-                  {tournaments.length === 1 ? "tournament" : "tournaments"}
+                  {pagination?.total ?? tournaments.length}{" "}
+                  {(pagination?.total ?? tournaments.length) === 1
+                    ? "tournament"
+                    : "tournaments"}
                 </p>
               </div>
 
@@ -930,6 +992,17 @@ function TournamentsTab({
                 />
               ))}
             </div>
+
+            {pagination?.hasMore && (
+              <button
+                type="button"
+                disabled={fetching}
+                onClick={onLoadMore}
+                className="flex h-11 w-full items-center justify-center rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) text-[9px] font-black text-(--color-brand) shadow-sm disabled:opacity-50"
+              >
+                {fetching ? "Loading..." : "Load More Tournaments"}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -1133,9 +1206,12 @@ function TournamentStatusBadge({
 ========================================================= */
 
 function TournamentEmpty({
+  scope,
   filter,
   onCreate,
 }: {
+  scope: VolleyballMyScope;
+
   filter: TournamentFilter;
 
   onCreate: () => void;
@@ -1147,14 +1223,14 @@ function TournamentEmpty({
       </div>
 
       <p className="mt-3 text-sm font-black text-(--color-text-primary)">
-        {getEmptyTitle(filter)}
+        {getEmptyTitle(scope, filter)}
       </p>
 
       <p className="mx-auto mt-1 max-w-[280px] text-[10px] leading-5 text-(--color-text-muted)">
-        {getEmptyMessage(filter)}
+        {getEmptyMessage(scope, filter)}
       </p>
 
-      {filter === "all" && (
+      {scope === VOLLEYBALL_MY_SCOPES.ALL && filter === "all" && (
         <Button fullWidth className="mt-5" onClick={onCreate}>
           <Plus size={15} />
           Create Tournament
@@ -1218,6 +1294,28 @@ function isMatchFilter(value: string | null): value is MatchFilter {
   );
 }
 
+function isMyVolleyballScopeUrlValue(value: string) {
+  return (
+    value === "all" ||
+    value === "played" ||
+    value === "created" ||
+    value === "network"
+  );
+}
+
+function getMyVolleyballScope(value: string | null): VolleyballMyScope {
+  switch (value) {
+    case "played":
+      return VOLLEYBALL_MY_SCOPES.PLAYED;
+    case "created":
+      return VOLLEYBALL_MY_SCOPES.CREATED;
+    case "network":
+      return VOLLEYBALL_MY_SCOPES.NETWORK;
+    default:
+      return VOLLEYBALL_MY_SCOPES.ALL;
+  }
+}
+
 function isTournamentFilter(value: string | null): value is TournamentFilter {
   return (
     value === "all" ||
@@ -1264,42 +1362,6 @@ function getMatchStatusFilter(
 
     default:
       return undefined;
-  }
-}
-
-function createMatchContextQuery(match: VolleyballMyMatchItem) {
-  if (
-    match.sourceType !== VOLLEYBALL_MY_MATCH_SOURCES.TOURNAMENT ||
-    !match.tournament ||
-    !match.fixture
-  ) {
-    return "";
-  }
-
-  return new URLSearchParams({
-    tournamentId: match.tournament.id,
-
-    fixtureId: match.fixture.id,
-  }).toString();
-}
-
-function getMatchActionLabel(match: VolleyballMyMatchItem) {
-  switch (match.primaryAction) {
-    case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.SETUP_ROSTER:
-      return "Setup Rosters";
-
-    case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.START_SET:
-      return "Start Match";
-
-    case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.RESUME_SCORING:
-      return "Resume Scoring";
-
-    case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.VIEW_RESULT:
-      return "View Result";
-
-    case VOLLEYBALL_MATCH_PRIMARY_ACTIONS.VIEW_MATCH:
-    default:
-      return "View Match";
   }
 }
 
@@ -1409,7 +1471,19 @@ function getTeamInitials(name: string) {
     .toUpperCase();
 }
 
-function getMatchEmptyTitle(filter: MatchFilter) {
+function getMatchEmptyTitle(scope: VolleyballMyScope, filter: MatchFilter) {
+  if (scope === VOLLEYBALL_MY_SCOPES.PLAYED) {
+    return "No played matches yet";
+  }
+
+  if (scope === VOLLEYBALL_MY_SCOPES.CREATED) {
+    return "No created matches yet";
+  }
+
+  if (scope === VOLLEYBALL_MY_SCOPES.NETWORK) {
+    return "No network matches yet";
+  }
+
   switch (filter) {
     case "live":
       return "No live matches";
@@ -1425,7 +1499,19 @@ function getMatchEmptyTitle(filter: MatchFilter) {
   }
 }
 
-function getMatchEmptyMessage(filter: MatchFilter) {
+function getMatchEmptyMessage(scope: VolleyballMyScope, filter: MatchFilter) {
+  if (scope === VOLLEYBALL_MY_SCOPES.PLAYED) {
+    return "Matches you participate in will appear here.";
+  }
+
+  if (scope === VOLLEYBALL_MY_SCOPES.CREATED) {
+    return "Matches you create will appear here.";
+  }
+
+  if (scope === VOLLEYBALL_MY_SCOPES.NETWORK) {
+    return "Matches connected through your Volleyball network will appear here.";
+  }
+
   switch (filter) {
     case "live":
       return "Matches you're currently scoring will appear here.";
@@ -1475,6 +1561,12 @@ function formatTournamentFormat(format: string) {
     case "GROUP_KNOCKOUT":
       return "Group + Knockout";
 
+    case "LEAGUE_PLAYOFF":
+      return "League + Playoffs";
+
+    case "CUSTOM":
+      return "Custom";
+
     default:
       return format;
   }
@@ -1512,7 +1604,19 @@ function formatDate(value: string) {
   });
 }
 
-function getEmptyTitle(filter: TournamentFilter) {
+function getEmptyTitle(scope: VolleyballMyScope, filter: TournamentFilter) {
+  if (scope === VOLLEYBALL_MY_SCOPES.PLAYED) {
+    return "No played tournaments yet";
+  }
+
+  if (scope === VOLLEYBALL_MY_SCOPES.CREATED) {
+    return "No created tournaments yet";
+  }
+
+  if (scope === VOLLEYBALL_MY_SCOPES.NETWORK) {
+    return "No network tournaments yet";
+  }
+
   switch (filter) {
     case "active":
       return "No active tournaments";
@@ -1528,7 +1632,19 @@ function getEmptyTitle(filter: TournamentFilter) {
   }
 }
 
-function getEmptyMessage(filter: TournamentFilter) {
+function getEmptyMessage(scope: VolleyballMyScope, filter: TournamentFilter) {
+  if (scope === VOLLEYBALL_MY_SCOPES.PLAYED) {
+    return "Tournaments where you participate as a player will appear here.";
+  }
+
+  if (scope === VOLLEYBALL_MY_SCOPES.CREATED) {
+    return "Tournaments you create will appear here.";
+  }
+
+  if (scope === VOLLEYBALL_MY_SCOPES.NETWORK) {
+    return "Tournaments connected through your Volleyball network will appear here.";
+  }
+
   switch (filter) {
     case "active":
       return "Your active Volleyball tournaments will appear here.";

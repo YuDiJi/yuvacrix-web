@@ -28,6 +28,8 @@ import { useUploadFileMutation } from "@/store/api/uploadApi";
 import { logout } from "@/store/auth/authSlice";
 import { selectUser } from "@/store/auth/authSelectors";
 import { useAppSelector } from "@/store/hooks";
+import { selectActiveSport } from "@/store/sport/selectors";
+import { SPORT_TYPES } from "@/types/sport";
 import type {
   BattingStyle,
   BowlingStyle,
@@ -436,6 +438,19 @@ export default function MyProfilePage() {
 
   const user = useAppSelector(selectUser);
 
+  const activeSport = useAppSelector(selectActiveSport);
+
+  const sportProfileConfig =
+    activeSport === SPORT_TYPES.VOLLEYBALL
+      ? {
+          label: "My Volleyball Profile",
+          href: "/volleyball/profile",
+        }
+      : {
+          label: "My Cricket Profile",
+          href: "/cricket-profile",
+        };
+
   const { data, isLoading, isError, refetch } = useGetPlayerQuery();
 
   const [logoutApi, { isLoading: isLoggingOut }] = useLogoutMutation();
@@ -661,7 +676,7 @@ export default function MyProfilePage() {
 
                 <button
                   type="button"
-                  onClick={() => router.push("/cricket-profile")}
+                  onClick={() => router.push(sportProfileConfig.href)}
                   className="mt-4 flex w-full items-center justify-between rounded-xl border border-(--color-brand)/25 bg-(--color-brand)/8 px-4 py-1 transition-all active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-2.5">
@@ -670,7 +685,7 @@ export default function MyProfilePage() {
                     </div>
 
                     <span className="font-display text-[12px] font-bold uppercase tracking-wide text-(--color-brand)">
-                      My Cricket Profile
+                      {sportProfileConfig.label}
                     </span>
                   </div>
 

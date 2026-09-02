@@ -18,6 +18,13 @@ import { S3Image } from "@/components/common/S3Image";
 
 import { cn } from "@/lib/cn";
 import { getInitials } from "@/lib/getInitials";
+import {
+  getReadableTextColor,
+  resolveVolleyballTeamColor,
+  VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  withHexAlpha,
+} from "@/lib/volleyball/teamColors";
 
 import { useRecordVolleyballLiberoReplacementMutation } from "@/store/api/volleyball/volleyballMatchApi";
 
@@ -144,7 +151,10 @@ export function VolleyballLiberoReplacementSheet({
 
         rotation: liveSet.teamACurrentRotation,
 
-        tone: "orange" as const,
+        color: resolveVolleyballTeamColor(
+          match.teamASnapshot.teamColor,
+          VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+        ),
       };
     }
 
@@ -161,7 +171,10 @@ export function VolleyballLiberoReplacementSheet({
 
       rotation: liveSet.teamBCurrentRotation,
 
-      tone: "red" as const,
+      color: resolveVolleyballTeamColor(
+        match.teamBSnapshot.teamColor,
+        VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+      ),
     };
   }, [selectedSide, match, liveSet]);
 
@@ -389,7 +402,10 @@ export function VolleyballLiberoReplacementSheet({
               name={match.teamASnapshot.name}
               shortName={match.teamASnapshot.shortName}
               logoUrl={match.teamASnapshot.logoUrl}
-              tone="orange"
+              color={resolveVolleyballTeamColor(
+                match.teamASnapshot.teamColor,
+                VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+              )}
               selected={selectedSide === "TEAM_A"}
               disabled={isSubmitting}
               onClick={() => handleSelectTeam("TEAM_A")}
@@ -399,7 +415,10 @@ export function VolleyballLiberoReplacementSheet({
               name={match.teamBSnapshot.name}
               shortName={match.teamBSnapshot.shortName}
               logoUrl={match.teamBSnapshot.logoUrl}
-              tone="red"
+              color={resolveVolleyballTeamColor(
+                match.teamBSnapshot.teamColor,
+                VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+              )}
               selected={selectedSide === "TEAM_B"}
               disabled={isSubmitting}
               onClick={() => handleSelectTeam("TEAM_B")}
@@ -450,7 +469,7 @@ export function VolleyballLiberoReplacementSheet({
                         player={player}
                         selected={outgoingPlayerId === player.playerId}
                         badge={position ? `P${position}` : undefined}
-                        tone={selectedTeam.tone}
+                        color={selectedTeam.color}
                         onClick={() => handleOutgoingPlayer(player)}
                       />
                     );
@@ -484,7 +503,7 @@ export function VolleyballLiberoReplacementSheet({
                           player={player}
                           selected={incomingPlayerId === player.playerId}
                           badge={player.isLibero ? "Libero" : "Bench"}
-                          tone={selectedTeam.tone}
+                          color={selectedTeam.color}
                           onClick={() => handleIncomingPlayer(player)}
                         />
                       ))}
@@ -560,7 +579,7 @@ function LiberoTeamChoice({
   name,
   shortName,
   logoUrl,
-  tone,
+  color,
   selected,
   disabled,
   onClick,
@@ -569,7 +588,7 @@ function LiberoTeamChoice({
   shortName: string | null;
   logoUrl: string | null;
 
-  tone: "orange" | "red";
+  color: string;
 
   selected: boolean;
   disabled: boolean;
@@ -583,15 +602,18 @@ function LiberoTeamChoice({
       onClick={onClick}
       className={cn(
         "flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2.5 text-left",
-        selected && tone === "orange" && "border-orange-400 bg-orange-50",
-        selected && tone === "red" && "border-red-400 bg-red-50",
         !selected && "border-(--color-bg-border) bg-(--color-bg-card)",
       )}
+      style={
+        selected
+          ? { borderColor: color, backgroundColor: withHexAlpha(color, "12") }
+          : undefined
+      }
     >
       <LiberoTeamBadge
         imageKey={logoUrl}
         name={shortName ?? name}
-        tone={tone}
+        color={color}
       />
 
       <div className="min-w-0 flex-1">
@@ -605,10 +627,7 @@ function LiberoTeamChoice({
       </div>
 
       {selected && (
-        <Check
-          size={14}
-          className={tone === "orange" ? "text-orange-600" : "text-red-600"}
-        />
+        <Check size={14} style={{ color }} />
       )}
     </button>
   );
@@ -622,7 +641,7 @@ function LiberoPlayerCard({
   player,
   selected,
   badge,
-  tone,
+  color,
   onClick,
 }: {
   player: VolleyballMatchRosterPlayer;
@@ -631,7 +650,7 @@ function LiberoPlayerCard({
 
   badge?: string;
 
-  tone: "orange" | "red";
+  color: string;
 
   onClick: () => void;
 }) {
@@ -641,14 +660,17 @@ function LiberoPlayerCard({
       onClick={onClick}
       className={cn(
         "relative flex min-w-0 items-center gap-2 rounded-2xl border bg-(--color-bg-card) p-2.5 text-left",
-        selected &&
-          tone === "orange" &&
-          "border-orange-400 bg-orange-50 ring-1 ring-orange-100",
-        selected &&
-          tone === "red" &&
-          "border-red-400 bg-red-50 ring-1 ring-red-100",
         !selected && "border-(--color-bg-border)",
       )}
+      style={
+        selected
+          ? {
+              borderColor: color,
+              backgroundColor: withHexAlpha(color, "12"),
+              boxShadow: `0 0 0 1px ${withHexAlpha(color, "33")}`,
+            }
+          : undefined
+      }
     >
       <LiberoPlayerAvatar player={player} size={38} />
 
@@ -829,20 +851,18 @@ function LiberoSummaryPlayer({
 function LiberoTeamBadge({
   imageKey,
   name,
-  tone,
+  color,
 }: {
   imageKey: string | null;
 
   name: string;
 
-  tone: "orange" | "red";
+  color: string;
 }) {
   return (
     <div
-      className={cn(
-        "flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-white",
-        tone === "orange" ? "bg-orange-500" : "bg-red-500",
-      )}
+      className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg"
+      style={{ backgroundColor: color, color: getReadableTextColor(color) }}
     >
       {imageKey ? (
         <S3Image
