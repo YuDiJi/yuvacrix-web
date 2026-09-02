@@ -1,4 +1,8 @@
 import { VolleyballMatchRoster } from "./roster";
+import type {
+  VolleyballMyScope,
+  VolleyballViewerRelation,
+} from "./myVolleyball";
 
 export const VOLLEYBALL_MATCH_RULE_PRESETS = {
   DEFAULT: "DEFAULT",
@@ -286,6 +290,8 @@ export interface VolleyballMyMatchItem {
 
   primaryAction: VolleyballMatchPrimaryAction;
 
+  viewerRelation: VolleyballViewerRelation;
+
   updatedAt: string;
 }
 
@@ -301,6 +307,7 @@ export interface VolleyballMyMatchesResponse {
 }
 
 export interface GetVolleyballMyMatchesQuery {
+  scope?: VolleyballMyScope;
   status?: VolleyballMyMatchStatusFilter;
   source?: VolleyballMyMatchSource;
   skip?: number;

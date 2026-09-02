@@ -13,8 +13,10 @@ import { cn } from "@/lib/cn";
 import { useCreateVolleyballTournamentMutation } from "@/store/api/volleyball/volleyballTournamentApi";
 
 import {
+  VOLLEYBALL_PLAYOFF_STRUCTURES,
   VOLLEYBALL_TOURNAMENT_FORMATS,
   VOLLEYBALL_TOURNAMENT_VISIBILITIES,
+  type VolleyballPlayoffStructure,
   type VolleyballTournamentFormat,
   type VolleyballTournamentVisibility,
 } from "@/types/volleyball/tournament";
@@ -51,6 +53,11 @@ export default function CreateVolleyballTournamentPage() {
   const [format, setFormat] = useState<VolleyballTournamentFormat>(
     VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE,
   );
+
+  const [playoffStructure, setPlayoffStructure] =
+    useState<VolleyballPlayoffStructure>(
+      VOLLEYBALL_PLAYOFF_STRUCTURES.SEMIFINAL_FINAL,
+    );
 
   /* =====================================================
      POINTS
@@ -89,7 +96,8 @@ export default function CreateVolleyballTournamentPage() {
 
   const usesLeaguePoints =
     format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE ||
-    format === VOLLEYBALL_TOURNAMENT_FORMATS.GROUP_KNOCKOUT;
+    format === VOLLEYBALL_TOURNAMENT_FORMATS.GROUP_KNOCKOUT ||
+    format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF;
 
   /* =====================================================
      VALIDATION
@@ -153,6 +161,20 @@ export default function CreateVolleyballTournamentPage() {
 
         format,
 
+        ...(format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF
+          ? {
+              formatConfig: {
+                roundRobinCycles: 1 as const,
+                qualifyingTeamCount:
+                  playoffStructure ===
+                  VOLLEYBALL_PLAYOFF_STRUCTURES.TOP_2_FINAL
+                    ? (2 as const)
+                    : (4 as const),
+                playoffStructure,
+              },
+            }
+          : {}),
+
         ...(usesLeaguePoints
           ? {
               pointsConfig: {
@@ -196,13 +218,15 @@ export default function CreateVolleyballTournamentPage() {
         <div>
           <p className="text-section-label">New Volleyball Tournament</p>
 
-          <h1 className="mt-1 font-(family-name:--font-display) text-2xl font-black uppercase tracking-wide text-(--color-text-primary)">
-            Create Tournament
-          </h1>
-
           <p className="mt-1 text-sm text-(--color-text-secondary)">
             Set up your competition format, teams and tournament details.
           </p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <SetupStep number="1" label="Tournament" active />
+          <SetupStep number="2" label="Teams" />
+          <SetupStep number="3" label="Fixtures" />
         </div>
 
         {/* =================================================
@@ -332,7 +356,7 @@ export default function CreateVolleyballTournamentPage() {
           <div className="space-y-2.5">
             <TournamentFormatCard
               title="League"
-              description="Teams play league fixtures and earn points in the standings."
+              description="Every team plays every other team. Standings determine the ranking."
               icon={<Users size={18} />}
               selected={format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE}
               onClick={() => {
@@ -344,7 +368,7 @@ export default function CreateVolleyballTournamentPage() {
 
             <TournamentFormatCard
               title="Knockout"
-              description="Single elimination. Winners advance while losing teams are eliminated."
+              description="Lose once and you're eliminated. Winners progress through the bracket."
               icon={<Trophy size={18} />}
               selected={format === VOLLEYBALL_TOURNAMENT_FORMATS.KNOCKOUT}
               onClick={() => {
@@ -356,7 +380,7 @@ export default function CreateVolleyballTournamentPage() {
 
             <TournamentFormatCard
               title="Groups + Knockout"
-              description="Teams first compete in groups before qualifying for knockout rounds."
+              description="Teams play in groups first, then qualifiers advance to knockout rounds."
               icon={<Shield size={18} />}
               selected={format === VOLLEYBALL_TOURNAMENT_FORMATS.GROUP_KNOCKOUT}
               onClick={() => {
@@ -365,7 +389,77 @@ export default function CreateVolleyballTournamentPage() {
                 setFormat(VOLLEYBALL_TOURNAMENT_FORMATS.GROUP_KNOCKOUT);
               }}
             />
+
+            <TournamentFormatCard
+              title="League + Playoffs"
+              description="All teams play a league stage, then the top teams advance to playoffs."
+              icon={<Trophy size={18} />}
+              selected={
+                format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF
+              }
+              onClick={() => {
+                setError("");
+                setFormat(VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF);
+              }}
+            />
+
+            <TournamentFormatCard
+              title="Custom"
+              description="You control fixtures, stages, and progression manually."
+              icon={<Shield size={18} />}
+              selected={format === VOLLEYBALL_TOURNAMENT_FORMATS.CUSTOM}
+              onClick={() => {
+                setError("");
+                setFormat(VOLLEYBALL_TOURNAMENT_FORMATS.CUSTOM);
+              }}
+            />
           </div>
+
+          {format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF && (
+            <div className="mt-3 rounded-2xl border border-(--color-brand)/15 bg-(--color-bg-card) p-3">
+              <p className="text-[10px] font-black uppercase tracking-wide text-(--color-text-primary)">
+                Playoff Structure
+              </p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <PlayoffStructureButton
+                  label="Top 2 → Final"
+                  selected={
+                    playoffStructure ===
+                    VOLLEYBALL_PLAYOFF_STRUCTURES.TOP_2_FINAL
+                  }
+                  onClick={() =>
+                    setPlayoffStructure(
+                      VOLLEYBALL_PLAYOFF_STRUCTURES.TOP_2_FINAL,
+                    )
+                  }
+                />
+                <PlayoffStructureButton
+                  label="Semifinals → Final"
+                  selected={
+                    playoffStructure ===
+                    VOLLEYBALL_PLAYOFF_STRUCTURES.SEMIFINAL_FINAL
+                  }
+                  onClick={() =>
+                    setPlayoffStructure(
+                      VOLLEYBALL_PLAYOFF_STRUCTURES.SEMIFINAL_FINAL,
+                    )
+                  }
+                />
+              </div>
+              <p className="mt-3 rounded-xl bg-(--color-bg-tint) px-3 py-2 text-center text-[10px] font-bold text-(--color-text-secondary)">
+                {playoffStructure ===
+                VOLLEYBALL_PLAYOFF_STRUCTURES.TOP_2_FINAL
+                  ? "League Stage → Top 2 → Final"
+                  : "League Stage → Top 4 → Semifinals → Final"}
+              </p>
+            </div>
+          )}
+
+          {format === VOLLEYBALL_TOURNAMENT_FORMATS.CUSTOM && (
+            <p className="mt-3 rounded-xl bg-(--color-bg-tint) px-3 py-2.5 text-[10px] text-(--color-text-secondary)">
+              You&apos;ll create fixtures and stages manually.
+            </p>
+          )}
         </section>
 
         {/* =================================================
@@ -522,6 +616,46 @@ function SectionHeader({
   );
 }
 
+function SetupStep({
+  number,
+  label,
+  active = false,
+}: {
+  number: string;
+  label: string;
+  active?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl border px-2 py-2.5 text-center",
+        active
+          ? "border-(--color-brand)/25 bg-(--color-bg-tint)"
+          : "border-(--color-bg-border) bg-(--color-bg-card)",
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-black",
+          active
+            ? "bg-(--color-brand) text-white"
+            : "bg-(--color-bg-base) text-(--color-text-muted)",
+        )}
+      >
+        {number}
+      </div>
+      <p
+        className={cn(
+          "mt-1.5 text-[8px] font-black uppercase tracking-wide",
+          active ? "text-(--color-brand)" : "text-(--color-text-muted)",
+        )}
+      >
+        {label}
+      </p>
+    </div>
+  );
+}
+
 /* =========================================================
    FIELD
 ========================================================= */
@@ -662,6 +796,32 @@ function TournamentFormatCard({
       >
         {selected && <div className="h-2 w-2 rounded-full bg-white" />}
       </div>
+    </button>
+  );
+}
+
+function PlayoffStructureButton({
+  label,
+  selected,
+  onClick,
+}: {
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      className={cn(
+        "min-h-11 rounded-xl border px-2.5 py-2 text-[10px] font-black transition",
+        selected
+          ? "border-(--color-brand) bg-(--color-brand) text-white"
+          : "border-(--color-bg-border) bg-(--color-bg-base) text-(--color-text-secondary)",
+      )}
+    >
+      {label}
     </button>
   );
 }
@@ -833,6 +993,12 @@ function formatTournamentFormat(format: VolleyballTournamentFormat) {
 
     case VOLLEYBALL_TOURNAMENT_FORMATS.GROUP_KNOCKOUT:
       return "Groups + Knockout";
+
+    case VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF:
+      return "League + Playoffs";
+
+    case VOLLEYBALL_TOURNAMENT_FORMATS.CUSTOM:
+      return "Custom";
 
     default:
       return format;

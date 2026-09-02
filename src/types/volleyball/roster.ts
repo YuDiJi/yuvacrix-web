@@ -8,6 +8,10 @@ export const VOLLEYBALL_ROSTER_SIDES = {
 export type VolleyballRosterSide =
   (typeof VOLLEYBALL_ROSTER_SIDES)[keyof typeof VOLLEYBALL_ROSTER_SIDES];
 
+export type VolleyballRosterSelectionSource =
+  | "MATCH"
+  | "TOURNAMENT_DEFAULT";
+
 export interface VolleyballRosterPlayerInput {
   playerId: string;
 }
@@ -41,13 +45,15 @@ export interface VolleyballMatchRoster {
 
   side: VolleyballRosterSide;
 
-  captainPlayerId: string;
+  captainPlayerId: string | null;
 
   liberoPlayerIds: string[];
 
   playerCount: number;
 
   isConfirmed: boolean;
+
+  selectionSource: VolleyballRosterSelectionSource;
 
   players: VolleyballMatchRosterPlayer[];
 }

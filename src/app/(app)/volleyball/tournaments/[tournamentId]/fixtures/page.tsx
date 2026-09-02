@@ -34,6 +34,7 @@ import {
   useGetVolleyballTournamentFixturesQuery,
   useGetVolleyballTournamentQuery,
   useGetVolleyballTournamentTeamsQuery,
+  useGenerateVolleyballLeagueFixturesMutation,
   useUpdateVolleyballTournamentFixtureMutation,
 } from "@/store/api/volleyball/volleyballTournamentApi";
 
@@ -100,6 +101,8 @@ export default function VolleyballTournamentFixturesPage() {
 
   const [deleteFixtureTarget, setDeleteFixtureTarget] =
     useState<VolleyballTournamentFixture | null>(null);
+
+  const [generateLeagueOpen, setGenerateLeagueOpen] = useState(false);
 
   const [error, setError] = useState("");
 
@@ -221,6 +224,9 @@ export default function VolleyballTournamentFixturesPage() {
   const [deleteFixture, { isLoading: isDeletingFixture }] =
     useDeleteVolleyballTournamentFixtureMutation();
 
+  const [generateLeagueFixtures, { isLoading: isGeneratingLeague }] =
+    useGenerateVolleyballLeagueFixturesMutation();
+
   const [createMatchFromFixture] =
     useCreateVolleyballMatchFromFixtureMutation();
 
@@ -229,6 +235,18 @@ export default function VolleyballTournamentFixturesPage() {
   const canCreateExecutionMatch =
     tournament?.viewerAccess.canCreateExecutionMatch === true;
   const canScoreMatches = tournament?.viewerAccess.canScoreMatches === true;
+
+  const hasLeagueFixtures = fixtures.some(
+    (fixture) => fixture.stage === VOLLEYBALL_TOURNAMENT_STAGES.LEAGUE,
+  );
+
+  const canGenerateLeagueFixtures =
+    canManageFixtures &&
+    tournament?.format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF &&
+    tournament.leaguePhaseComplete === false &&
+    (tournament.currentStage === null ||
+      tournament.currentStage === VOLLEYBALL_TOURNAMENT_STAGES.LEAGUE) &&
+    !hasLeagueFixtures;
 
   /* =====================================================
      STAGES
@@ -239,7 +257,10 @@ export default function VolleyballTournamentFixturesPage() {
       return [];
     }
 
-    if (tournament.format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE) {
+    if (
+      tournament.format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE ||
+      tournament.format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF
+    ) {
       return [VOLLEYBALL_TOURNAMENT_STAGES.LEAGUE];
     }
 
@@ -252,6 +273,10 @@ export default function VolleyballTournamentFixturesPage() {
         VOLLEYBALL_TOURNAMENT_STAGES.THIRD_PLACE,
         VOLLEYBALL_TOURNAMENT_STAGES.FINAL,
       ];
+    }
+
+    if (tournament.format === VOLLEYBALL_TOURNAMENT_FORMATS.CUSTOM) {
+      return Object.values(VOLLEYBALL_TOURNAMENT_STAGES);
     }
 
     return [
@@ -889,6 +914,39 @@ export default function VolleyballTournamentFixturesPage() {
     }
   }
 
+  async function handleGenerateLeagueFixtures() {
+    if (!canGenerateLeagueFixtures || isGeneratingLeague) return;
+
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      await generateLeagueFixtures({ tournamentId }).unwrap();
+      setGenerateLeagueOpen(false);
+      setSuccessMessage("League fixtures generated successfully.");
+      await Promise.all([refetchFixtures(), refetchTournament()]);
+    } catch (err) {
+      if (isForbidden(err)) {
+        setGenerateLeagueOpen(false);
+        setError("Your tournament permissions have changed.");
+        void refetchTournament();
+        return;
+      }
+
+      const message = extractErrorMessage(
+        err,
+        "Failed to generate league fixtures.",
+      );
+      setGenerateLeagueOpen(false);
+      setError(
+        /NOT_ENOUGH|ENOUGH_TEAMS|MINIMUM_TEAMS/i.test(message)
+          ? "Add enough teams before generating league fixtures."
+          : message,
+      );
+      void Promise.all([refetchFixtures(), refetchTournament()]);
+    }
+  }
+
   /* =====================================================
      CREATE EXECUTION MATCH
   ===================================================== */
@@ -1144,6 +1202,26 @@ export default function VolleyballTournamentFixturesPage() {
             </div>
           )}
 
+          {canGenerateLeagueFixtures && (
+            <section className="rounded-2xl border border-(--color-brand)/20 bg-(--color-bg-tint) p-4">
+              <p className="text-section-label">League Stage</p>
+              <p className="mt-1 text-xs leading-5 text-(--color-text-secondary)">
+                Generate the single round-robin schedule for all registered
+                teams.
+              </p>
+              <Button
+                fullWidth
+                className="mt-3"
+                onClick={() => {
+                  setError("");
+                  setGenerateLeagueOpen(true);
+                }}
+              >
+                Generate League Fixtures
+              </Button>
+            </section>
+          )}
+
           {/* SCHEDULE */}
 
           <section>
@@ -1174,7 +1252,7 @@ export default function VolleyballTournamentFixturesPage() {
 
             {fixtures.length === 0 ? (
               <EmptySchedule
-                canManage={canManageFixtures}
+                canManage={canManageFixtures && !canGenerateLeagueFixtures}
                 onCreate={handleOpenCreateSheet}
               />
             ) : (
@@ -1228,6 +1306,42 @@ export default function VolleyballTournamentFixturesPage() {
           </div>
         )} */}
       </div>
+
+      <DialogBottom
+        open={generateLeagueOpen && canGenerateLeagueFixtures}
+        onClose={() => {
+          if (!isGeneratingLeague) setGenerateLeagueOpen(false);
+        }}
+      >
+        <div className="pb-1">
+          <h2 className="font-(family-name:--font-display) text-xl font-black text-(--color-text-primary)">
+            Generate league fixtures?
+          </h2>
+          <p className="mt-2 text-sm leading-5 text-(--color-text-secondary)">
+            YuvaCrix will create the full single round-robin league schedule
+            for all registered teams.
+          </p>
+          <p className="mt-3 rounded-xl bg-(--color-bg-base) px-3 py-2.5 text-xs text-(--color-text-muted)">
+            Existing generated fixtures will not be duplicated.
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              disabled={isGeneratingLeague}
+              onClick={() => setGenerateLeagueOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              loading={isGeneratingLeague}
+              disabled={isGeneratingLeague}
+              onClick={() => void handleGenerateLeagueFixtures()}
+            >
+              {isGeneratingLeague ? "Generating..." : "Generate Fixtures"}
+            </Button>
+          </div>
+        </div>
+      </DialogBottom>
 
       {/* =================================================
           ADD FIXTURE SHEET
@@ -3467,7 +3581,10 @@ function getSuggestedInitialStage(
 
   options: VolleyballTournamentStage[],
 ) {
-  if (format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE) {
+  if (
+    format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE ||
+    format === VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF
+  ) {
     return VOLLEYBALL_TOURNAMENT_STAGES.LEAGUE;
   }
 
@@ -3528,7 +3645,7 @@ function inputClassName() {
 function formatStage(stage: VolleyballTournamentStage) {
   switch (stage) {
     case VOLLEYBALL_TOURNAMENT_STAGES.LEAGUE:
-      return "League";
+      return "League Stage";
 
     case VOLLEYBALL_TOURNAMENT_STAGES.GROUP_STAGE:
       return "Group Stage";
@@ -3537,10 +3654,10 @@ function formatStage(stage: VolleyballTournamentStage) {
       return "Round of 16";
 
     case VOLLEYBALL_TOURNAMENT_STAGES.QUARTER_FINAL:
-      return "Quarter Final";
+      return "Quarterfinals";
 
     case VOLLEYBALL_TOURNAMENT_STAGES.SEMI_FINAL:
-      return "Semi Final";
+      return "Semifinals";
 
     case VOLLEYBALL_TOURNAMENT_STAGES.THIRD_PLACE:
       return "Third Place";

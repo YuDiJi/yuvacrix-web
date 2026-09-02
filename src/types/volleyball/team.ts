@@ -35,6 +35,7 @@ export interface UpdateVolleyballTeamMemberDto {
 export interface VolleyballTeamMember {
   membershipId: string;
   playerId: string;
+  userId: string | null;
   fullName: string;
   profileImageUrl: string | null;
   membershipStatus: VolleyballMembershipStatus;

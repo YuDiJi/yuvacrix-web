@@ -4,6 +4,12 @@ import { CheckCircle2, Trophy } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
 import { DialogBottom } from "@/components/common/DialogBottom";
+import {
+  resolveVolleyballTeamColor,
+  VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  withHexAlpha,
+} from "@/lib/volleyball/teamColors";
 
 import type { VolleyballMatch } from "@/types/volleyball/match";
 import type { VolleyballSet } from "@/types/volleyball/set";
@@ -33,6 +39,15 @@ export function VolleyballSetCompletedSheet({
       : set.winnerTeamId === match.teamBId
         ? match.teamBSnapshot
         : null;
+
+  const teamAColor = resolveVolleyballTeamColor(
+    match.teamASnapshot.teamColor,
+    VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  );
+  const teamBColor = resolveVolleyballTeamColor(
+    match.teamBSnapshot.teamColor,
+    VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  );
 
   return (
     <DialogBottom
@@ -68,6 +83,7 @@ export function VolleyballSetCompletedSheet({
               name={match.teamASnapshot.shortName ?? match.teamASnapshot.name}
               score={set.teamAPoints}
               winner={set.winnerTeamId === match.teamAId}
+              color={teamAColor}
             />
 
             <span className="text-sm font-bold text-(--color-text-muted)">
@@ -78,6 +94,7 @@ export function VolleyballSetCompletedSheet({
               name={match.teamBSnapshot.shortName ?? match.teamBSnapshot.name}
               score={set.teamBPoints}
               winner={set.winnerTeamId === match.teamBId}
+              color={teamBColor}
             />
           </div>
         </div>
@@ -111,10 +128,12 @@ function TeamScore({
   name,
   score,
   winner,
+  color,
 }: {
   name: string;
   score: number;
   winner: boolean;
+  color: string;
 }) {
   return (
     <div className="text-center">
@@ -122,12 +141,18 @@ function TeamScore({
         {name}
       </p>
 
-      <p className="mt-1 font-(family-name:--font-display) text-4xl font-black text-(--color-text-primary)">
+      <p
+        className="mt-1 border-b-2 pb-1 font-(family-name:--font-display) text-4xl font-black text-(--color-text-primary)"
+        style={{ borderColor: color }}
+      >
         {score}
       </p>
 
       {winner && (
-        <span className="mt-1 inline-flex rounded-full bg-(--color-brand)/10 px-2 py-0.5 text-[9px] font-black uppercase text-(--color-brand)">
+        <span
+          className="mt-1 inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase"
+          style={{ color, backgroundColor: withHexAlpha(color, "1A") }}
+        >
           Winner
         </span>
       )}

@@ -1,12 +1,23 @@
 "use client";
 
-import { Check, ChevronRight, Plus, Shield, Trophy, Users } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  MoreVertical,
+  Plus,
+  Shield,
+  Trash2,
+  Trophy,
+  Users,
+  X,
+} from "lucide-react";
 
 import { useMemo, useState } from "react";
 
 import { useParams, useRouter } from "next/navigation";
 
 import { Button } from "@/components/common/Button";
+import { DialogBottom } from "@/components/common/DialogBottom";
 
 import { cn } from "@/lib/cn";
 
@@ -16,12 +27,14 @@ import {
   useGetVolleyballTournamentQuery,
   useGetVolleyballTournamentTeamsQuery,
   useRegisterVolleyballTournamentTeamMutation,
+  useRemoveVolleyballTournamentTeamMutation,
 } from "@/store/api/volleyball/volleyballTournamentApi";
 
 import { SPORT_TYPES } from "@/types/sport";
 
 import {
   VOLLEYBALL_TOURNAMENT_FORMATS,
+  VOLLEYBALL_TOURNAMENT_STATUSES,
   type VolleyballTournamentTeam,
 } from "@/types/volleyball/tournament";
 
@@ -49,7 +62,14 @@ export default function VolleyballTournamentTeamsPage() {
 
   const [addingTeamId, setAddingTeamId] = useState<string | null>(null);
 
+  const [teamMenuId, setTeamMenuId] = useState<string | null>(null);
+
+  const [teamToRemove, setTeamToRemove] =
+    useState<VolleyballTournamentTeam | null>(null);
+
   const [error, setError] = useState("");
+
+  const [success, setSuccess] = useState("");
 
   /* =====================================================
      API
@@ -72,10 +92,17 @@ export default function VolleyballTournamentTeamsPage() {
   const canManageTournament =
     tournament?.viewerAccess.canManageTournament === true;
 
+  const canManageAdmins = tournament?.viewerAccess.canManageAdmins === true;
+
+  const canRemoveTeams =
+    canManageTournament &&
+    tournament?.status === VOLLEYBALL_TOURNAMENT_STATUSES.DRAFT;
+
   const {
     data: registeredTeams = [],
     isLoading: areRegisteredTeamsLoading,
     isError: areRegisteredTeamsError,
+    refetch: refetchRegisteredTeams,
   } = useGetVolleyballTournamentTeamsQuery(
     {
       tournamentId,
@@ -92,6 +119,9 @@ export default function VolleyballTournamentTeamsPage() {
   } = useGetOwnedTeamQuery(undefined, { skip: !canManageTournament });
 
   const [registerTeam] = useRegisterVolleyballTournamentTeamMutation();
+
+  const [removeTeam, { isLoading: isRemovingTeam }] =
+    useRemoveVolleyballTournamentTeamMutation();
 
   /* =====================================================
      DERIVED
@@ -179,6 +209,66 @@ export default function VolleyballTournamentTeamsPage() {
     }
   }
 
+  async function handleRemoveTeam() {
+    if (!teamToRemove || !canRemoveTeams || isRemovingTeam) return;
+
+    setError("");
+    setSuccess("");
+
+    try {
+      await removeTeam({
+        tournamentId,
+        teamId: teamToRemove.teamId,
+      }).unwrap();
+
+      setTeamToRemove(null);
+      setTeamMenuId(null);
+      setSuccess("Team removed from tournament.");
+      await refetchRegisteredTeams();
+    } catch (err) {
+      const code = getApiErrorCode(err);
+
+      if (code === "VOLLEYBALL_TOURNAMENT_TEAM_IN_USE") {
+        setError(
+          "This team is already used in tournament fixtures. Remove or update those fixtures first.",
+        );
+        setTeamToRemove(null);
+        return;
+      }
+
+      if (code === "VOLLEYBALL_TOURNAMENT_TEAM_REMOVAL_NOT_ALLOWED") {
+        setError("Teams can only be removed while the tournament is in Draft.");
+        setTeamToRemove(null);
+        await refetchTournament();
+        return;
+      }
+
+      if (code === "TOURNAMENT_TEAM_NOT_FOUND") {
+        setError("This team is no longer registered in the tournament.");
+        setTeamToRemove(null);
+        await refetchRegisteredTeams();
+        return;
+      }
+
+      if (code === "VOLLEYBALL_TOURNAMENT_NOT_FOUND") {
+        setError("Tournament not found.");
+        setTeamToRemove(null);
+        await refetchTournament();
+        return;
+      }
+
+      if (isForbidden(err)) {
+        setError("Your tournament permissions have changed.");
+        setTeamToRemove(null);
+        await refetchTournament();
+        return;
+      }
+
+      setError(extractErrorMessage(err, "Failed to remove team from tournament."));
+      setTeamToRemove(null);
+    }
+  }
+
   /* =====================================================
      CONTINUE
   ===================================================== */
@@ -191,6 +281,13 @@ export default function VolleyballTournamentTeamsPage() {
     }
 
     router.push(`/volleyball/tournaments/${tournamentId}/fixtures`);
+  }
+
+  function handleCreateVolleyballTeam() {
+    const returnTo = `/volleyball/tournaments/${tournamentId}/teams`;
+    const query = new URLSearchParams({ returnTo });
+
+    router.push(`/volleyball/teams/create?${query.toString()}`);
   }
 
   /* =====================================================
@@ -267,6 +364,26 @@ export default function VolleyballTournamentTeamsPage() {
               ? "Add the volleyball teams participating in this tournament."
               : "Teams participating in this tournament."}
           </p>
+
+          {canManageAdmins && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-3"
+              leftIcon={<Shield size={14} />}
+              onClick={() => {
+                const query = new URLSearchParams({
+                  returnTo: `/volleyball/tournaments/${tournamentId}/teams`,
+                });
+
+                router.push(
+                  `/volleyball/tournaments/${tournamentId}/admins?${query.toString()}`,
+                );
+              }}
+            >
+              Manage Admins
+            </Button>
+          )}
         </div>
 
         {/* ===============================================
@@ -316,6 +433,12 @@ export default function VolleyballTournamentTeamsPage() {
         {error && (
           <div className="rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 px-4 py-3">
             <p className="text-sm font-semibold text-(--color-live)">{error}</p>
+          </div>
+        )}
+
+        {success && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <p className="text-sm font-semibold text-emerald-700">{success}</p>
           </div>
         )}
 
@@ -422,7 +545,24 @@ export default function VolleyballTournamentTeamsPage() {
 
                     <div className="space-y-2">
                       {teams.map((team) => (
-                        <RegisteredTeamCard key={team.id} team={team} />
+                        <RegisteredTeamCard
+                          key={team.id}
+                          team={team}
+                          canRemove={canRemoveTeams}
+                          menuOpen={teamMenuId === team.id}
+                          disabled={isRemovingTeam}
+                          onToggleMenu={() =>
+                            setTeamMenuId((current) =>
+                              current === team.id ? null : team.id,
+                            )
+                          }
+                          onRemove={() => {
+                            setError("");
+                            setSuccess("");
+                            setTeamMenuId(null);
+                            setTeamToRemove(team);
+                          }}
+                        />
                       ))}
                     </div>
                   </div>
@@ -431,7 +571,24 @@ export default function VolleyballTournamentTeamsPage() {
             ) : (
               <div className="space-y-2">
                 {registeredTeams.map((team) => (
-                  <RegisteredTeamCard key={team.id} team={team} />
+                  <RegisteredTeamCard
+                    key={team.id}
+                    team={team}
+                    canRemove={canRemoveTeams}
+                    menuOpen={teamMenuId === team.id}
+                    disabled={isRemovingTeam}
+                    onToggleMenu={() =>
+                      setTeamMenuId((current) =>
+                        current === team.id ? null : team.id,
+                      )
+                    }
+                    onRemove={() => {
+                      setError("");
+                      setSuccess("");
+                      setTeamMenuId(null);
+                      setTeamToRemove(team);
+                    }}
+                  />
                 ))}
               </div>
             )}
@@ -449,22 +606,35 @@ export default function VolleyballTournamentTeamsPage() {
           />
 
           {availableTeams.length > 0 ? (
-            <div className="space-y-2">
-              {availableTeams.map((team) => (
-                <AvailableTeamCard
-                  key={team.id}
-                  team={team}
-                  groupName={isGroupKnockout ? effectiveGroupName : null}
-                  loading={addingTeamId === team.id}
-                  disabled={addingTeamId !== null}
-                  onAdd={() => void handleRegisterTeam(team)}
-                />
-              ))}
+            <div>
+              <div className="space-y-2">
+                {availableTeams.map((team) => (
+                  <AvailableTeamCard
+                    key={team.id}
+                    team={team}
+                    groupName={isGroupKnockout ? effectiveGroupName : null}
+                    loading={addingTeamId === team.id}
+                    disabled={addingTeamId !== null}
+                    onAdd={() => void handleRegisterTeam(team)}
+                  />
+                ))}
+              </div>
+
+              <Button
+                fullWidth
+                variant="outline"
+                className="mt-3"
+                leftIcon={<Plus size={15} />}
+                onClick={handleCreateVolleyballTeam}
+              >
+                Create New Team
+              </Button>
             </div>
           ) : (
             <EmptyTeamsState
               registeredCount={registeredTeams.length}
               totalCount={volleyballTeams.length}
+              onCreateTeam={handleCreateVolleyballTeam}
             />
           )}
         </section>}
@@ -515,6 +685,58 @@ export default function VolleyballTournamentTeamsPage() {
           </Button>
         </div>
       </div>}
+
+      <DialogBottom
+        open={teamToRemove !== null}
+        onClose={() => {
+          if (!isRemovingTeam) setTeamToRemove(null);
+        }}
+      >
+        {teamToRemove && (
+          <div className="pb-1">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-(family-name:--font-display) text-xl font-black text-(--color-text-primary)">
+                  Remove team?
+                </h2>
+                <p className="mt-2 break-words text-sm leading-5 text-(--color-text-secondary)">
+                  “{teamToRemove.teamSnapshot.name}” will be removed from this tournament.
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={isRemovingTeam}
+                onClick={() => setTeamToRemove(null)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-base)"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mt-3 rounded-xl bg-(--color-bg-base) px-3 py-2.5 text-xs text-(--color-text-muted)">
+              This does not delete the team from YuvaCrix.
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                disabled={isRemovingTeam}
+                onClick={() => setTeamToRemove(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                loading={isRemovingTeam}
+                disabled={isRemovingTeam}
+                onClick={() => void handleRemoveTeam()}
+              >
+                {isRemovingTeam ? "Removing..." : "Remove team"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogBottom>
     </div>
   );
 }
@@ -523,7 +745,21 @@ export default function VolleyballTournamentTeamsPage() {
    REGISTERED TEAM
 ========================================================= */
 
-function RegisteredTeamCard({ team }: { team: VolleyballTournamentTeam }) {
+function RegisteredTeamCard({
+  team,
+  canRemove,
+  menuOpen,
+  disabled,
+  onToggleMenu,
+  onRemove,
+}: {
+  team: VolleyballTournamentTeam;
+  canRemove: boolean;
+  menuOpen: boolean;
+  disabled: boolean;
+  onToggleMenu: () => void;
+  onRemove: () => void;
+}) {
   const initials = getInitials(team.teamSnapshot.name);
 
   return (
@@ -561,6 +797,33 @@ function RegisteredTeamCard({ team }: { team: VolleyballTournamentTeam }) {
           )}
         </div>
       </div>
+
+      {canRemove && (
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            aria-label={`Actions for ${team.teamSnapshot.name}`}
+            disabled={disabled}
+            onClick={onToggleMenu}
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-(--color-text-secondary) hover:bg-(--color-bg-base) disabled:opacity-40"
+          >
+            <MoreVertical size={18} />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-10 z-20 w-48 rounded-xl border border-(--color-bg-border) bg-(--color-bg-card) p-1.5 shadow-lg">
+              <button
+                type="button"
+                onClick={onRemove}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-xs font-bold text-(--color-live) hover:bg-red-50"
+              >
+                <Trash2 size={15} />
+                Remove from tournament
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -745,10 +1008,13 @@ function SetupStep({
 function EmptyTeamsState({
   registeredCount,
   totalCount,
+  onCreateTeam,
 }: {
   registeredCount: number;
 
   totalCount: number;
+
+  onCreateTeam: () => void;
 }) {
   if (totalCount === 0) {
     return (
@@ -756,12 +1022,21 @@ function EmptyTeamsState({
         <Users size={23} className="mx-auto text-(--color-text-muted)" />
 
         <p className="mt-3 text-sm font-black text-(--color-text-primary)">
-          No volleyball teams found
+          No volleyball teams yet
         </p>
 
         <p className="mt-1 text-xs text-(--color-text-muted)">
-          Create volleyball teams before adding them to this tournament.
+          Create your first team and add it to this tournament.
         </p>
+
+        <Button
+          size="sm"
+          className="mt-4"
+          leftIcon={<Plus size={14} />}
+          onClick={onCreateTeam}
+        >
+          Create Volleyball Team
+        </Button>
       </div>
     );
   }
@@ -778,6 +1053,16 @@ function EmptyTeamsState({
         {registeredCount} team
         {registeredCount === 1 ? "" : "s"} registered.
       </p>
+
+      <Button
+        size="sm"
+        variant="outline"
+        className="mt-4"
+        leftIcon={<Plus size={14} />}
+        onClick={onCreateTeam}
+      >
+        Create Another Team
+      </Button>
     </div>
   );
 }
@@ -830,6 +1115,12 @@ function formatTournamentFormat(format: string) {
     case VOLLEYBALL_TOURNAMENT_FORMATS.GROUP_KNOCKOUT:
       return "Groups + Knockout";
 
+    case VOLLEYBALL_TOURNAMENT_FORMATS.LEAGUE_PLAYOFF:
+      return "League + Playoffs";
+
+    case VOLLEYBALL_TOURNAMENT_FORMATS.CUSTOM:
+      return "Custom";
+
     default:
       return format;
   }
@@ -870,4 +1161,14 @@ function isForbidden(error: unknown) {
       "status" in error &&
       error.status === 403,
   );
+}
+
+function getApiErrorCode(error: unknown) {
+  if (!error || typeof error !== "object" || !("data" in error)) return null;
+
+  const data = error.data;
+
+  if (!data || typeof data !== "object" || !("code" in data)) return null;
+
+  return typeof data.code === "string" ? data.code : null;
 }

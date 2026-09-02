@@ -25,7 +25,19 @@ export type RouteConfig = {
     teamA?: Team | null;
     teamB?: Team | null;
   }) => string;
+  getBackHref?: (ctx: {
+    pathname: string;
+    searchParams: URLSearchParams;
+  }) => string;
 };
+
+function getVolleyballTournamentDetailPath(pathname: string) {
+  const match = pathname.match(/^\/volleyball\/tournaments\/([^/]+)/);
+
+  return match
+    ? `/volleyball/tournaments/${match[1]}`
+    : "/volleyball/my-volleyball?tab=tournaments&filter=all";
+}
 
 export const routeConfig: Record<string, RouteConfig> = {
   "/home": {
@@ -301,6 +313,15 @@ export const routeConfig: Record<string, RouteConfig> = {
     showBackButton: false,
   },
 
+  "/volleyball/profile": {
+    title: "Volleyball Profile",
+    showBackButton: true,
+    back: {
+      type: "route",
+      href: "/profile",
+    },
+  },
+
   "/volleyball/matches/create": {
     title: "Start a Match",
     showBackButton: true,
@@ -322,26 +343,24 @@ export const routeConfig: Record<string, RouteConfig> = {
   "/volleyball/matches/[matchId]/rosters": {
     title: "Team Rosters",
     showBackButton: true,
-    back: {
-      type: "history",
-    },
+    getBackHref: ({ pathname }) => pathname.replace(/\/rosters$/, ""),
   },
 
   "/volleyball/matches/[matchId]/sets/setup": {
     title: "Set Setup",
     showBackButton: true,
-    back: {
-      type: "history",
-    },
+    getBackHref: ({ pathname }) => pathname.replace(/\/sets\/setup$/, ""),
   },
 
   "/volleyball/matches/[matchId]/scoring": {
     title: "Scoring",
     showBackButton: true,
-    back: {
-      type: "route",
-      href: "/volleyball/my-volleyball",
-      replace: true,
+    getBackHref: ({ pathname, searchParams }) => {
+      const tournamentId = searchParams.get("tournamentId");
+
+      return tournamentId
+        ? `/volleyball/tournaments/${encodeURIComponent(tournamentId)}/fixtures`
+        : pathname.replace(/\/scoring$/, "");
     },
   },
 
@@ -363,7 +382,7 @@ export const routeConfig: Record<string, RouteConfig> = {
   },
 
   "/volleyball/tournaments/[tournamentId]": {
-    title: "Tournament",
+    title: "Tournament Details",
     showBackButton: true,
     back: {
       type: "route",
@@ -375,33 +394,44 @@ export const routeConfig: Record<string, RouteConfig> = {
   "/volleyball/tournaments/[tournamentId]/teams": {
     title: "Teams",
     showBackButton: true,
-    back: {
-      type: "history",
+    getBackHref: ({ pathname }) =>
+      getVolleyballTournamentDetailPath(pathname),
+  },
+
+  "/volleyball/tournaments/[tournamentId]/admins": {
+    title: "Manage Admins",
+    showBackButton: true,
+    getBackHref: ({ pathname, searchParams }) => {
+      const tournamentPath = pathname.replace(/\/admins$/, "");
+      const returnTo = searchParams.get("returnTo");
+      const isAllowedReturnTo =
+        returnTo !== null &&
+        (/^\/volleyball\/tournaments\/[^/?#]+(?:\/teams)?$/.test(returnTo) ||
+          /^\/volleyball\/matches\/[^/?#]+$/.test(returnTo));
+
+      return isAllowedReturnTo ? returnTo : tournamentPath;
     },
   },
 
   "/volleyball/tournaments/[tournamentId]/fixtures": {
     title: "Fixtures",
     showBackButton: true,
-    back: {
-      type: "history",
-    },
+    getBackHref: ({ pathname }) =>
+      getVolleyballTournamentDetailPath(pathname),
   },
 
   "/volleyball/tournaments/[tournamentId]/standings": {
     title: "Standings",
     showBackButton: true,
-    back: {
-      type: "history",
-    },
+    getBackHref: ({ pathname }) =>
+      getVolleyballTournamentDetailPath(pathname),
   },
 
   "/volleyball/tournaments/[tournamentId]/bracket": {
     title: "Bracket",
     showBackButton: true,
-    back: {
-      type: "history",
-    },
+    getBackHref: ({ pathname }) =>
+      getVolleyballTournamentDetailPath(pathname),
   },
 
   "/volleyball/my-performance": {
@@ -412,7 +442,7 @@ export const routeConfig: Record<string, RouteConfig> = {
     },
   },
 
-  "/volleyball/awards": {
+  "/volleyball/my-awards": {
     title: "My Awards",
     showBackButton: true,
     back: {
