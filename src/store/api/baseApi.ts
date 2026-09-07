@@ -89,6 +89,7 @@ export const baseApi = createApi({
     "VolleyballScoringHistory",
     "VolleyballPerformance",
     "VolleyballProfile",
+    "VolleyballHome",
   ],
 
   endpoints: () => ({}),

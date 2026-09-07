@@ -15,49 +15,27 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// TODO: Replace with dedicated Volleyball Home API.
-const HOME_PREVIEW_DATA = {
-  stats: [
-    { label: "Kills", value: 386, trend: "16%", tone: "orange" },
-    { label: "Aces", value: 92, trend: "10%", tone: "blue" },
-    { label: "Blocks", value: 64, trend: "5%", tone: "green" },
-    { label: "Digs", value: 228, trend: "3%", tone: "purple" },
-  ],
-  awards: [
-    { title: "4 MVP Awards", detail: "Season 2024–25", kind: "mvp" },
-    { title: "Best Spiker", detail: "District Open 2025", kind: "spiker" },
-    { title: "Top 5 Ace Server", detail: "Regional Rankings", kind: "server" },
-  ],
-  recentMatch: {
-    meta: "Yesterday · Beach Court 2",
-    detail: "Best of 5 · Set 3 decided",
-    result: "Won",
-    teams: [
-      {
-        initials: "SP",
-        name: "Spike Masters",
-        scores: [25, 25, 22, null, null],
-      },
-      { initials: "BK", name: "Block Kings", scores: [18, 20, 25, null, null] },
-    ],
-  },
-  tournaments: [
-    {
-      name: "City Beach Open 2025",
-      meta: "16 Teams · Pool Stage",
-      venue: "Beach Volleyball",
-      status: "Live",
-      tone: "beach",
-    },
-    {
-      name: "YuvaCrix Invitational",
-      meta: "12 Teams · Knockout",
-      venue: "Indoor Volleyball",
-      status: "Upcoming",
-      tone: "indoor",
-    },
-  ],
-} as const;
+import { S3Image } from "@/components/common/S3Image";
+import { getInitials } from "@/lib/getInitials";
+import {
+  VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+  getReadableTextColor,
+  resolveVolleyballTeamColor,
+} from "@/lib/volleyball/teamColors";
+import {
+  formatVolleyballTournamentFormat,
+  formatVolleyballTournamentStage,
+} from "@/lib/volleyball/tournamentFormat";
+import { useGetVolleyballHomeQuery } from "@/store/api/volleyball/volleyballHomeApi";
+import type {
+  VolleyballHomeAward,
+  VolleyballHomeRecentMatch,
+  VolleyballHomeResponse,
+  VolleyballHomeSeasonMetric,
+  VolleyballHomeTournament,
+  VolleyballHomeViewer,
+} from "@/types/volleyball/home";
 
 const QUICK_ACTIONS = [
   {
@@ -103,30 +81,73 @@ const toneClasses = {
 } as const;
 
 export default function VolleyballHomePage() {
+  const { currentData, isLoading, isError, refetch } =
+    useGetVolleyballHomeQuery();
+  const showInitialLoading = isLoading && !currentData;
+  const showInitialError = isError && !currentData;
+
   return (
-    <div className="min-h-full overflow-x-hidden bg-(--color-bg-base) pb-24">
+    <div className="min-h-full overflow-x-hidden scrollbar-none bg-(--color-bg-base) pb-16">
       <main className="space-y-7 px-4 py-4">
-        <VolleyballHomeHero />
+        <VolleyballHomeHero viewer={currentData?.viewer ?? null} />
         <HomeQuickActions />
-        <HomeSeasonStats />
-        <HomeAwards />
-        <HomeRecentMatch />
-        <HomeTournaments />
+        {showInitialLoading ? (
+          <HomeSkeleton />
+        ) : showInitialError ? (
+          <HomeError onRetry={() => void refetch()} />
+        ) : currentData ? (
+          <>
+            <HomeSeasonStats seasonSummary={currentData.seasonSummary} />
+            <HomeAwards
+              awardSummary={currentData.awardSummary}
+              awards={currentData.awards}
+            />
+            <HomeRecentMatch match={currentData.recentMatches[0] ?? null} />
+            <HomeTournaments tournaments={currentData.tournaments} />
+          </>
+        ) : null}
       </main>
     </div>
   );
 }
 
-function VolleyballHomeHero() {
+function VolleyballHomeHero({
+  viewer,
+}: {
+  viewer: VolleyballHomeViewer | null;
+}) {
+  const viewerName = viewer?.fullName ?? "Welcome to Volleyball";
+  const fallback = (
+    <span className="flex h-full w-full items-center justify-center bg-white text-[10px] font-black text-blue-600">
+      {getInitials(viewerName)}
+    </span>
+  );
+
   return (
     <section
       role="img"
       aria-label="Volleyball player jumping to hit the ball with Play Hard Rise Higher message"
-      className="aspect-[3/1] w-full overflow-hidden rounded-2xl border border-blue-100 bg-blue-50 bg-contain bg-center bg-no-repeat shadow-[0_6px_18px_rgba(31,78,140,0.08)]"
+      className="relative aspect-3/1 w-full overflow-hidden rounded-2xl border border-blue-100 bg-blue-50 bg-contain bg-center bg-no-repeat shadow-[0_6px_18px_rgba(31,78,140,0.08)]"
       style={{
         backgroundImage: "url('/volleyball/home/volleyball banner.png')",
       }}
-    />
+    >
+      <div className="absolute left-3 top-3 flex max-w-[72%] items-center gap-2 rounded-full bg-white/90 px-2 py-1 shadow-[0_5px_16px_rgba(31,78,140,0.12)]">
+        <span className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-blue-50">
+          <S3Image
+            imageKey={viewer?.profileImageUrl ?? null}
+            alt={viewerName}
+            width={28}
+            height={28}
+            className="h-full w-full object-cover"
+            fallback={fallback}
+          />
+        </span>
+        <span className="min-w-0 truncate text-[10px] font-black text-(--color-navy)">
+          {viewerName}
+        </span>
+      </div>
+    </section>
   );
 }
 
@@ -175,8 +196,23 @@ function HomeQuickActions() {
   );
 }
 
-function HomeSeasonStats() {
+function HomeSeasonStats({
+  seasonSummary,
+}: {
+  seasonSummary: VolleyballHomeResponse["seasonSummary"];
+}) {
   const icons = [Activity, Target, Shield, Sparkles];
+  const stats: Array<{
+    label: string;
+    metric: VolleyballHomeSeasonMetric;
+    tone: keyof typeof toneClasses;
+  }> = [
+    { label: "Kills", metric: seasonSummary.kills, tone: "orange" },
+    { label: "Aces", metric: seasonSummary.aces, tone: "blue" },
+    { label: "Blocks", metric: seasonSummary.blocks, tone: "green" },
+    { label: "Digs", metric: seasonSummary.digs, tone: "purple" },
+  ];
+
   return (
     <section>
       <SectionHeading
@@ -185,8 +221,9 @@ function HomeSeasonStats() {
         href="/volleyball/my-performance"
       />
       <div className="mt-3 grid grid-cols-2 gap-2.5">
-        {HOME_PREVIEW_DATA.stats.map((stat, index) => {
+        {stats.map((stat, index) => {
           const Icon = icons[index];
+          const trend = formatTrend(stat.metric);
           return (
             <article
               key={stat.label}
@@ -202,15 +239,22 @@ function HomeSeasonStats() {
                   <p className="text-[10px] font-semibold text-slate-600">
                     {stat.label}
                   </p>
-                  <p className="font-(family-name:--font-display) text-3xl font-black leading-none text-(--color-navy)">
-                    {stat.value}
+                  <p
+                    className={`font-(family-name:--font-display) font-black leading-none text-(--color-navy) ${
+                      stat.metric.supported && stat.metric.value !== null
+                        ? "text-3xl"
+                        : "text-xs"
+                    }`}
+                  >
+                    {stat.metric.supported && stat.metric.value !== null
+                      ? stat.metric.value
+                      : "Not tracked"}
                   </p>
                 </div>
               </div>
-              <p className="mt-3 text-[10px] font-bold text-emerald-600">
-                ↑ {stat.trend}
+              <p className={`mt-3 text-[10px] font-bold ${trend.className}`}>
+                {trend.label}
               </p>
-              <p className="mt-0.5 text-[9px] text-slate-400">vs last season</p>
             </article>
           );
         })}
@@ -219,7 +263,15 @@ function HomeSeasonStats() {
   );
 }
 
-function HomeAwards() {
+function HomeAwards({
+  awardSummary,
+  awards,
+}: {
+  awardSummary: VolleyballHomeResponse["awardSummary"];
+  awards: VolleyballHomeAward[];
+}) {
+  const visibleAwards = awards.slice(0, 3);
+
   return (
     <section>
       <SectionHeading
@@ -229,40 +281,58 @@ function HomeAwards() {
       />
       <div className="-mx-4 mt-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
         <div className="flex w-max gap-2.5">
-          {HOME_PREVIEW_DATA.awards.map((award) => (
+          <article className="flex min-h-[112px] w-[225px] shrink-0 items-center gap-3 rounded-2xl border border-blue-100 bg-(--color-bg-card) p-3 shadow-[0_7px_20px_rgba(31,78,140,0.08)]">
+            <AwardIcon iconKey="mvp" />
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase leading-4 text-(--color-navy)">
+                {awardSummary.total} Total Awards
+              </p>
+              <p className="mt-3 flex items-center gap-1.5 text-[9px] text-slate-500">
+                Season achievements
+              </p>
+            </div>
+          </article>
+          {visibleAwards.map((award) => (
             <article
-              key={award.title}
+              key={award.id}
               className="flex min-h-[112px] w-[225px] shrink-0 items-center gap-3 rounded-2xl border border-blue-100 bg-(--color-bg-card) p-3 shadow-[0_7px_20px_rgba(31,78,140,0.08)]"
             >
-              <AwardIcon kind={award.kind} />
+              <AwardIcon iconKey={award.iconKey} />
               <div className="min-w-0">
                 <p className="text-xs font-black uppercase leading-4 text-(--color-navy)">
                   {award.title}
                 </p>
                 <p className="mt-3 flex items-center gap-1.5 text-[9px] text-slate-500">
-                  <span className="text-amber-400">★</span>
-                  {award.detail}
+                  {award.subtitle ?? formatDateLabel(award.awardedAt)}
                 </p>
               </div>
             </article>
           ))}
+          {awards.length === 0 && (
+            <article className="flex min-h-[112px] w-[225px] shrink-0 items-center rounded-2xl border border-dashed border-blue-100 bg-(--color-bg-card) p-3 text-[10px] font-bold text-slate-500">
+              No awards yet
+            </article>
+          )}
         </div>
       </div>
     </section>
   );
 }
 
-function AwardIcon({
-  kind,
-}: {
-  kind: (typeof HOME_PREVIEW_DATA.awards)[number]["kind"];
-}) {
+function AwardIcon({ iconKey }: { iconKey: string }) {
   const config = {
     mvp: { icon: Trophy, className: "bg-amber-50 text-amber-500" },
     spiker: { icon: Zap, className: "bg-orange-50 text-orange-500" },
     server: { icon: Target, className: "bg-rose-50 text-rose-500" },
   } as const;
+  const normalizedKey = iconKey.toLowerCase();
+  const kind = normalizedKey.includes("spik")
+    ? "spiker"
+    : normalizedKey.includes("serv") || normalizedKey.includes("ace")
+      ? "server"
+      : "mvp";
   const Icon = config[kind].icon;
+
   return (
     <span
       className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${config[kind].className}`}
@@ -272,8 +342,11 @@ function AwardIcon({
   );
 }
 
-function HomeRecentMatch() {
-  const match = HOME_PREVIEW_DATA.recentMatch;
+function HomeRecentMatch({
+  match,
+}: {
+  match: VolleyballHomeRecentMatch | null;
+}) {
   return (
     <section>
       <SectionHeading
@@ -281,63 +354,103 @@ function HomeRecentMatch() {
         action="See all"
         href="/volleyball/my-volleyball?tab=matches&scope=all"
       />
-      <article className="mt-3 rounded-2xl border border-blue-100 bg-(--color-bg-card) p-3.5 shadow-[0_8px_24px_rgba(31,78,140,0.09)]">
-        <div className="flex flex-wrap items-center justify-between gap-1.5 text-[9px] text-slate-500">
-          <span>{match.meta}</span>
-          <span>{match.detail}</span>
-        </div>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1 space-y-2.5">
-            {match.teams.map((team, index) => (
-              <div key={team.name} className="flex min-w-0 items-center gap-2">
-                <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[9px] font-black text-white ${index === 0 ? "bg-(--color-navy)" : "bg-slate-400"}`}
-                >
-                  {team.initials}
-                </span>
-                <span className="truncate text-[11px] font-black text-(--color-navy)">
-                  {team.name}
-                </span>
-              </div>
-            ))}
+      {!match ? (
+        <CompactEmpty message="No recent matches yet" />
+      ) : (
+        <article className="mt-3 rounded-2xl border border-blue-100 bg-(--color-bg-card) p-3.5 shadow-[0_8px_24px_rgba(31,78,140,0.09)]">
+          <div className="flex flex-wrap items-center justify-between gap-1.5 text-[9px] text-slate-500">
+            <span>{formatMatchMeta(match)}</span>
+            <span>{formatMatchDetail(match)}</span>
           </div>
-          <div className="max-w-[185px] overflow-x-auto pb-1 scrollbar-hide">
-            <div className="grid min-w-[172px] grid-cols-5 gap-1.5">
-              {match.teams.flatMap((team, teamIndex) =>
-                team.scores.map((score, setIndex) => (
-                  <span
-                    key={`${team.name}-${setIndex}`}
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg border text-[10px] font-black ${teamIndex === 0 && setIndex === 2 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-blue-100 bg-blue-50/50 text-(--color-navy)"}`}
-                    style={{ gridRow: teamIndex + 1, gridColumn: setIndex + 1 }}
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1 space-y-2.5">
+              {[match.teamA, match.teamB].map((team, index) => {
+                const color = resolveVolleyballTeamColor(
+                  team.teamColor,
+                  index === 0
+                    ? VOLLEYBALL_TEAM_A_FALLBACK_COLOR
+                    : VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+                );
+
+                return (
+                  <div
+                    key={team.teamId}
+                    className="flex min-w-0 items-center gap-2"
                   >
-                    {score ?? "–"}
-                  </span>
-                )),
-              )}
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[9px] font-black"
+                      style={{
+                        backgroundColor: color,
+                        color: getReadableTextColor(color),
+                      }}
+                    >
+                      {team.shortName ?? getInitials(team.name)}
+                    </span>
+                    <span className="truncate text-[11px] font-black text-(--color-navy)">
+                      {team.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="max-w-[185px] overflow-x-auto pb-1 scrollbar-hide">
+              <div className="grid min-w-[172px] grid-cols-5 gap-1.5">
+                {[match.teamA, match.teamB].flatMap((team, teamIndex) =>
+                  Array.from({ length: 5 }, (_, setIndex) => {
+                    const set = match.sets[setIndex];
+                    const score = set
+                      ? teamIndex === 0
+                        ? set.teamAPoints
+                        : set.teamBPoints
+                      : null;
+
+                    return (
+                      <span
+                        key={`${team.teamId}-${setIndex}`}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-blue-100 bg-blue-50/50 text-[10px] font-black text-(--color-navy)"
+                        style={{
+                          gridRow: teamIndex + 1,
+                          gridColumn: setIndex + 1,
+                        }}
+                      >
+                        {score ?? "-"}
+                      </span>
+                    );
+                  }),
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="mt-3 flex items-center justify-between border-t border-blue-50 pt-3">
-          <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-600">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            {match.result}
-          </span>
-          <button
-            type="button"
-            disabled
-            aria-label="Scorecard preview unavailable"
-            className="flex h-8 items-center gap-1.5 rounded-lg border border-blue-100 px-3 text-[9px] font-bold text-blue-500 opacity-60"
-          >
-            <BarChart3 size={13} />
-            Scorecard
-          </button>
-        </div>
-      </article>
+          <div className="mt-3 flex items-center justify-between border-t border-blue-50 pt-3">
+            <span
+              className={`flex items-center gap-1.5 text-[10px] font-black ${getResultClassName(match.result)}`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${getResultDotClassName(match.result)}`}
+              />
+              {formatResult(match.result)}
+            </span>
+            <button
+              type="button"
+              disabled
+              aria-label="Scorecard preview unavailable"
+              className="flex h-8 items-center gap-1.5 rounded-lg border border-blue-100 px-3 text-[9px] font-bold text-blue-500 opacity-60"
+            >
+              <BarChart3 size={13} />
+              Scorecard
+            </button>
+          </div>
+        </article>
+      )}
     </section>
   );
 }
 
-function HomeTournaments() {
+function HomeTournaments({
+  tournaments,
+}: {
+  tournaments: VolleyballHomeTournament[];
+}) {
   return (
     <section>
       <SectionHeading
@@ -346,31 +459,52 @@ function HomeTournaments() {
         href="/volleyball/tournaments/create"
       />
       <div className="mt-3 overflow-hidden rounded-2xl border border-blue-100 bg-(--color-bg-card) shadow-[0_8px_24px_rgba(31,78,140,0.09)]">
-        {HOME_PREVIEW_DATA.tournaments.map((tournament, index) => (
-          <div
-            key={tournament.name}
-            className={`flex items-center gap-3 p-3 ${index > 0 ? "border-t border-blue-50" : ""}`}
-          >
-            <TournamentArtwork tone={tournament.tone} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[11px] font-black text-(--color-navy)">
-                {tournament.name}
-              </p>
-              <p className="mt-1 truncate text-[9px] text-slate-500">
-                {tournament.meta}
-              </p>
-              <p className="mt-1 truncate text-[8px] text-slate-400">
-                {tournament.venue}
-              </p>
-            </div>
-            <span
-              className={`shrink-0 rounded-full px-3 py-1.5 text-[8px] font-black ${tournament.status === "Live" ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-500"}`}
-            >
-              {tournament.status}
-            </span>
-            <ChevronRight size={16} className="shrink-0 text-slate-400" />
+        {tournaments.length === 0 ? (
+          <div className="p-3">
+            <p className="text-[10px] font-bold text-slate-500">
+              No tournaments yet
+            </p>
           </div>
-        ))}
+        ) : (
+          tournaments.map((tournament, index) => (
+            <div
+              key={tournament.id}
+              className={`flex items-center gap-3 p-3 ${index > 0 ? "border-t border-blue-50" : ""}`}
+            >
+              <TournamentArtwork
+                tone={tournament.format === "LEAGUE" ? "beach" : "indoor"}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[11px] font-black text-(--color-navy)">
+                  {tournament.name}
+                </p>
+                <p className="mt-1 truncate text-[9px] text-slate-500">
+                  {getTournamentMeta(tournament)}
+                </p>
+                {getTournamentRelationLabel(tournament) && (
+                  <p className="mt-1 truncate text-[8px] text-slate-400">
+                    {getTournamentRelationLabel(tournament)}
+                  </p>
+                )}
+              </div>
+              {tournament.viewerRelation.admin && (
+                <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[8px] font-black text-blue-600">
+                  Admin
+                </span>
+              )}
+              <span
+                className={`shrink-0 rounded-full px-3 py-1.5 text-[8px] font-black ${
+                  tournament.status === "ACTIVE"
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "bg-orange-50 text-orange-500"
+                }`}
+              >
+                {formatTournamentStatus(tournament.status)}
+              </span>
+              <ChevronRight size={16} className="shrink-0 text-slate-400" />
+            </div>
+          ))
+        )}
       </div>
       <Link
         href="/volleyball/my-volleyball?tab=tournaments&scope=all"
@@ -385,7 +519,11 @@ function HomeTournaments() {
 function TournamentArtwork({ tone }: { tone: "beach" | "indoor" }) {
   return (
     <span
-      className={`relative flex h-14 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl ${tone === "beach" ? "bg-[linear-gradient(145deg,#73c9ff,#fff2ad_58%,#f3a84d)]" : "bg-[linear-gradient(145deg,#131d55,#2969bd_58%,#ff6b2c)]"}`}
+      className={`relative flex h-14 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl ${
+        tone === "beach"
+          ? "bg-[linear-gradient(145deg,#73c9ff,#fff2ad_58%,#f3a84d)]"
+          : "bg-[linear-gradient(145deg,#131d55,#2969bd_58%,#ff6b2c)]"
+      }`}
       aria-hidden="true"
     >
       <span className="absolute inset-x-0 bottom-2 h-px bg-white/60" />
@@ -419,4 +557,170 @@ function SectionHeading({
       </Link>
     </div>
   );
+}
+
+function HomeSkeleton() {
+  return (
+    <>
+      <section>
+        <div className="h-5 w-40 rounded-full bg-blue-100" />
+        <div className="mt-3 grid grid-cols-2 gap-2.5">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-[118px] animate-pulse rounded-2xl border border-blue-100 bg-(--color-bg-card)"
+            />
+          ))}
+        </div>
+      </section>
+      <section>
+        <div className="h-5 w-36 rounded-full bg-blue-100" />
+        <div className="-mx-4 mt-3 overflow-hidden px-4">
+          <div className="flex gap-2.5">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-[112px] w-[225px] shrink-0 animate-pulse rounded-2xl border border-blue-100 bg-(--color-bg-card)"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+      <div className="h-[162px] animate-pulse rounded-2xl border border-blue-100 bg-(--color-bg-card)" />
+      <div className="h-[164px] animate-pulse rounded-2xl border border-blue-100 bg-(--color-bg-card)" />
+    </>
+  );
+}
+
+function HomeError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <section className="rounded-2xl border border-blue-100 bg-(--color-bg-card) p-4 text-center shadow-[0_8px_24px_rgba(31,78,140,0.09)]">
+      <p className="text-sm font-black text-(--color-navy)">
+        Unable to load Volleyball Home
+      </p>
+      <p className="mt-1 text-[10px] leading-5 text-slate-500">
+        We couldn&apos;t load your Volleyball updates right now.
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-3 rounded-lg bg-blue-50 px-4 py-2 text-[10px] font-black text-blue-600"
+      >
+        Try again
+      </button>
+    </section>
+  );
+}
+
+function CompactEmpty({ message }: { message: string }) {
+  return (
+    <div className="mt-3 rounded-2xl border border-dashed border-blue-100 bg-(--color-bg-card) p-3 text-[10px] font-bold text-slate-500">
+      {message}
+    </div>
+  );
+}
+
+function formatTrend(metric: VolleyballHomeSeasonMetric) {
+  if (!metric.supported) {
+    return { label: "Not tracked", className: "text-slate-400" };
+  }
+
+  if (!metric.trend || metric.trend.percent === null) {
+    return { label: "No comparison", className: "text-slate-400" };
+  }
+
+  if (metric.trend.direction === "SAME") {
+    return { label: "Same as last season", className: "text-slate-500" };
+  }
+
+  return {
+    label: `${metric.trend.direction === "UP" ? "\u2191" : "\u2193"} ${
+      metric.trend.percent
+    }% vs last season`,
+    className:
+      metric.trend.direction === "UP" ? "text-emerald-600" : "text-red-500",
+  };
+}
+
+function formatDateLabel(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatMatchMeta(match: VolleyballHomeRecentMatch) {
+  const parts = [formatDateLabel(match.playedAt)];
+  const venue = match.venue
+    ? [match.venue.name, match.venue.city].filter(Boolean).join(", ")
+    : null;
+
+  if (venue) {
+    parts.push(venue);
+  }
+
+  return parts.join(" \u00B7 ");
+}
+
+function formatMatchDetail(match: VolleyballHomeRecentMatch) {
+  const source =
+    match.sourceType === "TOURNAMENT"
+      ? (match.tournament?.name ?? "Tournament")
+      : "Standalone";
+
+  return `${match.teamASetsWon}-${match.teamBSetsWon} Sets / ${source}`;
+}
+
+function formatResult(result: VolleyballHomeRecentMatch["result"]) {
+  switch (result) {
+    case "WON":
+      return "Won";
+    case "LOST":
+      return "Lost";
+    case "DRAW":
+      return "Draw";
+  }
+}
+
+function getResultClassName(result: VolleyballHomeRecentMatch["result"]) {
+  if (result === "WON") return "text-emerald-600";
+  if (result === "LOST") return "text-red-500";
+  return "text-slate-500";
+}
+
+function getResultDotClassName(result: VolleyballHomeRecentMatch["result"]) {
+  if (result === "WON") return "bg-emerald-500";
+  if (result === "LOST") return "bg-red-500";
+  return "bg-slate-400";
+}
+
+function getTournamentMeta(tournament: VolleyballHomeTournament) {
+  const parts = [
+    `${tournament.teamCount} Teams`,
+    formatVolleyballTournamentFormat(tournament.format),
+  ];
+
+  if (tournament.currentStage) {
+    parts.push(formatVolleyballTournamentStage(tournament.currentStage));
+  }
+
+  return parts.join(" \u00B7 ");
+}
+
+function getTournamentRelationLabel(tournament: VolleyballHomeTournament) {
+  if (tournament.viewerRelation.played) return "Played tournament";
+  if (tournament.viewerRelation.created) return "Created tournament";
+  if (tournament.viewerRelation.network) return "Network tournament";
+  return null;
+}
+
+function formatTournamentStatus(status: VolleyballHomeTournament["status"]) {
+  return status.charAt(0) + status.slice(1).toLowerCase();
 }
