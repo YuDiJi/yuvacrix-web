@@ -7,7 +7,8 @@
  * ------------------------------
  * - YuvaCrix global design tokens remain shared.
  * - Cricket remains the DEFAULT theme.
- * - Each sport overrides only sport identity tokens.
+ * - Each sport sets its identity tokens and rebinds the
+ *   public aliases inside the same data-sport scope.
  * - Existing components using:
  *
  *     --color-brand
@@ -85,10 +86,8 @@
   /*
    * Compatibility aliases.
    *
-   * Existing Cricket components already use these variables,
-   * so they now resolve to the active sport theme.
-   *
-   * No component migration is required.
+   * Default Cricket aliases. Explicit sport scopes rebind
+   * these aliases locally so descendants resolve correctly.
    */
   --color-brand: var(--sport-primary);
   --color-sky: var(--sport-secondary);
@@ -177,7 +176,8 @@
  * SPORT THEMES
  * ===========================================================
  *
- * Only SPORT IDENTITY belongs here.
+ * Sport scopes own both low-level identity values and the
+ * public aliases derived from those values.
  *
  * Do not duplicate:
  * - typography
@@ -187,8 +187,8 @@
  * - card styles
  * - semantic error/success/live states
  *
- * Adding another sport later only requires another
- * [data-sport="..."] block.
+ * Adding another sport later requires the same low-level
+ * values and alias bindings in its [data-sport="..."] block.
  */
 
 /* ── Cricket ───────────────────────────────────────────────── */
@@ -204,6 +204,10 @@
   --sport-secondary: #4b8bff;
   --sport-tint: #eef4ff;
   --sport-primary-rgb: 27, 63, 160;
+  --color-brand: var(--sport-primary);
+  --color-sky: var(--sport-secondary);
+  --color-bg-tint: var(--sport-tint);
+  --shadow-button: 0 4px 16px rgba(var(--sport-primary-rgb), 0.3);
 }
 
 /* ── Volleyball ────────────────────────────────────────────── */
@@ -213,6 +217,10 @@
   --sport-secondary: #f59e0b;
   --sport-tint: #fff7ed;
   --sport-primary-rgb: 234, 88, 12;
+  --color-brand: var(--sport-primary);
+  --color-sky: var(--sport-secondary);
+  --color-bg-tint: var(--sport-tint);
+  --shadow-button: 0 4px 16px rgba(var(--sport-primary-rgb), 0.3);
 }
 
 /* ── Badminton ─────────────────────────────────────────────── */
@@ -222,6 +230,10 @@
   --sport-secondary: #a78bfa;
   --sport-tint: #f5f3ff;
   --sport-primary-rgb: 124, 58, 237;
+  --color-brand: var(--sport-primary);
+  --color-sky: var(--sport-secondary);
+  --color-bg-tint: var(--sport-tint);
+  --shadow-button: 0 4px 16px rgba(var(--sport-primary-rgb), 0.3);
 }
 
 /* ── Football ──────────────────────────────────────────────── */
@@ -231,6 +243,10 @@
   --sport-secondary: #22c55e;
   --sport-tint: #f0fdf4;
   --sport-primary-rgb: 21, 128, 61;
+  --color-brand: var(--sport-primary);
+  --color-sky: var(--sport-secondary);
+  --color-bg-tint: var(--sport-tint);
+  --shadow-button: 0 4px 16px rgba(var(--sport-primary-rgb), 0.3);
 }
 
 /*
@@ -245,6 +261,10 @@
  *   --sport-secondary: #xxxxxx;
  *   --sport-tint: #xxxxxx;
  *   --sport-primary-rgb: R, G, B;
+ *   --color-brand: var(--sport-primary);
+ *   --color-sky: var(--sport-secondary);
+ *   --color-bg-tint: var(--sport-tint);
+ *   --shadow-button: 0 4px 16px rgba(var(--sport-primary-rgb), 0.3);
  * }
  *
  * No existing component should need to change.

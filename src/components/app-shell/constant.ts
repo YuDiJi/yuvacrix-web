@@ -187,7 +187,7 @@ export const volleyballDrawerSections: DrawerSection[] = [
       {
         label: "My Awards",
         icon: Award,
-        href: "/volleyball/awards",
+        href: "/volleyball/my-awards",
       },
     ],
   },

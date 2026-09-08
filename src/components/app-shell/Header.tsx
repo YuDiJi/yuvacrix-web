@@ -7,17 +7,18 @@ import { useHeader } from "@/providers/HeaderProvider";
 import { useAppSelector } from "@/store/hooks";
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 import { getRouteConfig } from "./config/getRouteConfig";
-import { selectActiveSport } from "@/store/sport/selectors";
+import type { SportType } from "@/types/sport";
 
 function Header({
   onMenuClick,
   pathname,
+  activeSport,
 }: {
   onMenuClick: () => void;
   pathname: string;
+  activeSport: SportType;
 }) {
   const router = useRouter();
-  const activeSport = useAppSelector(selectActiveSport);
   const showBottomNav =
     activeSport !== null && isBottomNavRoute(pathname, activeSport);
 

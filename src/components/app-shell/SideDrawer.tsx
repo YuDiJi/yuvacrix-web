@@ -14,17 +14,18 @@ import { resetMatch } from "@/store/startMatch/startMatchSlice";
 import { useGetSignedUrlQuery } from "@/store/api/uploadApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { S3Image } from "../common/S3Image";
-import { selectActiveSport } from "@/store/sport/selectors";
-import { SPORT_TYPES } from "@/types/sport";
+import { SPORT_TYPES, type SportType } from "@/types/sport";
 
 export default function SideDrawer({
   open,
   onClose,
   pathname,
+  activeSport,
 }: {
   open: boolean;
   onClose: () => void;
   pathname: string;
+  activeSport: SportType;
 }) {
   const prevPath = useRef(pathname);
   const [logoutApi] = useLogoutMutation();
@@ -34,8 +35,6 @@ export default function SideDrawer({
   const user = useAppSelector(selectUser);
 
   const { data, isLoading } = useGetPlayerQuery();
-
-  const activeSport = useAppSelector(selectActiveSport);
 
   const drawerSections =
     activeSport === SPORT_TYPES.VOLLEYBALL
@@ -114,7 +113,7 @@ export default function SideDrawer({
         {/* User card */}
         <div className="px-4 pt-4">
           <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/8 px-4 py-3">
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--color-sky) font-(family-name:--font-display) text-sm font-black text-white shadow-[0_2px_8px_rgba(75,139,255,0.35)]">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--color-sky) font-(family-name:--font-display) text-sm font-black text-white shadow-[0_2px_8px_rgba(var(--sport-primary-rgb),0.35)]">
               {data?.player?.profileImageUrl ? (
                 <S3Image
                   imageKey={data.player.profileImageUrl}
@@ -256,7 +255,7 @@ export default function SideDrawer({
                     className={cn(
                       "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 active:scale-[0.98]",
                       active
-                        ? "bg-(--color-brand) text-white shadow-[0_4px_16px_rgba(27,63,160,0.45)]"
+                        ? "bg-(--color-brand) text-white shadow-[0_4px_16px_rgba(var(--sport-primary-rgb),0.45)]"
                         : item.danger
                           ? "text-(--color-live) hover:bg-white/6"
                           : "text-white/75 hover:bg-white/8 hover:text-white",
