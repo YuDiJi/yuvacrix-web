@@ -67,7 +67,11 @@ const toneClasses = {
     text: "text-(--color-brand)",
     solid: "bg-(--color-brand)",
   },
-  blue: { soft: "bg-blue-50", text: "text-blue-500", solid: "bg-blue-500" },
+  blue: {
+    soft: "bg-(--color-bg-tint)",
+    text: "text-(--color-brand)",
+    solid: "bg-(--color-brand)",
+  },
   green: {
     soft: "bg-emerald-50",
     text: "text-emerald-600",
@@ -118,7 +122,7 @@ function VolleyballHomeHero({
 }) {
   const viewerName = viewer?.fullName ?? "Welcome to Volleyball";
   const fallback = (
-    <span className="flex h-full w-full items-center justify-center bg-white text-[10px] font-black text-blue-600">
+    <span className="flex h-full w-full items-center justify-center bg-white text-[10px] font-black text-(--color-brand)">
       {getInitials(viewerName)}
     </span>
   );
@@ -127,13 +131,13 @@ function VolleyballHomeHero({
     <section
       role="img"
       aria-label="Volleyball player jumping to hit the ball with Play Hard Rise Higher message"
-      className="relative aspect-3/1 w-full overflow-hidden rounded-2xl border border-blue-100 bg-blue-50 bg-contain bg-center bg-no-repeat shadow-[0_6px_18px_rgba(31,78,140,0.08)]"
+      className="relative aspect-3/1 w-full overflow-hidden rounded-2xl border border-(--color-bg-border) bg-(--color-bg-tint) bg-contain bg-center bg-no-repeat shadow-(--shadow-card)"
       style={{
         backgroundImage: "url('/volleyball/home/volleyball banner.png')",
       }}
     >
-      <div className="absolute left-3 top-3 flex max-w-[72%] items-center gap-2 rounded-full bg-white/90 px-2 py-1 shadow-[0_5px_16px_rgba(31,78,140,0.12)]">
-        <span className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-blue-50">
+      <div className="absolute left-3 top-3 flex max-w-[72%] items-center gap-2 rounded-full bg-white/90 px-2 py-1 shadow-(--shadow-card)">
+        <span className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-(--color-bg-tint)">
           <S3Image
             imageKey={viewer?.profileImageUrl ?? null}
             alt={viewerName}
@@ -167,7 +171,7 @@ function HomeQuickActions() {
               <Link
                 key={action.title}
                 href={action.href}
-                className="flex min-h-[104px] w-[220px] shrink-0 items-center gap-3 rounded-2xl border border-blue-100 bg-(--color-bg-card) p-3 shadow-[0_7px_20px_rgba(31,78,140,0.08)] transition active:scale-[0.99]"
+                className="flex min-h-[104px] w-[220px] shrink-0 items-center gap-3 rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-3 shadow-(--shadow-card) transition active:scale-[0.99]"
               >
                 <span
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${toneClasses[action.tone].soft} ${toneClasses[action.tone].text}`}
@@ -227,7 +231,7 @@ function HomeSeasonStats({
           return (
             <article
               key={stat.label}
-              className="rounded-2xl border border-blue-100 bg-(--color-bg-card) p-3 shadow-[0_7px_20px_rgba(31,78,140,0.08)]"
+              className="rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-3 shadow-(--shadow-card)"
             >
               <div className="flex items-center gap-2.5">
                 <span
@@ -281,7 +285,7 @@ function HomeAwards({
       />
       <div className="-mx-4 mt-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
         <div className="flex w-max gap-2.5">
-          <article className="flex min-h-[112px] w-[225px] shrink-0 items-center gap-3 rounded-2xl border border-blue-100 bg-(--color-bg-card) p-3 shadow-[0_7px_20px_rgba(31,78,140,0.08)]">
+          <article className="flex min-h-[112px] w-[225px] shrink-0 items-center gap-3 rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-3 shadow-(--shadow-card)">
             <AwardIcon iconKey="mvp" />
             <div className="min-w-0">
               <p className="text-xs font-black uppercase leading-4 text-(--color-navy)">
@@ -295,7 +299,7 @@ function HomeAwards({
           {visibleAwards.map((award) => (
             <article
               key={award.id}
-              className="flex min-h-[112px] w-[225px] shrink-0 items-center gap-3 rounded-2xl border border-blue-100 bg-(--color-bg-card) p-3 shadow-[0_7px_20px_rgba(31,78,140,0.08)]"
+              className="flex min-h-[112px] w-[225px] shrink-0 items-center gap-3 rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-3 shadow-(--shadow-card)"
             >
               <AwardIcon iconKey={award.iconKey} />
               <div className="min-w-0">
@@ -309,7 +313,7 @@ function HomeAwards({
             </article>
           ))}
           {awards.length === 0 && (
-            <article className="flex min-h-[112px] w-[225px] shrink-0 items-center rounded-2xl border border-dashed border-blue-100 bg-(--color-bg-card) p-3 text-[10px] font-bold text-slate-500">
+            <article className="flex min-h-[112px] w-[225px] shrink-0 items-center rounded-2xl border border-dashed border-(--color-bg-border) bg-(--color-bg-card) p-3 text-[10px] font-bold text-slate-500">
               No awards yet
             </article>
           )}
@@ -357,7 +361,7 @@ function HomeRecentMatch({
       {!match ? (
         <CompactEmpty message="No recent matches yet" />
       ) : (
-        <article className="mt-3 rounded-2xl border border-blue-100 bg-(--color-bg-card) p-3.5 shadow-[0_8px_24px_rgba(31,78,140,0.09)]">
+        <article className="mt-3 rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-3.5 shadow-(--shadow-card)">
           <div className="flex flex-wrap items-center justify-between gap-1.5 text-[9px] text-slate-500">
             <span>{formatMatchMeta(match)}</span>
             <span>{formatMatchDetail(match)}</span>
@@ -407,7 +411,7 @@ function HomeRecentMatch({
                     return (
                       <span
                         key={`${team.teamId}-${setIndex}`}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-blue-100 bg-blue-50/50 text-[10px] font-black text-(--color-navy)"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-(--color-bg-border) bg-(--color-bg-base) text-[10px] font-black text-(--color-navy)"
                         style={{
                           gridRow: teamIndex + 1,
                           gridColumn: setIndex + 1,
@@ -421,7 +425,7 @@ function HomeRecentMatch({
               </div>
             </div>
           </div>
-          <div className="mt-3 flex items-center justify-between border-t border-blue-50 pt-3">
+          <div className="mt-3 flex items-center justify-between border-t border-(--color-bg-border) pt-3">
             <span
               className={`flex items-center gap-1.5 text-[10px] font-black ${getResultClassName(match.result)}`}
             >
@@ -434,7 +438,7 @@ function HomeRecentMatch({
               type="button"
               disabled
               aria-label="Scorecard preview unavailable"
-              className="flex h-8 items-center gap-1.5 rounded-lg border border-blue-100 px-3 text-[9px] font-bold text-blue-500 opacity-60"
+              className="flex h-8 items-center gap-1.5 rounded-lg border border-(--color-bg-border) px-3 text-[9px] font-bold text-(--color-brand) opacity-60"
             >
               <BarChart3 size={13} />
               Scorecard
@@ -458,7 +462,7 @@ function HomeTournaments({
         action="Create new"
         href="/volleyball/tournaments/create"
       />
-      <div className="mt-3 overflow-hidden rounded-2xl border border-blue-100 bg-(--color-bg-card) shadow-[0_8px_24px_rgba(31,78,140,0.09)]">
+      <div className="mt-3 overflow-hidden rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) shadow-(--shadow-card)">
         {tournaments.length === 0 ? (
           <div className="p-3">
             <p className="text-[10px] font-bold text-slate-500">
@@ -469,7 +473,7 @@ function HomeTournaments({
           tournaments.map((tournament, index) => (
             <div
               key={tournament.id}
-              className={`flex items-center gap-3 p-3 ${index > 0 ? "border-t border-blue-50" : ""}`}
+              className={`flex items-center gap-3 p-3 ${index > 0 ? "border-t border-(--color-bg-border)" : ""}`}
             >
               <TournamentArtwork
                 tone={tournament.format === "LEAGUE" ? "beach" : "indoor"}
@@ -488,7 +492,7 @@ function HomeTournaments({
                 )}
               </div>
               {tournament.viewerRelation.admin && (
-                <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[8px] font-black text-blue-600">
+                <span className="shrink-0 rounded-full bg-(--color-bg-tint) px-2 py-1 text-[8px] font-black text-(--color-brand)">
                   Admin
                 </span>
               )}
@@ -508,7 +512,7 @@ function HomeTournaments({
       </div>
       <Link
         href="/volleyball/my-volleyball?tab=tournaments&scope=all"
-        className="mt-3 flex items-center justify-center gap-1 text-[10px] font-black text-blue-600"
+        className="mt-3 flex items-center justify-center gap-1 text-[10px] font-black text-(--color-brand)"
       >
         View all tournaments <ChevronRight size={13} />
       </Link>
@@ -550,7 +554,7 @@ function SectionHeading({
       <h2 className="text-base font-black text-(--color-navy)">{title}</h2>
       <Link
         href={href}
-        className="flex shrink-0 items-center gap-0.5 text-[10px] font-bold text-blue-600"
+        className="flex shrink-0 items-center gap-0.5 text-[10px] font-bold text-(--color-brand)"
       >
         {action}
         <ChevronRight size={13} />
@@ -563,38 +567,38 @@ function HomeSkeleton() {
   return (
     <>
       <section>
-        <div className="h-5 w-40 rounded-full bg-blue-100" />
+        <div className="h-5 w-40 rounded-full bg-(--color-bg-tint)" />
         <div className="mt-3 grid grid-cols-2 gap-2.5">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-[118px] animate-pulse rounded-2xl border border-blue-100 bg-(--color-bg-card)"
+              className="h-[118px] animate-pulse rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card)"
             />
           ))}
         </div>
       </section>
       <section>
-        <div className="h-5 w-36 rounded-full bg-blue-100" />
+        <div className="h-5 w-36 rounded-full bg-(--color-bg-tint)" />
         <div className="-mx-4 mt-3 overflow-hidden px-4">
           <div className="flex gap-2.5">
             {Array.from({ length: 2 }).map((_, index) => (
               <div
                 key={index}
-                className="h-[112px] w-[225px] shrink-0 animate-pulse rounded-2xl border border-blue-100 bg-(--color-bg-card)"
+                className="h-[112px] w-[225px] shrink-0 animate-pulse rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card)"
               />
             ))}
           </div>
         </div>
       </section>
-      <div className="h-[162px] animate-pulse rounded-2xl border border-blue-100 bg-(--color-bg-card)" />
-      <div className="h-[164px] animate-pulse rounded-2xl border border-blue-100 bg-(--color-bg-card)" />
+      <div className="h-[162px] animate-pulse rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card)" />
+      <div className="h-[164px] animate-pulse rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card)" />
     </>
   );
 }
 
 function HomeError({ onRetry }: { onRetry: () => void }) {
   return (
-    <section className="rounded-2xl border border-blue-100 bg-(--color-bg-card) p-4 text-center shadow-[0_8px_24px_rgba(31,78,140,0.09)]">
+    <section className="rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) p-4 text-center shadow-(--shadow-card)">
       <p className="text-sm font-black text-(--color-navy)">
         Unable to load Volleyball Home
       </p>
@@ -604,7 +608,7 @@ function HomeError({ onRetry }: { onRetry: () => void }) {
       <button
         type="button"
         onClick={onRetry}
-        className="mt-3 rounded-lg bg-blue-50 px-4 py-2 text-[10px] font-black text-blue-600"
+        className="mt-3 rounded-lg bg-(--color-bg-tint) px-4 py-2 text-[10px] font-black text-(--color-brand)"
       >
         Try again
       </button>
@@ -614,7 +618,7 @@ function HomeError({ onRetry }: { onRetry: () => void }) {
 
 function CompactEmpty({ message }: { message: string }) {
   return (
-    <div className="mt-3 rounded-2xl border border-dashed border-blue-100 bg-(--color-bg-card) p-3 text-[10px] font-bold text-slate-500">
+    <div className="mt-3 rounded-2xl border border-dashed border-(--color-bg-border) bg-(--color-bg-card) p-3 text-[10px] font-bold text-slate-500">
       {message}
     </div>
   );

@@ -12,7 +12,15 @@ import { useGetPlayerQuery } from "@/store/api/playerApi";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setActiveSport } from "@/store/sport/sportSlice";
 import { selectActiveSport } from "@/store/sport/selectors";
-import { SPORT_TYPES } from "@/types/sport";
+import { SPORT_TYPES, type SportType } from "@/types/sport";
+
+function getRouteSport(pathname: string): SportType | null {
+  if (pathname === "/volleyball" || pathname.startsWith("/volleyball/")) {
+    return SPORT_TYPES.VOLLEYBALL;
+  }
+
+  return null;
+}
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -26,9 +34,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
   } = useGetPlayerQuery();
 
   const activeSport = useAppSelector(selectActiveSport);
+  const routeSport = getRouteSport(pathname);
+  const effectiveSport = routeSport ?? activeSport;
 
   const bottomNav =
-    activeSport === SPORT_TYPES.VOLLEYBALL
+    effectiveSport === SPORT_TYPES.VOLLEYBALL
       ? volleyballBottomNav
       : cricketBottomNav;
 
@@ -51,9 +61,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
     }
   }, [isPlayerSuccess, playerData?.player?.activeSport, activeSport, dispatch]);
 
-  if (isPlayerLoading || !activeSport) {
+  if (isPlayerLoading || !effectiveSport) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-(--color-bg-base)">
+      <div
+        data-sport={effectiveSport ?? undefined}
+        className="flex min-h-dvh items-center justify-center bg-(--color-bg-base)"
+      >
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-(--color-bg-border) border-t-(--color-brand)" />
       </div>
     );
@@ -61,17 +74,21 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div
-      data-sport={activeSport}
+      data-sport={effectiveSport}
       className="flex min-h-dvh items-start justify-center bg-(--color-bg-base) md:bg-[#c9d1df]"
     >
       <div
-        data-sport={activeSport}
+        data-sport={effectiveSport}
         className={cn(
           "relative flex h-dvh w-full flex-col overflow-hidden bg-(--color-bg-base)",
           "md:max-w-107.5 md:shadow-[0_0_80px_rgba(13,27,62,0.28)]",
         )}
       >
-        <Header pathname={pathname} onMenuClick={() => setDrawerOpen(true)} />
+        <Header
+          pathname={pathname}
+          activeSport={effectiveSport}
+          onMenuClick={() => setDrawerOpen(true)}
+        />
 
         <main
           className={`flex flex-1 flex-col overflow-y-auto scrollbar-hide overflow-x-hidden ${showBottomNav && "pb-[calc(3.75rem+env(safe-area-inset-bottom,12px))]"}`}
@@ -82,6 +99,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {showBottomNav && (
           <BottomNav
             pathname={pathname}
+            activeSport={effectiveSport}
             drawerOpen={drawerOpen}
             onMoreClick={() => setDrawerOpen((v) => !v)}
           />
@@ -89,6 +107,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         <SideDrawer
           pathname={pathname}
+          activeSport={effectiveSport}
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
         />

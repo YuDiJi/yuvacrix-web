@@ -1,21 +1,19 @@
 import { cn } from "@/lib/cn";
 import Link from "next/link";
 import { cricketBottomNav, volleyballBottomNav } from "./constant";
-import { useAppSelector } from "@/store/hooks";
-import { selectActiveSport } from "@/store/sport/selectors";
-import { SPORT_TYPES } from "@/types/sport";
+import { SPORT_TYPES, type SportType } from "@/types/sport";
 
 export default function BottomNav({
   pathname,
+  activeSport,
   onMoreClick,
   drawerOpen,
 }: {
   pathname: string;
+  activeSport: SportType;
   onMoreClick: () => void;
   drawerOpen: boolean;
 }) {
-  const activeSport = useAppSelector(selectActiveSport);
-
   const bottomNav =
     activeSport === SPORT_TYPES.VOLLEYBALL
       ? volleyballBottomNav
@@ -40,7 +38,7 @@ export default function BottomNav({
                 className={cn(
                   "absolute top-2 flex h-12 w-16 items-center justify-center rounded-2xl transition-all duration-300",
                   active
-                    ? "bg-(--color-brand) shadow-[0_4px_14px_rgba(27,63,160,0.30)]"
+                    ? "bg-(--color-brand) shadow-[0_4px_14px_rgba(var(--sport-primary-rgb),0.30)]"
                     : "bg-transparent",
                 )}
               />
