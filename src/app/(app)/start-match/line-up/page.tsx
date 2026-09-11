@@ -529,6 +529,44 @@ export default function LineupPage() {
     return [...selectedB].filter((id) => teamAPlayerIds.has(id));
   }
 
+  function validateTeamLineup({
+    teamName,
+    selectedIds,
+    captainId,
+    wicketKeeperId,
+  }: {
+    teamName: string;
+    selectedIds: Set<string>;
+    captainId: string | null;
+    wicketKeeperId: string | null;
+  }): string | null {
+    if (selectedIds.size === 0) {
+      return `${teamName}: Select at least 1 playing player.`;
+    }
+
+    if (!captainId && !wicketKeeperId) {
+      return `${teamName}: Select Captain and Wicketkeeper.`;
+    }
+
+    if (!captainId) {
+      return `${teamName}: Select Captain.`;
+    }
+
+    if (!wicketKeeperId) {
+      return `${teamName}: Select Wicketkeeper.`;
+    }
+
+    if (!selectedIds.has(captainId)) {
+      return `${teamName}: Captain must be part of the playing XI.`;
+    }
+
+    if (!selectedIds.has(wicketKeeperId)) {
+      return `${teamName}: Wicketkeeper must be part of the playing XI.`;
+    }
+
+    return null;
+  }
+
   // ── Build lineup payload ──────────────────────────────────────────────────
   function buildLineupPayload(
     players: PlayerListItem[],
@@ -570,6 +608,39 @@ export default function LineupPage() {
   async function handleContinue() {
     setError("");
 
+    if (!matchId || !teamA?.id || !teamB?.id) {
+      setError("Match or team details are missing. Please restart match setup.");
+      return;
+    }
+
+    const teamAValidationError = validateTeamLineup({
+      teamName: teamA.name,
+      selectedIds: selectedA,
+      captainId: captainA,
+      wicketKeeperId: keeperA,
+    });
+
+    if (teamAValidationError) {
+      setError(teamAValidationError);
+      setReviewOpen(true);
+      setActiveTab("A");
+      return;
+    }
+
+    const teamBValidationError = validateTeamLineup({
+      teamName: teamB.name,
+      selectedIds: selectedB,
+      captainId: captainB,
+      wicketKeeperId: keeperB,
+    });
+
+    if (teamBValidationError) {
+      setError(teamBValidationError);
+      setReviewOpen(true);
+      setActiveTab("B");
+      return;
+    }
+
     // 1. Duplicate player check — inline error instead of alert()
     const duplicates = validateNoDuplicatePlayers();
     if (duplicates.length > 0) {
@@ -582,15 +653,7 @@ export default function LineupPage() {
     }
 
     // 2. Guard: required fields
-    if (
-      !matchId ||
-      !teamA?.id ||
-      !teamB?.id ||
-      !captainA ||
-      !keeperA ||
-      !captainB ||
-      !keeperB
-    ) {
+    if (!captainA || !keeperA || !captainB || !keeperB) {
       setError(
         "Please assign Captain and Wicketkeeper for both teams before continuing.",
       );

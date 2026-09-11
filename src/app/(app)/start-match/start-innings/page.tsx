@@ -431,11 +431,28 @@ function PlayerPickerSheet({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object" &&
+    "message" in error.data &&
+    typeof error.data.message === "string"
+  ) {
+    return error.data.message;
+  }
+
+  return fallback;
+}
+
 export default function StartInningsPage() {
   const router = useRouter();
   const matchId = useAppSelector(selectMatchId);
 
   const [showMatchRules, setShowMatchRules] = useState(false);
+  const [startError, setStartError] = useState("");
 
   // const { data, isLoading } = useGetMatchByIdQuery(
   //   matchId ? { matchId } : skipToken,
@@ -585,10 +602,12 @@ export default function StartInningsPage() {
       !bowlingTeamId ||
       !striker ||
       !nonStriker ||
-      !bowler
+      !bowler ||
+      isStartingInnings
     ) {
       return;
     }
+    setStartError("");
     try {
       const response = await startInning({
         matchId,
@@ -603,6 +622,9 @@ export default function StartInningsPage() {
       router.push("/scoring");
     } catch (error) {
       console.error(error);
+      setStartError(
+        getErrorMessage(error, "Unable to start innings. Please try again."),
+      );
     }
   };
 
@@ -739,6 +761,12 @@ export default function StartInningsPage() {
         </div>
       </div>
 
+      {startError && (
+        <p className="mx-4 mb-3 rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 px-3 py-2 text-center text-sm font-semibold text-(--color-live)">
+          {startError}
+        </p>
+      )}
+
       {/* Footer CTA */}
       <div className="safe-bottom shrink-0 flex border-t border-(--color-bg-border) bg-(--color-bg-card)">
         <button
@@ -751,16 +779,17 @@ export default function StartInningsPage() {
         <div className="h-8 w-px self-center bg-(--color-bg-border)" />
         <button
           onClick={() => canStart && handleStartScroing()}
-          disabled={!canStart}
+          disabled={!canStart || isStartingInnings}
           className={cn(
             "flex flex-2 items-center justify-center gap-2 py-4",
             "font-(family-name:--font-display) text-sm font-black uppercase tracking-[0.06em] text-white transition-all active:scale-[0.97]",
-            canStart
+            canStart && !isStartingInnings
               ? "bg-(--color-brand) shadow-[0_-2px_12px_rgba(27,63,160,0.20)]"
               : "bg-(--color-bg-border) text-(--color-text-muted) cursor-not-allowed",
           )}
         >
-          Start Scoring <ChevronRight size={16} />
+          {isStartingInnings ? "Starting..." : "Start Scoring"}{" "}
+          <ChevronRight size={16} />
         </button>
       </div>
 

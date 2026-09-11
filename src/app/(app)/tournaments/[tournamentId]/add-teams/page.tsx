@@ -13,6 +13,7 @@ import {
   useAddTeamToTournamentMutation,
   useGetTournamentTeamsQuery,
 } from "@/store/api/cricket/tournamentTeamApi";
+import { SPORT_TYPES } from "@/types/sport";
 
 export default function AddTeamPage() {
   const router = useRouter();
@@ -35,16 +36,18 @@ export default function AddTeamPage() {
     tournamentTeams?.map((t) => t.teamId) ?? [],
   );
 
-  const filteredTeams =
-    teams?.filter((team) => {
-      const matchesSearch = team.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+  const cricketTeams =
+    teams?.filter((team) => team.sportType === SPORT_TYPES.CRICKET) ?? [];
 
-      const notAlreadyAdded = !tournamentTeamIds.has(team.id);
+  const filteredTeams = cricketTeams.filter((team) => {
+    const matchesSearch = team.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
 
-      return matchesSearch && notAlreadyAdded;
-    }) ?? [];
+    const notAlreadyAdded = !tournamentTeamIds.has(team.id);
+
+    return matchesSearch && notAlreadyAdded;
+  });
 
   function toggleTeam(teamId: string) {
     setSelectedTeamIds((prev) =>
@@ -110,7 +113,7 @@ export default function AddTeamPage() {
     );
   }
 
-  if (teams?.length === 0) {
+  if (cricketTeams.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
         {/* Icon */}

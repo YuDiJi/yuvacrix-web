@@ -25,8 +25,25 @@ interface OutSheetProps {
   //   onSelect: (type: OutType) => void;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object" &&
+    "message" in error.data &&
+    typeof error.data.message === "string"
+  ) {
+    return error.data.message;
+  }
+
+  return fallback;
+}
+
 export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
   const [step, setStep] = useState<OutFlowStep>("SELECT_WICKET_TYPE");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [form, setForm] = useState<WicketFlowState>({
     fielderIds: [],
@@ -36,6 +53,7 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
     useRecordBallMutation();
 
   const handleWicketTypeSelect = (wicketType: WicketType) => {
+    setErrorMessage("");
     setForm({
       fielderIds: [],
     });
@@ -207,7 +225,9 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
   };
 
   const handleOut = async () => {
-    if (!state?.inningsId || !form.wicketType) return;
+    if (!state?.inningsId || !form.wicketType || isRecordingWicket) return;
+
+    setErrorMessage("");
 
     try {
       const payload = buildWicketPayload(form);
@@ -223,6 +243,9 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
       setStep("SELECT_WICKET_TYPE");
     } catch (error) {
       console.error("Failed to record wicket", error);
+      setErrorMessage(
+        getErrorMessage(error, "Unable to record wicket. Please try again."),
+      );
     }
   };
 
@@ -231,6 +254,7 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
       open={open}
       onClose={() => {
         onClose();
+        setErrorMessage("");
         setStep("SELECT_WICKET_TYPE");
       }}
     >
@@ -238,6 +262,11 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
         <button onClick={goBack}>
           <ArrowLeft size={20} />
         </button>
+      )}
+      {errorMessage && (
+        <p className="mb-3 rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 px-3 py-2 text-center text-sm font-semibold text-(--color-live)">
+          {errorMessage}
+        </p>
       )}
       <div className="max-h-[75vh] flex flex-col min-h-0 overflow-y-auto scrollbar-none">
         {step === "SELECT_WICKET_TYPE" && (
@@ -309,6 +338,7 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
             form={form}
             setForm={setForm}
             players={players}
+            isLoading={isRecordingWicket}
             onSubmit={() => {
               handleOut();
             }}

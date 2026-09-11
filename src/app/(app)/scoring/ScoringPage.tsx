@@ -1,8 +1,9 @@
 "use client";
 
 import { Copy, ChevronUp, User, Volleyball } from "lucide-react";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectMatchId } from "@/store/startMatch/selectors";
+import { resetMatch } from "@/store/startMatch/startMatchSlice";
 import {
   useChangeStrikeManuallyMutation,
   useGetScoringStateQuery,
@@ -15,7 +16,7 @@ import {
   useUpdateMatchRulesMutation,
 } from "@/store/api/cricket/matchRulesApi";
 
-import { skipToken } from "@reduxjs/toolkit/query";
+import { skipToken, type FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { ExtraType, FieldZone } from "@/types/cricket/scoring";
 import { useEffect, useState } from "react";
 import { WideBallSheet } from "./WideBall";
@@ -111,12 +112,54 @@ function CardSkeleton({ className }: { className?: string }) {
   );
 }
 
+function getQueryErrorStatus(error: unknown): FetchBaseQueryError["status"] | null {
+  if (error && typeof error === "object" && "status" in error) {
+    return (error as FetchBaseQueryError).status;
+  }
+
+  return null;
+}
+
+function ScoringRecoveryState({
+  title,
+  description,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  description: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-(--color-bg-base) px-6 text-center">
+      <div className="max-w-sm">
+        <h1 className="font-display text-xl font-black uppercase tracking-wide text-(--color-navy)">
+          {title}
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-(--color-text-secondary)">
+          {description}
+        </p>
+        {actionLabel && onAction && (
+          <Button onClick={onAction} className="mt-5">
+            {actionLabel}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ScoringPage() {
+  const dispatch = useAppDispatch();
   const router = useRouter();
   const matchId = useAppSelector(selectMatchId);
-  const { data: matchData } = useGetMatchByIdQuery(
-    matchId ? { matchId } : skipToken,
-  );
+  const {
+    data: matchData,
+    isError: isMatchError,
+    error: matchError,
+    refetch: refetchMatch,
+  } = useGetMatchByIdQuery(matchId ? { matchId } : skipToken);
 
   const { data: matchRulesConfiguration, isLoading: isLoadingMatchRules } =
     useGetMatchRulesQuery(matchId ?? skipToken);
@@ -128,6 +171,7 @@ export default function ScoringPage() {
     data: state,
     isLoading: loadingState,
     isFetching: isFetchingState,
+    isError: isScoringStateError,
     refetch: refetchScoringState,
   } = useGetScoringStateQuery(matchId ?? skipToken, {
     refetchOnMountOrArgChange: true,
@@ -153,6 +197,29 @@ export default function ScoringPage() {
     useState<ScoringState | null>(null);
 
   const [shortcutScreen, setShortcutScreen] = useState<ShortcutScreen>(null);
+
+  const matchErrorStatus = getQueryErrorStatus(matchError);
+  const isStaleMatchError = matchErrorStatus === 404;
+  const isCompletedMatch = matchData?.match.status === "COMPLETED";
+
+  useEffect(() => {
+    if (matchId) return;
+
+    router.replace("/my-cricket");
+  }, [matchId, router]);
+
+  useEffect(() => {
+    if (!matchId || !isStaleMatchError) return;
+
+    dispatch(resetMatch());
+    router.replace("/my-cricket");
+  }, [dispatch, isStaleMatchError, matchId, router]);
+
+  useEffect(() => {
+    if (!matchId || !isCompletedMatch) return;
+
+    router.replace(`/matches/${matchId}/scorecard`);
+  }, [isCompletedMatch, matchId, router]);
 
   const isInitialStateLoading = loadingState && !state;
   const isInitialMatchLoading = !matchData;
@@ -571,6 +638,55 @@ export default function ScoringPage() {
     return setFlow("IDLE");
   }, [state]);
 
+  const hasRecoverableMatchError = isMatchError && !isStaleMatchError;
+  const hasRecoverableScoringStateError = isScoringStateError;
+
+  if (!matchId) {
+    return (
+      <ScoringRecoveryState
+        title="Match Not Selected"
+        description="Returning to My Cricket so you can choose a match to score."
+      />
+    );
+  }
+
+  if (isStaleMatchError) {
+    return (
+      <ScoringRecoveryState
+        title="Match Unavailable"
+        description="This saved match can no longer be opened for scoring. Returning to My Cricket."
+      />
+    );
+  }
+
+  if (isCompletedMatch) {
+    return (
+      <ScoringRecoveryState
+        title="Match Completed"
+        description="Opening the completed scorecard."
+      />
+    );
+  }
+
+  if (hasRecoverableMatchError || hasRecoverableScoringStateError) {
+    return (
+      <ScoringRecoveryState
+        title="Unable To Load Scoring"
+        description="The match could not be loaded right now. Check your connection and try again."
+        actionLabel="Try Again"
+        onAction={() => {
+          if (hasRecoverableMatchError) {
+            void refetchMatch();
+          }
+
+          if (hasRecoverableScoringStateError) {
+            void refetchScoringState();
+          }
+        }}
+      />
+    );
+  }
+
   const scoringLocked = flow === "AWAITING_NEXT_OVER";
 
   const shouldUseSnapshot =
@@ -930,8 +1046,17 @@ export default function ScoringPage() {
             2
           </button>
           <button
-            onClick={() => setOpenDialog("UNDO")}
-            className=" z-30 flex-1 font-display text-sm font-black text-[#38f5cf] bg-[#38f5cf]/5 uppercase tracking-widest active:bg-slate-50 transition-colors"
+            disabled={isRecording || isChangingStrike}
+            onClick={() => {
+              if (!isRecording && !isChangingStrike) {
+                setOpenDialog("UNDO");
+              }
+            }}
+            className={cn(
+              "z-30 flex-1 font-display text-sm font-black text-[#38f5cf] bg-[#38f5cf]/5 uppercase tracking-widest active:bg-slate-50 transition-colors",
+              (isRecording || isChangingStrike) &&
+                "cursor-not-allowed opacity-50",
+            )}
           >
             UNDO
           </button>
@@ -1108,6 +1233,7 @@ export default function ScoringPage() {
           setOpenDialog={setOpenDialog}
           inningsId={state?.inningsId}
           matchId={matchId}
+          isScoringBusy={isRecording || isChangingStrike}
           onDone={() => {
             setFlow("IDLE");
           }}

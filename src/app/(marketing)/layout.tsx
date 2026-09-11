@@ -99,13 +99,13 @@ export default function MarketingLayout({
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
             {/* <Link
-              href="/home"
+              href="/mode"
               className="text-white/65 hover:text-white text-sm font-medium transition-colors"
             >
               Sign in
             </Link> */}
             <Link
-              href="/home"
+              href="/mode"
               className={cn(
                 "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
                 "bg-[var(--color-brand)] text-white px-5 py-2.5 rounded-xl text-sm",
@@ -185,7 +185,7 @@ export default function MarketingLayout({
         {/* Drawer CTAs */}
         <div className="px-4 pb-10 pt-4 flex flex-col gap-3 border-t border-white/10">
           <Link
-            href="/home"
+            href="/mode"
             onClick={() => setMobileOpen(false)}
             className={cn(
               "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",
@@ -196,7 +196,7 @@ export default function MarketingLayout({
             Sign In
           </Link>
           <Link
-            href="/home"
+            href="/mode"
             onClick={() => setMobileOpen(false)}
             className={cn(
               "font-[family-name:var(--font-display)] font-bold uppercase tracking-[0.06em]",

@@ -23,6 +23,7 @@ import {
 import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
 import { TeamCard } from "@/components/cricket/team/TeamCard";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import { SPORT_TYPES } from "@/types/sport";
 
 function getErrorMessage(error: unknown): string {
   if (!error) {
@@ -149,24 +150,26 @@ export default function SelectTeamPage() {
     refetch,
   } = useGetOwnedTeamQuery();
 
-  const filteredTeams =
-    teams?.filter((team) => {
-      // Search filter
-      const matchesSearch = team.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+  const cricketTeams =
+    teams?.filter((team) => team.sportType === SPORT_TYPES.CRICKET) ?? [];
 
-      // Prevent selecting same team for both sides
-      if (teamType === "B" && team.id === teamA?.id) {
-        return false;
-      }
+  const filteredTeams = cricketTeams.filter((team) => {
+    // Search filter
+    const matchesSearch = team.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
 
-      if (teamType === "A" && team.id === teamB?.id) {
-        return false;
-      }
+    // Prevent selecting same team for both sides
+    if (teamType === "B" && team.id === teamA?.id) {
+      return false;
+    }
 
-      return matchesSearch;
-    }) ?? [];
+    if (teamType === "A" && team.id === teamB?.id) {
+      return false;
+    }
+
+    return matchesSearch;
+  });
 
   // Initial loading state
   if (isLoading) {
@@ -232,7 +235,7 @@ export default function SelectTeamPage() {
   }
 
   // Empty team state
-  if (teams?.length === 0) {
+  if (cricketTeams.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
         <button
