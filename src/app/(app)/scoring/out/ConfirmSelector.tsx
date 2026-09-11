@@ -315,6 +315,7 @@ export default function Confirm({
           size="lg"
           fullWidth
           onClick={onSubmit}
+          disabled={isLoading}
           loading={isLoading}
         >
           {isLoading ? "Recording…" : " Record Wicket"}

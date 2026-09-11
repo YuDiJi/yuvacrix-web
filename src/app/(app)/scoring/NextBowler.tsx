@@ -7,6 +7,22 @@ import { ScoringState } from "@/types/cricket/innings";
 import { MatchDetailsPlayer } from "@/types/cricket/match";
 import { useEffect, useState } from "react";
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object" &&
+    "message" in error.data &&
+    typeof error.data.message === "string"
+  ) {
+    return error.data.message;
+  }
+
+  return fallback;
+}
+
 export function NextBowlerSheet({
   open,
   players,
@@ -30,6 +46,7 @@ export function NextBowlerSheet({
 }) {
   const [selectedBowler, setSelectedBowler] =
     useState<MatchDetailsPlayer | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [startNextOver, { isLoading: isStartingNextOver }] =
     useStartNextOverMutation();
@@ -37,11 +54,14 @@ export function NextBowlerSheet({
   useEffect(() => {
     if (open) {
       setSelectedBowler(null);
+      setErrorMessage("");
     }
   }, [open]);
 
   const handleContinue = async () => {
     if (!selectedBowler || !matchId || !inningsId) return;
+
+    setErrorMessage("");
 
     try {
       await startNextOver({
@@ -53,6 +73,12 @@ export function NextBowlerSheet({
       onClose();
     } catch (error) {
       console.error(error);
+      setErrorMessage(
+        getErrorMessage(
+          error,
+          "Unable to start the next over. Please try again.",
+        ),
+      );
     }
   };
 
@@ -84,10 +110,16 @@ export function NextBowlerSheet({
       <Button
         fullWidth
         disabled={!selectedBowler || isStartingNextOver}
+        loading={isStartingNextOver}
         onClick={handleContinue}
       >
         Continue Scoring
       </Button>
+      {errorMessage && (
+        <p className="mt-3 rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 px-3 py-2 text-center text-sm font-semibold text-(--color-live)">
+          {errorMessage}
+        </p>
+      )}
       {state && (
         <div className="overflow-hidden px-5 py-1">
           <div className="whitespace-nowrap animate-marquee">

@@ -14,6 +14,7 @@ export function UndoSheet({
   matchId,
   setOpenDialog,
   onDone,
+  isScoringBusy = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -21,6 +22,7 @@ export function UndoSheet({
   matchId: string | null;
   inningsId: string | undefined;
   setOpenDialog: Dispatch<SetStateAction<DialogType | null>>;
+  isScoringBusy?: boolean;
 }) {
   const [undoLastBall, { isLoading: isUndoing, error }] =
     useUndoLastBallMutation();
@@ -28,7 +30,7 @@ export function UndoSheet({
     ?.data?.message;
 
   async function handleUndo() {
-    if (!matchId || !inningsId) return;
+    if (!matchId || !inningsId || isUndoing || isScoringBusy) return;
 
     try {
       await undoLastBall({
@@ -67,7 +69,11 @@ export function UndoSheet({
         <Button onClick={onClose} size="sm" variant="secondary" fullWidth>
           Cancel
         </Button>
-        <Button disabled={isUndoing} onClick={handleUndo} fullWidth>
+        <Button
+          disabled={isUndoing || isScoringBusy}
+          onClick={handleUndo}
+          fullWidth
+        >
           Yes, I&apos;m sure
         </Button>
       </div>

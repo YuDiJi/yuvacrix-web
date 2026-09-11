@@ -28,6 +28,22 @@ function getInitials(name?: string) {
     .join("");
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object" &&
+    "message" in error.data &&
+    typeof error.data.message === "string"
+  ) {
+    return error.data.message;
+  }
+
+  return fallback;
+}
+
 // ── Strike selection photo-card ───────────────────────────────────────────────
 // Replaces the old plain-text button: image on top, name below, checkmark
 // badge + brand border when selected.
@@ -115,6 +131,7 @@ const NextBatterSheet = ({
     useState<MatchDetailsPlayer | null>(null);
   const [step, setStep] = useState<"BATTER" | "STRIKE">("BATTER");
   const [onStrike, setOnStrike] = useState<"NEW_BATTER" | "CURRENT_BATTER">();
+  const [errorMessage, setErrorMessage] = useState("");
   const [changeStrikeManually, { isLoading }] =
     useChangeStrikeManuallyMutation();
 
@@ -133,7 +150,8 @@ const NextBatterSheet = ({
 
   const handleSelectBatter = async () => {
     // if (!selectedBowler || !matchId || !inningsId) return;
-    if (!state?.lastBall?.wicket?.type || !selectedBatter) return;
+    if (!state?.lastBall?.wicket?.type || !selectedBatter || isLoading) return;
+    setErrorMessage("");
     try {
       if (
         WICKET_CONFIG[state?.lastBall?.wicket?.type]
@@ -153,11 +171,15 @@ const NextBatterSheet = ({
       }
     } catch (error) {
       console.error(error);
+      setErrorMessage(
+        getErrorMessage(error, "Unable to update batter. Please try again."),
+      );
     }
   };
   const handleContinue = async () => {
     // if (!selectedBowler || !matchId || !inningsId) return;
-    if (!state || !selectedBatter || !survivingBatter) return;
+    if (!state || !selectedBatter || !survivingBatter || isLoading) return;
+    setErrorMessage("");
     try {
       await changeStrikeManually({
         matchId: state.matchId,
@@ -180,12 +202,20 @@ const NextBatterSheet = ({
       onClose();
     } catch (error) {
       console.error(error);
+      setErrorMessage(
+        getErrorMessage(error, "Unable to update batter. Please try again."),
+      );
     }
   };
 
   return (
     <DialogBottom open={open} onClose={() => {}}>
       <div className="flex flex-col gap-4">
+        {errorMessage && (
+          <p className="rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 px-3 py-2 text-center text-sm font-semibold text-(--color-live)">
+            {errorMessage}
+          </p>
+        )}
         {/* ── BATTER step ──────────────────────────────────────────────────── */}
         {step === "BATTER" && (
           <div>
@@ -201,12 +231,14 @@ const NextBatterSheet = ({
               }
               selectedPlayerId={selectedBatter?.playerId}
               onSelect={(player) => {
+                setErrorMessage("");
                 setSelectedBatter(player);
               }}
             />
             <Button
               fullWidth
-              disabled={!selectedBatter}
+              disabled={!selectedBatter || isLoading}
+              loading={isLoading}
               onClick={handleSelectBatter}
             >
               Continue
@@ -253,7 +285,12 @@ const NextBatterSheet = ({
               />
             </div>
 
-            <Button fullWidth disabled={!onStrike} onClick={handleContinue}>
+            <Button
+              fullWidth
+              disabled={!onStrike || isLoading}
+              loading={isLoading}
+              onClick={handleContinue}
+            >
               Continue
             </Button>
           </>
