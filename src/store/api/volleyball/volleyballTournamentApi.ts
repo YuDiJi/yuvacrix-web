@@ -391,6 +391,7 @@ export const volleyballTournamentApi = baseApi.injectEndpoints({
           type: "VolleyballTournamentStandings",
           id: tournamentId,
         },
+        "VolleyballTournaments",
       ],
     }),
 

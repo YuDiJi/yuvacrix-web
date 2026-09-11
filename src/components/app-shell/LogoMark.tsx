@@ -14,10 +14,10 @@ export default function LogoMark() {
       <Image
         src="/logo/logo_dark.png"
         alt="YuvaCrix Logo"
-        width={250}
-        height={50}
+        width={80}
+        height={18}
         priority
-        className="h-auto w-auto max-h-24"
+        className="h-auto w-auto max-h-20"
       />
       {/* // </div> */}
     </>

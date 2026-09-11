@@ -24,6 +24,7 @@ import { S3Image } from "@/components/common/S3Image";
 import { VolleyballSubstitutionSheet } from "@/components/volleyball/scoring/VolleyballSubstitutionSheet";
 import { VolleyballLiberoReplacementSheet } from "@/components/volleyball/scoring/VolleyballLiberoReplacementSheet";
 import { VolleyballHistorySheet } from "@/components/volleyball/scoring/VolleyballHistorySheet";
+import { VolleyballMatchRuleCorrectionSheet } from "@/components/volleyball/scoring/VolleyballMatchRuleCorrectionSheet";
 import { VolleyballSetCompletedSheet } from "@/components/volleyball/scoring/VolleyballSetCompletedSheet";
 import { VolleyballUndoHistorySheet } from "@/components/volleyball/scoring/VolleyballUndoHistorySheet";
 
@@ -32,6 +33,8 @@ import { getInitials } from "@/lib/getInitials";
 import { VOLLEYBALL_COURT_SLOTS } from "@/lib/volleyball/courtPositions";
 import {
   getReadableTextColor,
+  getTeamColorIndicatorStyles,
+  getTeamColorSurfaceStyles,
   resolveVolleyballTeamColor,
   VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
   VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
@@ -39,6 +42,7 @@ import {
 } from "@/lib/volleyball/teamColors";
 
 import {
+  useCorrectVolleyballMatchRulesMutation,
   useGetCurrentVolleyballSetQuery,
   useGetVolleyballMatchQuery,
   useGetVolleyballMatchSetsQuery,
@@ -60,7 +64,10 @@ import {
 
 import {
   VOLLEYBALL_MATCH_STATUSES,
+  VOLLEYBALL_RULE_FORMAT_TYPES,
   VolleyballMatch,
+  type VolleyballMatchRulePreset,
+  type VolleyballMatchRulesOverrides,
 } from "@/types/volleyball/match";
 
 import type {
@@ -190,6 +197,10 @@ export default function VolleyballScoringPage() {
 
   const [undoHistoryResetKey, setUndoHistoryResetKey] = useState(0);
 
+  const [formatCorrectionOpen, setFormatCorrectionOpen] = useState(false);
+
+  const [formatCorrectionError, setFormatCorrectionError] = useState("");
+
   const [isRefreshingLifecycle, setIsRefreshingLifecycle] = useState(false);
 
   const [endMatchOpen, setEndMatchOpen] = useState(false);
@@ -240,6 +251,9 @@ export default function VolleyballScoringPage() {
   const [undoLastEvent, { isLoading: isUndoing }] =
     useUndoLastVolleyballEventMutation();
 
+  const [correctMatchRules, { isLoading: isCorrectingMatchRules }] =
+    useCorrectVolleyballMatchRulesMutation();
+
   const resolvedTournamentId = match?.tournament?.id ?? tournamentIdFromQuery;
 
   const resolvedFixtureId = match?.fixture?.id ?? fixtureIdFromQuery;
@@ -247,9 +261,12 @@ export default function VolleyballScoringPage() {
   const scoreUpdatePending =
     isRecordingRally ||
     isUndoing ||
+    isCorrectingMatchRules ||
     isMatchFetching ||
     isSetFetching ||
     isSetsFetching;
+
+  const isCompletedMatchFlowActive = Boolean(completedMatch) || endMatchOpen;
 
   /* =========================
      RESOLVE ACTIVE SET
@@ -286,9 +303,13 @@ export default function VolleyballScoringPage() {
 
       setLiveSet(routeSet);
 
-      setCompletedSet(
-        routeSet.status === VOLLEYBALL_SET_STATUSES.COMPLETED ? routeSet : null,
-      );
+      if (!isCompletedMatchFlowActive) {
+        setCompletedSet(
+          routeSet.status === VOLLEYBALL_SET_STATUSES.COMPLETED
+            ? routeSet
+            : null,
+        );
+      }
 
       return;
     }
@@ -300,13 +321,22 @@ export default function VolleyballScoringPage() {
     if (currentSet) {
       setLiveSet(currentSet);
 
-      setCompletedSet(
-        currentSet.status === VOLLEYBALL_SET_STATUSES.COMPLETED
-          ? currentSet
-          : null,
-      );
+      if (!isCompletedMatchFlowActive) {
+        setCompletedSet(
+          currentSet.status === VOLLEYBALL_SET_STATUSES.COMPLETED
+            ? currentSet
+            : null,
+        );
+      }
     }
-  }, [setIdFromRoute, restoringSetId, sets, currentSet, scoreUpdatePending]);
+  }, [
+    setIdFromRoute,
+    restoringSetId,
+    sets,
+    currentSet,
+    scoreUpdatePending,
+    isCompletedMatchFlowActive,
+  ]);
 
   const setId = restoringSetId ?? setIdFromRoute ?? liveSet?.id;
 
@@ -403,6 +433,12 @@ export default function VolleyballScoringPage() {
     !liveSet ||
     scoreUpdatePending ||
     liveSet.status !== VOLLEYBALL_SET_STATUSES.LIVE;
+
+  const canCorrectMatchFormat =
+    Boolean(completedSet) &&
+    match?.status !== VOLLEYBALL_MATCH_STATUSES.COMPLETED &&
+    match?.rulesSnapshot.formatType === VOLLEYBALL_RULE_FORMAT_TYPES.BEST_OF &&
+    (match?.rulesSnapshot.maxSets ?? 0) > 1;
 
   /* =========================
      POINT
@@ -684,6 +720,109 @@ export default function VolleyballScoringPage() {
       setError(extractErrorMessage(err));
     } finally {
       setIsRefreshingLifecycle(false);
+    }
+  }
+
+  async function handleCorrectMatchFormat({
+    presetKey,
+    customRules,
+  }: {
+    presetKey: VolleyballMatchRulePreset;
+    customRules: VolleyballMatchRulesOverrides;
+  }) {
+    if (!match || isCorrectingMatchRules) {
+      return;
+    }
+
+    setError("");
+    setFormatCorrectionError("");
+
+    try {
+      const response = await correctMatchRules({
+        matchId,
+        body: {
+          presetKey,
+          customRules,
+          expectedRevision: match.version,
+        },
+      }).unwrap();
+
+      const [matchResult, setsResult] = await Promise.all([
+        refetchMatch(),
+        refetchSets(),
+      ]);
+
+      const updatedMatch = matchResult.data ?? response.match;
+      const updatedSets = setsResult.data;
+
+      setFormatCorrectionOpen(false);
+      setFormatCorrectionError("");
+      setCompletedSet(null);
+      setPointTeamId(null);
+      setPointSheetOpen(false);
+      setPointActionsVisible(false);
+
+      if (updatedMatch.status === VOLLEYBALL_MATCH_STATUSES.COMPLETED) {
+        setLiveSet(response.currentSet);
+        setCompletedMatch(updatedMatch);
+        setEndMatchOpen(true);
+        return;
+      }
+
+      if (response.currentSet?.status === VOLLEYBALL_SET_STATUSES.LIVE) {
+        setLiveSet(response.currentSet);
+
+        const query = new URLSearchParams({
+          setId: response.currentSet.id,
+        });
+
+        if (resolvedTournamentId) {
+          query.set("tournamentId", resolvedTournamentId);
+        }
+
+        if (resolvedFixtureId) {
+          query.set("fixtureId", resolvedFixtureId);
+        }
+
+        router.replace(
+          `/volleyball/matches/${matchId}/scoring?${query.toString()}`,
+        );
+        return;
+      }
+
+      const nextSet = updatedSets
+        ?.filter((set) => set.status === VOLLEYBALL_SET_STATUSES.PENDING_LINEUP)
+        .sort((a, b) => a.setNumber - b.setNumber)[0];
+
+      if (nextSet) {
+        setLiveSet(nextSet);
+
+        const query = new URLSearchParams({
+          setNumber: String(nextSet.setNumber),
+        });
+
+        if (resolvedTournamentId) {
+          query.set("tournamentId", resolvedTournamentId);
+        }
+
+        if (resolvedFixtureId) {
+          query.set("fixtureId", resolvedFixtureId);
+        }
+
+        router.replace(
+          `/volleyball/matches/${matchId}/sets/setup?${query.toString()}`,
+        );
+        return;
+      }
+
+      router.replace(`/volleyball/matches/${matchId}`);
+    } catch (err) {
+      const message = getRuleCorrectionErrorMessage(err);
+
+      setFormatCorrectionError(message);
+      setError(message);
+
+      await Promise.all([refetchMatch(), refetchSets()]);
     }
   }
 
@@ -1041,13 +1180,40 @@ export default function VolleyballScoringPage() {
 
       {/* SET COMPLETE */}
 
-      {completedSet && (
+      {completedSet && !isCompletedMatchFlowActive && (
         <VolleyballSetCompletedSheet
           open
           match={match}
           set={completedSet}
           isLoading={isRefreshingLifecycle}
           onContinue={() => void handleSetCompletedContinue()}
+          onCorrectMatchFormat={
+            canCorrectMatchFormat
+              ? () => {
+                  setFormatCorrectionError("");
+                  setFormatCorrectionOpen(true);
+                }
+              : undefined
+          }
+        />
+      )}
+
+      {formatCorrectionOpen && (
+        <VolleyballMatchRuleCorrectionSheet
+          open={formatCorrectionOpen}
+          match={match}
+          sets={sets}
+          loading={isCorrectingMatchRules}
+          error={formatCorrectionError}
+          onClose={() => {
+            if (isCorrectingMatchRules) {
+              return;
+            }
+
+            setFormatCorrectionOpen(false);
+            setFormatCorrectionError("");
+          }}
+          onSubmit={(payload) => void handleCorrectMatchFormat(payload)}
         />
       )}
 
@@ -1232,8 +1398,8 @@ function CourtTeamLabel({
     <div className="flex items-center gap-1.5">
       {side === "A" && (
         <span
-          className="h-2.5 w-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: teamColor }}
+          className="h-2.5 w-2.5 shrink-0 rounded-full border"
+          style={getTeamColorIndicatorStyles(teamColor)}
         />
       )}
 
@@ -1250,8 +1416,8 @@ function CourtTeamLabel({
 
       {side === "B" && (
         <span
-          className="h-2.5 w-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: teamColor }}
+          className="h-2.5 w-2.5 shrink-0 rounded-full border"
+          style={getTeamColorIndicatorStyles(teamColor)}
         />
       )}
     </div>
@@ -1322,12 +1488,12 @@ function CourtPlayerMarker({
     >
       <div
         className={cn(
-          "relative flex h-10 w-10 items-center justify-center rounded-full shadow-[0_5px_12px_rgba(0,0,0,0.2)]",
+          "relative flex h-10 w-10 items-center justify-center rounded-full border shadow-[0_5px_12px_rgba(0,0,0,0.2)]",
           "min-[380px]:h-11 min-[380px]:w-11",
           isServer && "ring-[3px] ring-white",
         )}
         style={{
-          backgroundColor: teamColor,
+          ...getTeamColorSurfaceStyles(teamColor),
           boxShadow: `0 5px 12px ${withHexAlpha(teamColor, "4D")}`,
         }}
       >
@@ -1461,7 +1627,9 @@ function ScoreTeam({
       <div
         className="flex h-10 min-w-10 items-center justify-center rounded-xl border-2 px-2 font-(family-name:--font-display) text-2xl font-black transition-colors"
         style={{
-          borderColor: scoredLastPoint ? teamColor : "var(--color-bg-border)",
+          borderColor: scoredLastPoint
+            ? getTeamColorSurfaceStyles(teamColor).borderColor
+            : "var(--color-bg-border)",
 
           backgroundColor: scoredLastPoint
             ? teamColor
@@ -1488,7 +1656,11 @@ function ScoreTeam({
         </p>
 
         <p className="text-[9px] text-(--color-text-muted)">
-          <span style={{ color: teamColor }}>●</span> Sets {sets}
+          <span
+            className="inline-block h-2 w-2 rounded-full border"
+            style={getTeamColorIndicatorStyles(teamColor)}
+          />{" "}
+          Sets {sets}
         </p>
       </div>
     </div>
@@ -1530,10 +1702,14 @@ function ServeActionButton({
         onClick={onClick}
         className={cn(
           "flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 font-(family-name:--font-display) text-xl font-black shadow-lg transition-transform",
+          "border",
           !disabled && "active:scale-[0.98]",
           disabled && "cursor-not-allowed opacity-45",
         )}
-        style={{ backgroundColor: teamColor, color: foreground }}
+        style={{
+          ...getTeamColorSurfaceStyles(teamColor),
+          color: foreground,
+        }}
       >
         <Volleyball size={22} />
         Serve
@@ -1547,6 +1723,43 @@ function getApiErrorCode(error: unknown) {
   const data = error.data;
   if (!data || typeof data !== "object" || !("code" in data)) return null;
   return typeof data.code === "string" ? data.code : null;
+}
+
+const RULE_CORRECTION_ERROR_MESSAGES: Record<string, string> = {
+  VOLLEYBALL_MATCH_RULE_CORRECTION_NOT_ALLOWED:
+    "Match format can no longer be corrected.",
+  VOLLEYBALL_MATCH_RULE_CORRECTION_CONFLICT:
+    "The match changed while you were editing. Refresh and try again.",
+  VOLLEYBALL_MATCH_RULE_CORRECTION_INVALID_STATE:
+    "The selected format is not compatible with the sets already played.",
+  USER_CANNOT_CORRECT_VOLLEYBALL_MATCH_RULES:
+    "You do not have permission to correct this match.",
+};
+
+function getRuleCorrectionErrorMessage(error: unknown) {
+  const code = getApiErrorCode(error);
+  const fallback =
+    code && RULE_CORRECTION_ERROR_MESSAGES[code]
+      ? RULE_CORRECTION_ERROR_MESSAGES[code]
+      : "Unable to correct match format. Please try again.";
+
+  if (error && typeof error === "object" && "data" in error) {
+    const data = error.data;
+
+    if (data && typeof data === "object" && "message" in data) {
+      const message = data.message;
+
+      if (Array.isArray(message)) {
+        return message.join(", ");
+      }
+
+      if (typeof message === "string" && message && message !== code) {
+        return message;
+      }
+    }
+  }
+
+  return fallback;
 }
 
 function isScoringStateChangedError(error: unknown) {
@@ -1594,10 +1807,14 @@ function PointActionButton({
       onClick={onClick}
       className={cn(
         "relative overflow-hidden rounded-2xl px-3 py-3 text-left shadow-lg transition-transform",
+        "border",
         !disabled && "active:scale-[0.98]",
         disabled && "cursor-not-allowed opacity-45",
       )}
-      style={{ backgroundColor: teamColor, color: foreground }}
+      style={{
+        ...getTeamColorSurfaceStyles(teamColor),
+        color: foreground,
+      }}
     >
       {/* LARGE DECORATIVE BALL */}
 
@@ -2206,7 +2423,8 @@ function TeamChoiceCard({
       style={
         selected
           ? {
-              borderColor: team.teamColor,
+              borderColor: getTeamColorSurfaceStyles(team.teamColor)
+                .borderColor,
               backgroundColor: withHexAlpha(team.teamColor, "14"),
             }
           : undefined
@@ -2238,11 +2456,8 @@ function TeamBadge({
 }) {
   return (
     <div
-      className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl"
-      style={{
-        backgroundColor: teamColor,
-        color: getReadableTextColor(teamColor),
-      }}
+      className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border"
+      style={getTeamColorSurfaceStyles(teamColor)}
     >
       {imageKey ? (
         <S3Image
@@ -2336,11 +2551,8 @@ function TopTeamIdentity({
       )}
     >
       <div
-        className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-lg"
-        style={{
-          backgroundColor: teamColor,
-          color: getReadableTextColor(teamColor),
-        }}
+        className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-lg border"
+        style={getTeamColorSurfaceStyles(teamColor)}
       >
         {imageKey ? (
           <S3Image

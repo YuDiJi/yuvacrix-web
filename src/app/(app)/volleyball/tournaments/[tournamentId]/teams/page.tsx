@@ -94,8 +94,14 @@ export default function VolleyballTournamentTeamsPage() {
 
   const canManageAdmins = tournament?.viewerAccess.canManageAdmins === true;
 
+  const isTournamentCompleted =
+    tournament?.status === VOLLEYBALL_TOURNAMENT_STATUSES.COMPLETED;
+
+  const canManageTournamentSetup =
+    canManageTournament && !isTournamentCompleted;
+
   const canRemoveTeams =
-    canManageTournament &&
+    canManageTournamentSetup &&
     tournament?.status === VOLLEYBALL_TOURNAMENT_STATUSES.DRAFT;
 
   const {
@@ -116,7 +122,7 @@ export default function VolleyballTournamentTeamsPage() {
     data: ownedTeams = [],
     isLoading: areOwnedTeamsLoading,
     isError: areOwnedTeamsError,
-  } = useGetOwnedTeamQuery(undefined, { skip: !canManageTournament });
+  } = useGetOwnedTeamQuery(undefined, { skip: !canManageTournamentSetup });
 
   const [registerTeam] = useRegisterVolleyballTournamentTeamMutation();
 
@@ -172,7 +178,7 @@ export default function VolleyballTournamentTeamsPage() {
   ===================================================== */
 
   async function handleRegisterTeam(team: Team) {
-    if (!canManageTournament) return;
+    if (!canManageTournamentSetup) return;
     if (isGroupKnockout && !effectiveGroupName) {
       setError("Select or enter a pool before adding this team.");
 
@@ -284,6 +290,8 @@ export default function VolleyballTournamentTeamsPage() {
   }
 
   function handleCreateVolleyballTeam() {
+    if (!canManageTournamentSetup) return;
+
     const returnTo = `/volleyball/tournaments/${tournamentId}/teams`;
     const query = new URLSearchParams({ returnTo });
 
@@ -297,7 +305,7 @@ export default function VolleyballTournamentTeamsPage() {
   if (
     isTournamentLoading ||
     areRegisteredTeamsLoading ||
-    (canManageTournament && areOwnedTeamsLoading)
+    (canManageTournamentSetup && areOwnedTeamsLoading)
   ) {
     return (
       <div className="min-h-full bg-(--color-bg-base) px-4 py-5">
@@ -321,7 +329,7 @@ export default function VolleyballTournamentTeamsPage() {
   if (
     isTournamentError ||
     areRegisteredTeamsError ||
-    (canManageTournament && areOwnedTeamsError) ||
+    (canManageTournamentSetup && areOwnedTeamsError) ||
     !tournament
   ) {
     return (
@@ -360,7 +368,7 @@ export default function VolleyballTournamentTeamsPage() {
           </h1>
 
           <p className="mt-1 text-sm text-(--color-text-secondary)">
-            {canManageTournament
+            {canManageTournamentSetup
               ? "Add the volleyball teams participating in this tournament."
               : "Teams participating in this tournament."}
           </p>
@@ -446,7 +454,7 @@ export default function VolleyballTournamentTeamsPage() {
             GROUP SELECTION
         =============================================== */}
 
-        {isGroupKnockout && canManageTournament && (
+        {isGroupKnockout && canManageTournamentSetup && (
           <section>
             <SectionHeader
               title="Assign Pool"
@@ -599,7 +607,7 @@ export default function VolleyballTournamentTeamsPage() {
             AVAILABLE TEAMS
         =============================================== */}
 
-        {canManageTournament && <section>
+        {canManageTournamentSetup && <section>
           <SectionHeader
             title="Add Teams"
             description="Choose from your existing volleyball teams."
@@ -668,7 +676,7 @@ export default function VolleyballTournamentTeamsPage() {
           FOOTER
       =============================================== */}
 
-      {canManageTournament && <div className="safe-bottom sticky bottom-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3 shadow-[0_-8px_24px_rgba(13,27,62,0.06)]">
+      {canManageTournamentSetup && <div className="safe-bottom sticky bottom-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3 shadow-[0_-8px_24px_rgba(13,27,62,0.06)]">
         <div className="flex items-center justify-between gap-3">
           <div className="shrink-0">
             <p className="text-[8px] font-black uppercase tracking-wide text-(--color-text-muted)">

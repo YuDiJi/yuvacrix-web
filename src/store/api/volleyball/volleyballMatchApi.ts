@@ -1,11 +1,13 @@
 import { baseApi } from "../baseApi";
 
 import type {
+  CorrectVolleyballMatchRulesDto,
   CreateVolleyballMatchDto,
   GetVolleyballMatchRulePresetsResponse,
   GetVolleyballMyMatchesQuery,
   UpdateVolleyballPostMatchDto,
   VolleyballMatch,
+  VolleyballMatchRuleCorrectionResponse,
   VolleyballMyMatchesResponse,
 } from "@/types/volleyball/match";
 
@@ -34,6 +36,50 @@ import {
   UndoVolleyballEventDto,
   UndoVolleyballEventResponse,
 } from "@/types/volleyball/history";
+
+function getVolleyballMatchLifecycleTags(matchId: string) {
+  return [
+    {
+      type: "VolleyballMatch" as const,
+      id: matchId,
+    },
+    "VolleyballMatch" as const,
+    "VolleyballTournaments" as const,
+  ];
+}
+
+function getVolleyballScoringDerivedTags(matchId: string) {
+  return [
+    ...getVolleyballMatchLifecycleTags(matchId),
+    {
+      type: "VolleyballScoringHistory" as const,
+      id: matchId,
+    },
+    "VolleyballHome" as const,
+    "VolleyballPerformance" as const,
+    "VolleyballProfile" as const,
+  ];
+}
+
+function getVolleyballSetEventDerivedTags(matchId: string) {
+  return [
+    ...getVolleyballMatchLifecycleTags(matchId),
+    {
+      type: "VolleyballScoringHistory" as const,
+      id: matchId,
+    },
+    "VolleyballPerformance" as const,
+  ];
+}
+
+function getVolleyballPostMatchDerivedTags(matchId: string) {
+  return [
+    ...getVolleyballMatchLifecycleTags(matchId),
+    "VolleyballHome" as const,
+    "VolleyballPerformance" as const,
+    "VolleyballProfile" as const,
+  ];
+}
 
 export const volleyballMatchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -87,6 +133,57 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       ],
     }),
 
+    correctVolleyballMatchRules: builder.mutation<
+      VolleyballMatchRuleCorrectionResponse,
+      {
+        matchId: string;
+        body: CorrectVolleyballMatchRulesDto;
+      }
+    >({
+      query: ({ matchId, body }) => ({
+        url: `/volleyball/matches/${matchId}/rules`,
+        method: "PATCH",
+        body,
+      }),
+
+      invalidatesTags: (result, _error, { matchId }) => {
+        const tournamentId =
+          result?.match.tournament?.id ??
+          result?.linkedFixture?.tournamentId ??
+          null;
+
+        return [
+          {
+            type: "VolleyballMatch",
+            id: matchId,
+          },
+          {
+            type: "VolleyballScoringHistory",
+            id: matchId,
+          },
+          "VolleyballMatch",
+          "VolleyballHome",
+          "VolleyballTournaments",
+          ...(tournamentId
+            ? [
+                {
+                  type: "VolleyballTournament" as const,
+                  id: tournamentId,
+                },
+                {
+                  type: "VolleyballTournamentFixtures" as const,
+                  id: tournamentId,
+                },
+                {
+                  type: "VolleyballTournamentStandings" as const,
+                  id: tournamentId,
+                },
+              ]
+            : []),
+        ];
+      },
+    }),
+
     /* =====================================================
          ROSTERS
       ===================================================== */
@@ -106,10 +203,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (_result, _error, { matchId }) => [
-        {
-          type: "VolleyballMatch",
-          id: matchId,
-        },
+        ...getVolleyballMatchLifecycleTags(matchId),
       ],
     }),
 
@@ -125,10 +219,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (_result, _error, { matchId }) => [
-        {
-          type: "VolleyballMatch",
-          id: matchId,
-        },
+        ...getVolleyballMatchLifecycleTags(matchId),
       ],
     }),
 
@@ -150,10 +241,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (_result, _error, { matchId }) => [
-        {
-          type: "VolleyballMatch",
-          id: matchId,
-        },
+        ...getVolleyballMatchLifecycleTags(matchId),
       ],
     }),
 
@@ -176,10 +264,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (_result, _error, { matchId }) => [
-        {
-          type: "VolleyballMatch",
-          id: matchId,
-        },
+        ...getVolleyballMatchLifecycleTags(matchId),
       ],
     }),
 
@@ -244,10 +329,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (_result, _error, { matchId }) => [
-        {
-          type: "VolleyballMatch",
-          id: matchId,
-        },
+        ...getVolleyballSetEventDerivedTags(matchId),
       ],
     }),
 
@@ -270,10 +352,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (_result, _error, { matchId }) => [
-        {
-          type: "VolleyballMatch",
-          id: matchId,
-        },
+        ...getVolleyballSetEventDerivedTags(matchId),
       ],
     }),
 
@@ -296,10 +375,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (_result, _error, { matchId }) => [
-        {
-          type: "VolleyballMatch",
-          id: matchId,
-        },
+        ...getVolleyballPostMatchDerivedTags(matchId),
       ],
     }),
 
@@ -370,11 +446,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (_result, _error, { matchId }) => [
-        {
-          type: "VolleyballMatch",
-          id: matchId,
-        },
-        { type: "VolleyballScoringHistory", id: matchId },
+        ...getVolleyballScoringDerivedTags(matchId),
       ],
     }),
 
@@ -396,10 +468,7 @@ export const volleyballMatchApi = baseApi.injectEndpoints({
       }),
 
       invalidatesTags: (_result, _error, { matchId }) => [
-        {
-          type: "VolleyballMatch",
-          id: matchId,
-        },
+        ...getVolleyballScoringDerivedTags(matchId),
       ],
     }),
 
@@ -433,6 +502,8 @@ export const {
   useCreateVolleyballMatchMutation,
 
   useGetVolleyballMatchQuery,
+
+  useCorrectVolleyballMatchRulesMutation,
 
   useSubmitVolleyballRosterMutation,
 

@@ -22,6 +22,9 @@ import { S3Image } from "@/components/common/S3Image";
 import { cn } from "@/lib/cn";
 import { getInitials } from "@/lib/getInitials";
 import {
+  getTeamColorAccentTextColor,
+  getTeamColorIndicatorStyles,
+  getTeamColorSurfaceStyles,
   getReadableTextColor,
   resolveVolleyballTeamColor,
   VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
@@ -825,13 +828,15 @@ export default function VolleyballRosterPage() {
             }).map((_, index) => (
               <span
                 key={index}
-                className="h-1.5 flex-1 rounded-full"
-                style={{
-                  backgroundColor:
-                    index < selectedCount
-                      ? currentTeam.color
-                      : "var(--color-bg-base)",
-                }}
+                className="h-1.5 flex-1 rounded-full border"
+                style={
+                  index < selectedCount
+                    ? getTeamColorIndicatorStyles(currentTeam.color)
+                    : {
+                        backgroundColor: "var(--color-bg-base)",
+                        borderColor: "var(--color-bg-base)",
+                      }
+                }
               />
             ))}
 
@@ -859,7 +864,7 @@ export default function VolleyballRosterPage() {
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
               style={{
                 backgroundColor: withHexAlpha(currentTeam.color, "24"),
-                color: currentTeam.color,
+                color: getTeamColorAccentTextColor(currentTeam.color),
               }}
             >
               <Users size={17} />
@@ -880,7 +885,7 @@ export default function VolleyballRosterPage() {
               type="button"
               onClick={handleAddPlayer}
               className="text-[10px] font-black"
-              style={{ color: currentTeam.color }}
+              style={{ color: getTeamColorAccentTextColor(currentTeam.color) }}
             >
               Add
             </button>
@@ -1047,7 +1052,7 @@ function TeamTab({
       style={
         active
           ? {
-              borderColor: teamColor,
+              borderColor: getTeamColorSurfaceStyles(teamColor).borderColor,
               backgroundColor: withHexAlpha(teamColor, "14"),
               boxShadow: `0 0 0 1px ${withHexAlpha(teamColor, "26")}`,
             }
@@ -1139,7 +1144,7 @@ function RosterPlayerRow({
         )}
         style={
           selected
-            ? { borderColor: teamColor, backgroundColor: teamColor }
+            ? getTeamColorSurfaceStyles(teamColor)
             : undefined
         }
       >
@@ -1173,7 +1178,7 @@ function RosterPlayerRow({
               className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[7px] font-black"
               style={{
                 backgroundColor: withHexAlpha(teamColor, "24"),
-                color: teamColor,
+                color: getTeamColorAccentTextColor(teamColor),
               }}
             >
               C
@@ -1185,7 +1190,7 @@ function RosterPlayerRow({
               className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[7px] font-black"
               style={{
                 backgroundColor: withHexAlpha(teamColor, "24"),
-                color: teamColor,
+                color: getTeamColorAccentTextColor(teamColor),
               }}
             >
               L
@@ -1276,9 +1281,9 @@ function RoleButton({
       style={
         active
           ? {
-              borderColor: teamColor,
+              borderColor: getTeamColorSurfaceStyles(teamColor).borderColor,
               backgroundColor: withHexAlpha(teamColor, "1F"),
-              color: teamColor,
+              color: getTeamColorAccentTextColor(teamColor),
             }
           : undefined
       }
@@ -1310,12 +1315,11 @@ function TeamLogo({
 }) {
   return (
     <div
-      className="flex shrink-0 items-center justify-center overflow-hidden rounded-xl"
+      className="flex shrink-0 items-center justify-center overflow-hidden rounded-xl border"
       style={{
         width: size,
         height: size,
-        backgroundColor: teamColor,
-        color: getReadableTextColor(teamColor),
+        ...getTeamColorSurfaceStyles(teamColor),
       }}
     >
       {imageKey ? (
