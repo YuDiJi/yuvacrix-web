@@ -15,12 +15,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { S3Image } from "@/components/common/S3Image";
 import { getInitials } from "@/lib/getInitials";
 import {
   VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
   VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
-  getReadableTextColor,
+  getTeamColorSurfaceStyles,
   resolveVolleyballTeamColor,
 } from "@/lib/volleyball/teamColors";
 import {
@@ -34,7 +33,6 @@ import type {
   VolleyballHomeResponse,
   VolleyballHomeSeasonMetric,
   VolleyballHomeTournament,
-  VolleyballHomeViewer,
 } from "@/types/volleyball/home";
 
 const QUICK_ACTIONS = [
@@ -93,7 +91,7 @@ export default function VolleyballHomePage() {
   return (
     <div className="min-h-full overflow-x-hidden scrollbar-none bg-(--color-bg-base) pb-16">
       <main className="space-y-7 px-4 py-4">
-        <VolleyballHomeHero viewer={currentData?.viewer ?? null} />
+        <VolleyballHomeHero />
         <HomeQuickActions />
         {showInitialLoading ? (
           <HomeSkeleton />
@@ -115,43 +113,16 @@ export default function VolleyballHomePage() {
   );
 }
 
-function VolleyballHomeHero({
-  viewer,
-}: {
-  viewer: VolleyballHomeViewer | null;
-}) {
-  const viewerName = viewer?.fullName ?? "Welcome to Volleyball";
-  const fallback = (
-    <span className="flex h-full w-full items-center justify-center bg-white text-[10px] font-black text-(--color-brand)">
-      {getInitials(viewerName)}
-    </span>
-  );
-
+function VolleyballHomeHero() {
   return (
     <section
       role="img"
       aria-label="Volleyball player jumping to hit the ball with Play Hard Rise Higher message"
-      className="relative aspect-3/1 w-full overflow-hidden rounded-2xl border border-(--color-bg-border) bg-(--color-bg-tint) bg-contain bg-center bg-no-repeat shadow-(--shadow-card)"
+      className="relative aspect-3/1 w-full overflow-hidden rounded-2xl border border-(--color-bg-border) bg-(--color-bg-tint) bg-cover bg-center bg-no-repeat shadow-(--shadow-card)"
       style={{
         backgroundImage: "url('/volleyball/home/volleyball banner.png')",
       }}
-    >
-      <div className="absolute left-3 top-3 flex max-w-[72%] items-center gap-2 rounded-full bg-white/90 px-2 py-1 shadow-(--shadow-card)">
-        <span className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-(--color-bg-tint)">
-          <S3Image
-            imageKey={viewer?.profileImageUrl ?? null}
-            alt={viewerName}
-            width={28}
-            height={28}
-            className="h-full w-full object-cover"
-            fallback={fallback}
-          />
-        </span>
-        <span className="min-w-0 truncate text-[10px] font-black text-(--color-navy)">
-          {viewerName}
-        </span>
-      </div>
-    </section>
+    />
   );
 }
 
@@ -382,11 +353,8 @@ function HomeRecentMatch({
                     className="flex min-w-0 items-center gap-2"
                   >
                     <span
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[9px] font-black"
-                      style={{
-                        backgroundColor: color,
-                        color: getReadableTextColor(color),
-                      }}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[9px] font-black"
+                      style={getTeamColorSurfaceStyles(color)}
                     >
                       {team.shortName ?? getInitials(team.name)}
                     </span>

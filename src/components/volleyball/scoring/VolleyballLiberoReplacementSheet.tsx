@@ -19,7 +19,8 @@ import { S3Image } from "@/components/common/S3Image";
 import { cn } from "@/lib/cn";
 import { getInitials } from "@/lib/getInitials";
 import {
-  getReadableTextColor,
+  getTeamColorAccentTextColor,
+  getTeamColorSurfaceStyles,
   resolveVolleyballTeamColor,
   VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
   VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
@@ -606,7 +607,10 @@ function LiberoTeamChoice({
       )}
       style={
         selected
-          ? { borderColor: color, backgroundColor: withHexAlpha(color, "12") }
+          ? {
+              borderColor: getTeamColorSurfaceStyles(color).borderColor,
+              backgroundColor: withHexAlpha(color, "12"),
+            }
           : undefined
       }
     >
@@ -627,7 +631,10 @@ function LiberoTeamChoice({
       </div>
 
       {selected && (
-        <Check size={14} style={{ color }} />
+        <Check
+          size={14}
+          style={{ color: getTeamColorAccentTextColor(color) }}
+        />
       )}
     </button>
   );
@@ -665,7 +672,7 @@ function LiberoPlayerCard({
       style={
         selected
           ? {
-              borderColor: color,
+              borderColor: getTeamColorSurfaceStyles(color).borderColor,
               backgroundColor: withHexAlpha(color, "12"),
               boxShadow: `0 0 0 1px ${withHexAlpha(color, "33")}`,
             }
@@ -861,8 +868,8 @@ function LiberoTeamBadge({
 }) {
   return (
     <div
-      className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg"
-      style={{ backgroundColor: color, color: getReadableTextColor(color) }}
+      className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border"
+      style={getTeamColorSurfaceStyles(color)}
     >
       {imageKey ? (
         <S3Image

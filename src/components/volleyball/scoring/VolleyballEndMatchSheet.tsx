@@ -19,6 +19,9 @@ import { S3Image } from "@/components/common/S3Image";
 import { cn } from "@/lib/cn";
 import { getInitials } from "@/lib/getInitials";
 import {
+  getTeamColorAccentTextColor,
+  getTeamColorIndicatorStyles,
+  getTeamColorSurfaceStyles,
   resolveVolleyballTeamColor,
   VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
   VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
@@ -609,8 +612,8 @@ function PlayerTeamSection({
     <section>
       <div className="flex items-center gap-2">
         <span
-          className="h-2.5 w-2.5 rounded-full"
-          style={{ backgroundColor: color }}
+          className="h-2.5 w-2.5 rounded-full border"
+          style={getTeamColorIndicatorStyles(color)}
         />
 
         <p className="text-section-label">{label}</p>
@@ -630,7 +633,7 @@ function PlayerTeamSection({
             style={
               selectedPlayerId === player.playerId
                 ? {
-                    borderColor: color,
+                    borderColor: getTeamColorSurfaceStyles(color).borderColor,
                     backgroundColor: withHexAlpha(color, "12"),
                   }
                 : undefined
@@ -652,7 +655,7 @@ function PlayerTeamSection({
               <Check
                 size={13}
                 className="absolute right-2 top-2"
-                style={{ color }}
+                style={{ color: getTeamColorAccentTextColor(color) }}
               />
             )}
           </button>

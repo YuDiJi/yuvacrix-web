@@ -5,6 +5,7 @@ import { ArrowRightLeft, RotateCcw, Shield, Trophy, X } from "lucide-react";
 import { DialogBottom } from "@/components/common/DialogBottom";
 import { cn } from "@/lib/cn";
 import {
+  getTeamColorAccentTextColor,
   resolveVolleyballTeamColor,
   VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
   VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
@@ -282,7 +283,7 @@ function RallyRow({
           <div className="flex items-center gap-1.5">
             <span
               className="text-[9px] font-black uppercase tracking-wide"
-              style={{ color: teamColor }}
+              style={{ color: getTeamColorAccentTextColor(teamColor) }}
             >
               Point
             </span>
@@ -562,8 +563,12 @@ function EventIcon({
   type: "POINT" | "SUB" | "LIBERO";
   color: string;
 }) {
-  const common = "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg";
-  const style = { color, backgroundColor: withHexAlpha(color, "1A") };
+  const common =
+    "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg";
+  const style = {
+    color: getTeamColorAccentTextColor(color),
+    backgroundColor: withHexAlpha(color, "1A"),
+  };
 
   if (type === "POINT") {
     return (

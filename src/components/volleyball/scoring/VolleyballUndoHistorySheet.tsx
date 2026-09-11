@@ -7,6 +7,8 @@ import { Button } from "@/components/common/Button";
 import { DialogBottom } from "@/components/common/DialogBottom";
 import { cn } from "@/lib/cn";
 import {
+  getTeamColorAccentTextColor,
+  getTeamColorIndicatorStyles,
   resolveVolleyballTeamColor,
   VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
   VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
@@ -147,9 +149,9 @@ function TeamScore({ name, points, color, right = false }: { name: string; point
   return (
     <div className={cn("min-w-0", right && "text-right")}>
       <div className={cn("flex items-center gap-1.5", right && "justify-end")}>
-        {!right && <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />}
+        {!right && <span className="h-2 w-2 shrink-0 rounded-full border" style={getTeamColorIndicatorStyles(color)} />}
         <p className="line-clamp-2 text-[10px] font-bold leading-tight">{name}</p>
-        {right && <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />}
+        {right && <span className="h-2 w-2 shrink-0 rounded-full border" style={getTeamColorIndicatorStyles(color)} />}
       </div>
       <p className="mt-1 border-b-2 pb-1 font-(family-name:--font-display) text-3xl font-black" style={{ borderColor: color }}>{points}</p>
     </div>
@@ -191,7 +193,7 @@ function HistoryRow({ item, selected, disabled, teamAId, teamBId, teamAColor, te
           {formatRelativeTime(item.createdAt)}{servingTeamName ? ` · Serving after: ${servingTeamName}` : ""}
         </p>
       </div>
-      {selected ? <Check size={17} className="shrink-0" style={{ color: accentColor }} /> : <span className="h-3 w-3 shrink-0 rounded-full border-2" style={{ borderColor: servingColor ?? "#CBD5E1" }} />}
+      {selected ? <Check size={17} className="shrink-0" style={{ color: getTeamColorAccentTextColor(accentColor) }} /> : <span className="h-3 w-3 shrink-0 rounded-full border-2" style={servingColor ? getTeamColorIndicatorStyles(servingColor) : { borderColor: "#CBD5E1" }} />}
     </button>
   );
 }

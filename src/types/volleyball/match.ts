@@ -1,4 +1,6 @@
 import { VolleyballMatchRoster } from "./roster";
+import type { VolleyballSet } from "./set";
+import type { VolleyballTournamentFixture } from "./tournament";
 import type {
   VolleyballMyScope,
   VolleyballViewerRelation,
@@ -130,6 +132,26 @@ export interface CreateVolleyballMatchDto {
   teamBId: string;
 
   rules: CreateVolleyballMatchRules;
+}
+
+export interface CorrectVolleyballMatchRulesDto {
+  presetKey: VolleyballMatchRulePreset;
+
+  customRules?: VolleyballMatchRulesOverrides;
+
+  expectedRevision: number;
+}
+
+export interface VolleyballMatchRuleCorrectionResponse {
+  match: VolleyballMatch;
+
+  currentSet: VolleyballSet | null;
+
+  removedPendingSetNumbers: number[];
+
+  linkedFixture: VolleyballTournamentFixture | null;
+
+  reconciliationFlags: Record<string, boolean>;
 }
 
 export interface VolleyballMatchTeamSnapshot {

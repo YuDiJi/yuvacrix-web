@@ -240,7 +240,7 @@ function HeroScene() {
             className="mt-9 flex flex-col gap-3 sm:flex-row"
           >
             <Link
-              href="/home"
+              href="/mode"
               className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-[#1B3FA0] px-7 py-4 font-display text-sm font-bold uppercase tracking-[0.08em] text-white shadow-[0_18px_50px_rgba(27,63,160,0.42)] transition duration-300 hover:-translate-y-1 hover:bg-[#254EC0]"
             >
               Start scoring
@@ -1116,7 +1116,7 @@ function OnboardingPreviewScene() {
 
             <div className="pt-4">
               <Link
-                href="/home"
+                href="/mode"
                 className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#0050FF] to-[#00D6FF] text-white font-display font-bold text-sm uppercase tracking-wider shadow-[0_15px_40px_rgba(0,214,255,0.35)] hover:scale-105 active:scale-95 transition-all"
               >
                 Sign In to YuvaCrix
@@ -1254,7 +1254,7 @@ function FinalCtaScene() {
           transition={{ duration: 0.7, delay: 0.28 }}
         >
           <Link
-            href="/home"
+            href="/mode"
             className="group mt-10 inline-flex min-h-15 items-center justify-center gap-3 rounded-2xl bg-[#1B3FA0] px-9 py-4 font-display text-sm font-bold uppercase tracking-[0.1em] text-white shadow-[0_22px_60px_rgba(27,63,160,0.42)] transition duration-300 hover:-translate-y-1 hover:bg-[#254EC0]"
           >
             Start scoring free

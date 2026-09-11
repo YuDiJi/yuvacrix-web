@@ -37,8 +37,10 @@ import {
   VOLLEYBALL_FIXTURE_STATUSES,
   VOLLEYBALL_TOURNAMENT_FORMATS,
   VOLLEYBALL_TOURNAMENT_STAGES,
+  VOLLEYBALL_TOURNAMENT_STATUSES,
   type VolleyballTournamentFixture,
   type VolleyballTournamentStage,
+  type VolleyballTournamentTeam,
 } from "@/types/volleyball/tournament";
 
 /* =========================================================
@@ -134,8 +136,11 @@ export default function VolleyballTournamentOverviewPage() {
   const canManageTournament =
     tournament?.viewerAccess.canManageTournament === true;
   const canManageAdmins = tournament?.viewerAccess.canManageAdmins === true;
+  const isTournamentCompleted =
+    tournament?.status === VOLLEYBALL_TOURNAMENT_STATUSES.COMPLETED;
   const canCreateExecutionMatch =
-    tournament?.viewerAccess.canCreateExecutionMatch === true;
+    tournament?.viewerAccess.canCreateExecutionMatch === true &&
+    !isTournamentCompleted;
   const canScoreMatches = tournament?.viewerAccess.canScoreMatches === true;
 
   /* =====================================================
@@ -147,6 +152,43 @@ export default function VolleyballTournamentOverviewPage() {
   const recentFixtures = useMemo(() => {
     return [...fixtures].sort(compareFixturesForOverview).slice(0, 3);
   }, [fixtures]);
+
+  const championTeam = useMemo(() => {
+    if (!isTournamentCompleted || !tournament?.winnerTeamId) {
+      return null;
+    }
+
+    return (
+      registeredTeams.find((team) => team.teamId === tournament.winnerTeamId) ??
+      null
+    );
+  }, [isTournamentCompleted, registeredTeams, tournament?.winnerTeamId]);
+
+  const runnerUpTeam = useMemo(() => {
+    if (!isTournamentCompleted || !tournament?.runnerUpTeamId) {
+      return null;
+    }
+
+    return (
+      registeredTeams.find(
+        (team) => team.teamId === tournament.runnerUpTeamId,
+      ) ?? null
+    );
+  }, [isTournamentCompleted, registeredTeams, tournament?.runnerUpTeamId]);
+
+  const completedFinalFixture = useMemo(() => {
+    if (!isTournamentCompleted) {
+      return null;
+    }
+
+    return (
+      fixtures.find(
+        (fixture) =>
+          fixture.stage === VOLLEYBALL_TOURNAMENT_STAGES.FINAL &&
+          fixture.status === VOLLEYBALL_FIXTURE_STATUSES.COMPLETED,
+      ) ?? null
+    );
+  }, [fixtures, isTournamentCompleted]);
 
   /* =====================================================
      NAVIGATION
@@ -283,6 +325,12 @@ export default function VolleyballTournamentOverviewPage() {
                   <span className="rounded-full bg-(--color-brand) px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-white">
                     {formatVolleyballTournamentFormat(tournament.format)}
                   </span>
+
+                  {isTournamentCompleted && (
+                    <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-emerald-200">
+                      Completed
+                    </span>
+                  )}
                 </div>
 
                 <h1 className="mt-3 font-(family-name:--font-display) text-2xl font-black uppercase leading-tight tracking-wide text-white">
@@ -338,19 +386,37 @@ export default function VolleyballTournamentOverviewPage() {
         )}
 
         {/* =================================================
+            COMPLETED RESULT
+        ================================================= */}
+
+        {isTournamentCompleted && championTeam && (
+          <TournamentChampionCard
+            tournamentName={tournament.name}
+            championTeam={championTeam}
+            runnerUpTeam={runnerUpTeam}
+            finalFixture={completedFinalFixture}
+          />
+        )}
+
+        {/* =================================================
             PRIMARY ACTION
         ================================================= */}
 
         <section>
           <SectionHeader
             title="What's next?"
-            subtitle="Continue running the tournament."
+            subtitle={
+              isTournamentCompleted
+                ? "All matches have been completed."
+                : "Continue running the tournament."
+            }
           />
 
           {!primaryFixture ? (
             <NoFixturesAction
               teamCount={registeredTeams.length}
-              canManage={canManageTournament}
+              canManage={canManageTournament && !isTournamentCompleted}
+              completed={isTournamentCompleted}
               onTeams={goToTeams}
               onFixtures={goToFixtures}
             />
@@ -585,6 +651,73 @@ export default function VolleyballTournamentOverviewPage() {
 }
 
 /* =========================================================
+   CHAMPION
+========================================================= */
+
+function TournamentChampionCard({
+  tournamentName,
+  championTeam,
+  runnerUpTeam,
+  finalFixture,
+}: {
+  tournamentName: string;
+
+  championTeam: VolleyballTournamentTeam;
+
+  runnerUpTeam: VolleyballTournamentTeam | null;
+
+  finalFixture: VolleyballTournamentFixture | null;
+}) {
+  const championName = championTeam.teamSnapshot.name;
+  const runnerUpName = runnerUpTeam?.teamSnapshot.name ?? null;
+
+  return (
+    <section>
+      <div className="overflow-hidden rounded-3xl bg-(--color-navy) text-white shadow-sm">
+        <div className="relative px-4 py-4">
+          <div className="pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full bg-(--color-brand)/25 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-14 left-8 h-24 w-24 rounded-full bg-amber-300/15 blur-2xl" />
+
+          <div className="relative flex items-start gap-3">
+            <MiniTeamLogo
+              imageKey={championTeam.teamSnapshot.logoUrl}
+              name={championName}
+              large
+            />
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-amber-300/15 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-amber-200">
+                  Tournament Champion
+                </span>
+
+                <Trophy size={15} className="shrink-0 text-amber-200" />
+              </div>
+
+              <h2 className="mt-3 break-words font-(family-name:--font-display) text-2xl font-black uppercase leading-tight tracking-wide text-white">
+                {championName}
+              </h2>
+
+              <p className="mt-1 text-[10px] leading-5 text-white/65">
+                won {tournamentName}
+              </p>
+
+              {finalFixture && runnerUpName && (
+                <div className="mt-3 rounded-2xl border border-white/10 bg-white/10 px-3 py-2.5">
+                  <p className="text-[9px] font-bold leading-4 text-white/75">
+                    Defeated {runnerUpName} in the Final
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* =========================================================
    PRIMARY FIXTURE CARD
 ========================================================= */
 
@@ -777,12 +910,15 @@ function PrimaryFixtureCard({
 function NoFixturesAction({
   teamCount,
   canManage,
+  completed,
   onTeams,
   onFixtures,
 }: {
   teamCount: number;
 
   canManage: boolean;
+
+  completed: boolean;
 
   onTeams: () => void;
 
@@ -803,11 +939,21 @@ function NoFixturesAction({
 
         <div className="min-w-0">
           <p className="text-sm font-black text-(--color-text-primary)">
-            {needsTeams ? "Add tournament teams" : "Create the schedule"}
+            {completed
+              ? needsTeams
+                ? "Tournament teams"
+                : "Tournament schedule"
+              : needsTeams
+                ? "Add tournament teams"
+                : "Create the schedule"}
           </p>
 
           <p className="mt-1 text-[10px] leading-5 text-(--color-text-muted)">
-            {needsTeams
+            {completed
+              ? needsTeams
+                ? "This completed tournament has no registered teams to add."
+                : "This completed tournament has no fixtures to create."
+              : needsTeams
               ? "Register at least two Volleyball teams before building fixtures."
               : "Your teams are ready. Add the first tournament fixture."}
           </p>

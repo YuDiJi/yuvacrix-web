@@ -5,6 +5,7 @@ import { CheckCircle2, Trophy } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { DialogBottom } from "@/components/common/DialogBottom";
 import {
+  getTeamColorAccentTextColor,
   resolveVolleyballTeamColor,
   VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
   VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
@@ -24,6 +25,8 @@ type Props = {
   isLoading?: boolean;
 
   onContinue: () => void;
+
+  onCorrectMatchFormat?: () => void;
 };
 
 export function VolleyballSetCompletedSheet({
@@ -32,6 +35,7 @@ export function VolleyballSetCompletedSheet({
   set,
   isLoading = false,
   onContinue,
+  onCorrectMatchFormat,
 }: Props) {
   const winner =
     set.winnerTeamId === match.teamAId
@@ -118,6 +122,18 @@ export function VolleyballSetCompletedSheet({
           >
             Continue
           </Button>
+
+          {onCorrectMatchFormat && (
+            <Button
+              fullWidth
+              variant="outline"
+              className="mt-2"
+              disabled={isLoading}
+              onClick={onCorrectMatchFormat}
+            >
+              Correct match format
+            </Button>
+          )}
         </div>
       </div>
     </DialogBottom>
@@ -151,7 +167,10 @@ function TeamScore({
       {winner && (
         <span
           className="mt-1 inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase"
-          style={{ color, backgroundColor: withHexAlpha(color, "1A") }}
+          style={{
+            color: getTeamColorAccentTextColor(color),
+            backgroundColor: withHexAlpha(color, "1A"),
+          }}
         >
           Winner
         </span>

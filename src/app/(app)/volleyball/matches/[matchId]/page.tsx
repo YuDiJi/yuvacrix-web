@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import {
   Check,
@@ -19,9 +19,19 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/common/Button";
 import { S3Image } from "@/components/common/S3Image";
 
+import { VolleyballMatchRuleCorrectionSheet } from "@/components/volleyball/scoring/VolleyballMatchRuleCorrectionSheet";
+
 import { cn } from "@/lib/cn";
+import { isVolleyballRosterReadyForSetSetup } from "@/lib/volleyball/matchReadiness";
+import {
+  getTeamColorSurfaceStyles,
+  resolveVolleyballTeamColor,
+  VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+  VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+} from "@/lib/volleyball/teamColors";
 
 import {
+  useCorrectVolleyballMatchRulesMutation,
   useGetVolleyballMatchQuery,
   useGetVolleyballMatchSetsQuery,
 } from "@/store/api/volleyball/volleyballMatchApi";
@@ -29,7 +39,10 @@ import { useGetVolleyballTournamentQuery } from "@/store/api/volleyball/volleyba
 
 import {
   VOLLEYBALL_MATCH_STATUSES,
+  VOLLEYBALL_RULE_FORMAT_TYPES,
   type VolleyballMatch,
+  type VolleyballMatchRulePreset,
+  type VolleyballMatchRulesOverrides,
 } from "@/types/volleyball/match";
 
 import {
@@ -63,6 +76,15 @@ function getPrimaryAction(
       description: "View completed match summary.",
       href: `/volleyball/matches/${match.id}`,
       type: "COMPLETE",
+    };
+  }
+
+  if (!isVolleyballRosterReadyForSetSetup(match)) {
+    return {
+      label: "Setup Rosters",
+      description: "Select captain, players and Liberos.",
+      href: `/volleyball/matches/${match.id}/rosters`,
+      type: "ROSTER",
     };
   }
 
@@ -181,6 +203,50 @@ function getTeamLabel(name: string) {
     .join("");
 }
 
+function getApiErrorCode(error: unknown) {
+  if (!error || typeof error !== "object" || !("data" in error)) return null;
+  const data = error.data;
+  if (!data || typeof data !== "object" || !("code" in data)) return null;
+  return typeof data.code === "string" ? data.code : null;
+}
+
+const RULE_CORRECTION_ERROR_MESSAGES: Record<string, string> = {
+  VOLLEYBALL_MATCH_RULE_CORRECTION_NOT_ALLOWED:
+    "Match format can no longer be corrected.",
+  VOLLEYBALL_MATCH_RULE_CORRECTION_CONFLICT:
+    "The match changed while you were editing. Refresh and try again.",
+  VOLLEYBALL_MATCH_RULE_CORRECTION_INVALID_STATE:
+    "The selected format is not compatible with the sets already played.",
+  USER_CANNOT_CORRECT_VOLLEYBALL_MATCH_RULES:
+    "You do not have permission to correct this match.",
+};
+
+function getRuleCorrectionErrorMessage(error: unknown) {
+  const code = getApiErrorCode(error);
+  const fallback =
+    code && RULE_CORRECTION_ERROR_MESSAGES[code]
+      ? RULE_CORRECTION_ERROR_MESSAGES[code]
+      : "Unable to correct match format. Please try again.";
+
+  if (error && typeof error === "object" && "data" in error) {
+    const data = error.data;
+
+    if (data && typeof data === "object" && "message" in data) {
+      const message = data.message;
+
+      if (Array.isArray(message)) {
+        return message.join(", ");
+      }
+
+      if (typeof message === "string" && message && message !== code) {
+        return message;
+      }
+    }
+  }
+
+  return fallback;
+}
+
 /* =========================================================
    PAGE
 ========================================================= */
@@ -191,6 +257,10 @@ export default function VolleyballMatchDetailsPage() {
   const router = useRouter();
 
   const matchId = params.matchId as string;
+
+  const [formatCorrectionOpen, setFormatCorrectionOpen] = useState(false);
+
+  const [formatCorrectionError, setFormatCorrectionError] = useState("");
 
   const {
     data: match,
@@ -210,10 +280,14 @@ export default function VolleyballMatchDetailsPage() {
     matchId,
   });
 
-  const { data: tournament } = useGetVolleyballTournamentQuery(
-    { tournamentId: match?.tournament?.id ?? "" },
-    { skip: !match?.tournament?.id },
-  );
+  const { data: tournament, refetch: refetchTournament } =
+    useGetVolleyballTournamentQuery(
+      { tournamentId: match?.tournament?.id ?? "" },
+      { skip: !match?.tournament?.id },
+    );
+
+  const [correctMatchRules, { isLoading: isCorrectingMatchRules }] =
+    useCorrectVolleyballMatchRulesMutation();
 
   const canOperateMatch =
     match?.sourceType !== "TOURNAMENT" ||
@@ -238,6 +312,56 @@ export default function VolleyballMatchDetailsPage() {
 
     return getPrimaryAction(match, sortedSets);
   }, [match, sortedSets]);
+
+  const canCorrectMatchFormat =
+    Boolean(match) &&
+    match?.status !== VOLLEYBALL_MATCH_STATUSES.COMPLETED &&
+    canOperateMatch &&
+    match?.rulesSnapshot.formatType === VOLLEYBALL_RULE_FORMAT_TYPES.BEST_OF &&
+    (match?.rulesSnapshot.maxSets ?? 0) > 1 &&
+    typeof match?.version === "number";
+
+  async function handleCorrectMatchFormat({
+    presetKey,
+    customRules,
+  }: {
+    presetKey: VolleyballMatchRulePreset;
+    customRules: VolleyballMatchRulesOverrides;
+  }) {
+    if (!match || isCorrectingMatchRules) {
+      return;
+    }
+
+    setFormatCorrectionError("");
+
+    try {
+      await correctMatchRules({
+        matchId,
+        body: {
+          presetKey,
+          customRules,
+          expectedRevision: match.version,
+        },
+      }).unwrap();
+
+      await Promise.all([
+        refetchMatch(),
+        refetchSets(),
+        match.tournament?.id ? refetchTournament() : Promise.resolve(),
+      ]);
+
+      setFormatCorrectionOpen(false);
+      setFormatCorrectionError("");
+    } catch (err) {
+      setFormatCorrectionError(getRuleCorrectionErrorMessage(err));
+
+      await Promise.all([
+        refetchMatch(),
+        refetchSets(),
+        match.tournament?.id ? refetchTournament() : Promise.resolve(),
+      ]);
+    }
+  }
 
   /* =========================
      LOADING
@@ -405,8 +529,35 @@ export default function VolleyballMatchDetailsPage() {
             MATCH DETAILS
         ================================= */}
 
-        <CompactMatchInfo match={match} setsCount={sortedSets.length} />
+        <CompactMatchInfo
+          match={match}
+          setsCount={sortedSets.length}
+          canCorrectFormat={canCorrectMatchFormat}
+          onCorrectFormat={() => {
+            setFormatCorrectionError("");
+            setFormatCorrectionOpen(true);
+          }}
+        />
       </div>
+
+      {formatCorrectionOpen && (
+        <VolleyballMatchRuleCorrectionSheet
+          open={formatCorrectionOpen}
+          match={match}
+          sets={sets}
+          loading={isCorrectingMatchRules}
+          error={formatCorrectionError}
+          onClose={() => {
+            if (isCorrectingMatchRules) {
+              return;
+            }
+
+            setFormatCorrectionOpen(false);
+            setFormatCorrectionError("");
+          }}
+          onSubmit={(payload) => void handleCorrectMatchFormat(payload)}
+        />
+      )}
     </div>
   );
 }
@@ -459,7 +610,10 @@ function MatchHero({
           name={match.teamASnapshot.name}
           shortName={match.teamASnapshot.shortName}
           imageKey={match.teamASnapshot.logoUrl}
-          tone={match.teamASnapshot.teamColor ?? "orange"}
+          tone={resolveVolleyballTeamColor(
+            match.teamASnapshot.teamColor,
+            VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+          )}
           winner={match.winnerTeamId === match.teamAId}
         />
 
@@ -485,7 +639,10 @@ function MatchHero({
           name={match.teamBSnapshot.name}
           shortName={match.teamBSnapshot.shortName}
           imageKey={match.teamBSnapshot.logoUrl}
-          tone={match.teamBSnapshot.teamColor ?? "red"}
+          tone={resolveVolleyballTeamColor(
+            match.teamBSnapshot.teamColor,
+            VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+          )}
           winner={match.winnerTeamId === match.teamBId}
         />
       </div>
@@ -510,7 +667,10 @@ function MatchHero({
               label={match.teamASnapshot.shortName ?? match.teamASnapshot.name}
               score={liveSet.teamAPoints}
               serving={liveSet.servingTeamId === match.teamAId}
-              tone={match.teamASnapshot.teamColor ?? "orange"}
+              tone={resolveVolleyballTeamColor(
+                match.teamASnapshot.teamColor,
+                VOLLEYBALL_TEAM_A_FALLBACK_COLOR,
+              )}
             />
 
             <span className="px-4 text-sm font-black text-white/30">:</span>
@@ -519,7 +679,10 @@ function MatchHero({
               label={match.teamBSnapshot.shortName ?? match.teamBSnapshot.name}
               score={liveSet.teamBPoints}
               serving={liveSet.servingTeamId === match.teamBId}
-              tone={match.teamBSnapshot.teamColor ?? "red"}
+              tone={resolveVolleyballTeamColor(
+                match.teamBSnapshot.teamColor,
+                VOLLEYBALL_TEAM_B_FALLBACK_COLOR,
+              )}
             />
           </div>
         </div>
@@ -549,12 +712,12 @@ function HeroTeam({
     <div className="min-w-0 text-center">
       <div
         className={cn(
-          "mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl",
+          "mx-auto flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border",
 
           winner &&
             "ring-2 ring-white ring-offset-2 ring-offset-(--color-navy)",
         )}
-        style={{ backgroundColor: tone }}
+        style={getTeamColorSurfaceStyles(tone)}
       >
         {imageKey ? (
           <S3Image
@@ -564,13 +727,13 @@ function HeroTeam({
             height={56}
             className="h-full w-full object-cover"
             fallback={
-              <span className="font-(family-name:--font-display) text-lg font-black text-white">
+              <span className="font-(family-name:--font-display) text-lg font-black">
                 {getTeamLabel(shortName ?? name)}
               </span>
             }
           />
         ) : (
-          <span className="font-(family-name:--font-display) text-lg font-black text-white">
+          <span className="font-(family-name:--font-display) text-lg font-black">
             {getTeamLabel(shortName ?? name)}
           </span>
         )}
@@ -974,17 +1137,35 @@ function getBestPlayerName(bestPlayer: unknown, match: VolleyballMatch) {
 function CompactMatchInfo({
   match,
   setsCount,
+  canCorrectFormat,
+  onCorrectFormat,
 }: {
   match: VolleyballMatch;
 
   setsCount: number;
+
+  canCorrectFormat: boolean;
+
+  onCorrectFormat: () => void;
 }) {
   return (
     <section>
-      <div className="mb-2 flex items-center gap-2 px-1">
-        <Clock3 size={13} className="text-(--color-brand)" />
+      <div className="mb-2 flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center gap-2">
+          <Clock3 size={13} className="text-(--color-brand)" />
 
-        <p className="text-section-label">Match Info</p>
+          <p className="text-section-label">Match Info</p>
+        </div>
+
+        {canCorrectFormat && (
+          <button
+            type="button"
+            onClick={onCorrectFormat}
+            className="rounded-full bg-(--color-bg-tint) px-3 py-1.5 text-[10px] font-black text-(--color-brand) active:scale-[0.97]"
+          >
+            Correct format
+          </button>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-(--color-bg-border) bg-(--color-bg-card) shadow-(--shadow-card)">
