@@ -65,13 +65,13 @@ export const cricketDrawerSections: DrawerSection[] = [
     title: "Main",
     items: [
       { label: "Home", icon: Home, href: "/home" },
-      {
-        label: "Go Pro at ₹199",
-        icon: Crown,
-        href: "/pro",
-        badge: "PRO",
-        badgeColor: "violet",
-      },
+      // {
+      //   label: "Go Pro at ₹199",
+      //   icon: Crown,
+      //   href: "/pro",
+      //   badge: "PRO",
+      //   badgeColor: "violet",
+      // },
       { label: "My Cricket", icon: ShieldCheck, href: "/my-cricket" },
       {
         label: "Start a Match",
@@ -96,12 +96,12 @@ export const cricketDrawerSections: DrawerSection[] = [
     title: "Profile",
     items: [
       { label: "My Profile", icon: User, href: "/profile" },
-      {
-        label: "Notifications",
-        icon: Bell,
-        href: "/notifications",
-        badge: "3",
-      },
+      // {
+      //   label: "Notifications",
+      //   icon: Bell,
+      //   href: "/notifications",
+      //   badge: "3",
+      // },
       {
         label: "My Performance",
         icon: BarChart3,
