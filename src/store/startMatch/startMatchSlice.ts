@@ -1,5 +1,6 @@
 import { Team } from "@/types/team";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction, type Draft } from "@reduxjs/toolkit";
+import { logout } from "../auth/authSlice";
 
 type MatchPlayerRole = {
   id: string;
@@ -54,6 +55,23 @@ const initialState: StartMatchState = {
   matchId: null,
   lineUpMode: "FLEXIBLE",
 };
+
+function resetTransientMatchState(state: Draft<StartMatchState>) {
+  state.matchSource = "NORMAL";
+  state.tournamentId = null;
+  state.roundId = null;
+  state.groupId = null;
+  state.fixtureId = null;
+  state.creationMode = "PLAY_NOW";
+  state.teamA = null;
+  state.teamB = null;
+  state.teamACaptain = null;
+  state.teamAKeeper = null;
+  state.teamBCaptain = null;
+  state.teamBKeeper = null;
+  state.matchId = null;
+  state.lineUpMode = "FLEXIBLE";
+}
 
 const startMatchSlice = createSlice({
   name: "startMatch",
@@ -160,21 +178,13 @@ const startMatchSlice = createSlice({
     },
 
     resetMatch: (state) => {
-      state.matchSource = "NORMAL";
-      state.tournamentId = null;
-      state.roundId = null;
-      state.groupId = null;
-      state.fixtureId = null;
-      state.creationMode = "PLAY_NOW";
-      state.teamA = null;
-      state.teamB = null;
-      state.teamACaptain = null;
-      state.teamAKeeper = null;
-      state.teamBCaptain = null;
-      state.teamBKeeper = null;
-      state.matchId = null;
-      state.lineUpMode = "FLEXIBLE";
+      resetTransientMatchState(state);
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(logout, (state) => {
+      resetTransientMatchState(state);
+    });
   },
 });
 

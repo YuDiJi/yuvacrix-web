@@ -29,6 +29,8 @@ export default function CreateTournamentTeam() {
       isLoading={isLoading || isUploading || isAdding}
       error={error}
       onSubmit={async ({ name, city, logoFile }) => {
+        if (isLoading || isUploading || isAdding) return;
+
         setError("");
 
         try {
@@ -50,11 +52,21 @@ export default function CreateTournamentTeam() {
             ...(logoKey && { logoUrl: logoKey }),
           }).unwrap();
 
-          addTeamToTournament({
-            tournamentId,
-            teamId: response.id,
-            // seedNumber: index + 1,
-          }).unwrap();
+          try {
+            await addTeamToTournament({
+              tournamentId,
+              teamId: response.id,
+              // seedNumber: index + 1,
+            }).unwrap();
+          } catch (err) {
+            const message =
+              err instanceof Error
+                ? err.message
+                : "Team was created, but could not be added to the tournament. Please try again.";
+
+            setError(message);
+            return;
+          }
 
           router.push(
             `/tournaments/${tournamentId}/create-player?team=${response.id}`,

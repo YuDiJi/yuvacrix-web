@@ -28,7 +28,7 @@ const CreatePlayerForm = ({
         type="text"
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}
-        placeholder="e.g. Virat Kohli"
+        placeholder="Player name"
         className="w-full outline-none text-base text-slate-800 font-medium"
       />
     </div>

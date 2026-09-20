@@ -15,7 +15,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       <header className="safe-top relative z-30 flex h-14 shrink-0 items-center justify-start border-b border-white/10 bg-(--color-navy) px-4">
         <PublicPageBackButton />
 
-        <Link href="/" className="flex items-center gap-2 w-30 h-21.5">
+        <Link href="/" className="flex items-center gap-2 w-25 h-11">
           <Image
             src="/logo/logo_dark.png"
             alt="YuvaCrix"

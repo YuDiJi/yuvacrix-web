@@ -15,9 +15,9 @@ const CHANNELS = [
     id: "whatsapp",
     label: "WhatsApp",
     description: "Fastest way to reach us. Drop a message any time.",
-    value: "+91 99999 99999",
+    value: "+91 91373 68167",
     cta: "Open WhatsApp",
-    href: "https://wa.me/919999999999",
+    href: "https://wa.me/919137368167",
     Icon: MessageCircle,
     iconBg: "#22C55E",
     chipText: "Usually replies in an hour",
@@ -52,19 +52,19 @@ const CHANNELS = [
     chipBg: "bg-pink-50",
     chipFg: "text-pink-600",
   },
-  {
-    id: "linkedin",
-    label: "LinkedIn",
-    description: "Connect with us for professional inquiries and partnerships.",
-    value: "YuvaCrix",
-    cta: "Connect on LinkedIn",
-    href: "https://linkedin.com/company/yuvacrix",
-    Icon: Briefcase,
-    iconBg: "#0A66C2",
-    chipText: "Open to collaborations",
-    chipBg: "bg-blue-50",
-    chipFg: "text-blue-600",
-  },
+  // {
+  //   id: "linkedin",
+  //   label: "LinkedIn",
+  //   description: "Connect with us for professional inquiries and partnerships.",
+  //   value: "YuvaCrix",
+  //   cta: "Connect on LinkedIn",
+  //   href: "https://linkedin.com/company/yuvacrix",
+  //   Icon: Briefcase,
+  //   iconBg: "#0A66C2",
+  //   chipText: "Open to collaborations",
+  //   chipBg: "bg-blue-50",
+  //   chipFg: "text-blue-600",
+  // },
 ] as const;
 
 // ── Channel card ──────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ function ChannelCard({ channel }: { channel: (typeof CHANNELS)[number] }) {
       <div className="flex items-center justify-between">
         {/* Icon tile */}
         <div
-          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl shadow-sm"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm"
           style={{
             background: isGradient
               ? (channel as { iconBg: string }).iconBg
@@ -173,8 +173,8 @@ function Hero() {
         </h1>
 
         <p className="mt-3 max-w-xs text-[14px] leading-relaxed text-white/70">
-          Questions, partnerships, or just want to geek out about the game —
-          we&apos;re always on.
+          Questions or just want to geek out about the game — we&apos;re always
+          on.
         </p>
       </div>
     </div>
