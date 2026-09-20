@@ -78,7 +78,7 @@ export function Footer() {
                 icon="/icons/instagram.svg"
               />
               <SocialLink
-                href="https://wa.me/918591771137"
+                href="https://wa.me/919137368167"
                 label="WhatsApp"
                 icon="/icons/whatsapp.svg"
               />
@@ -96,7 +96,7 @@ export function Footer() {
               <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/30">
                 Product
               </p>
-              <FooterLink href="/about">About</FooterLink>
+              <FooterLink href="/about-us">About</FooterLink>
               <FooterLink href="/contact-us">Contact</FooterLink>
             </div>
 

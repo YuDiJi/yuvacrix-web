@@ -59,7 +59,7 @@ export function NextBowlerSheet({
   }, [open]);
 
   const handleContinue = async () => {
-    if (!selectedBowler || !matchId || !inningsId) return;
+    if (!selectedBowler || !matchId || !inningsId || isStartingNextOver) return;
 
     setErrorMessage("");
 

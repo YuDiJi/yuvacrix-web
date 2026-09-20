@@ -26,7 +26,13 @@ export default function AddTeamPage() {
 
   const [addTeamToTournament, { isLoading: isAdding }] =
     useAddTeamToTournamentMutation();
-  const { data: teams, isSuccess, isError } = useGetOwnedTeamQuery();
+  const {
+    data: teams,
+    isLoading: isTeamsLoading,
+    isFetching: isTeamsFetching,
+    isSuccess,
+    isError,
+  } = useGetOwnedTeamQuery();
   const { data: tournamentTeams } = useGetTournamentTeamsQuery({
     tournamentId,
     status: "ACTIVE",
@@ -113,7 +119,33 @@ export default function AddTeamPage() {
     );
   }
 
-  if (cricketTeams.length === 0) {
+  const isInitialTeamsLoading = isTeamsLoading || (!isSuccess && isTeamsFetching);
+
+  if (isInitialTeamsLoading) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+        <div className="mb-4 h-8 w-8 animate-spin rounded-full border-2 border-(--color-bg-border) border-t-(--color-brand)" />
+        <p className="text-sm font-semibold text-(--color-text-secondary)">
+          Loading teams...
+        </p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+        <h3 className="font-(family-name:--font-display) text-xl font-black uppercase text-(--color-text-primary)">
+          Unable To Load Teams
+        </h3>
+        <p className="mt-2 max-w-60 text-sm leading-relaxed text-(--color-text-secondary)">
+          Please check your connection and try again.
+        </p>
+      </div>
+    );
+  }
+
+  if (isSuccess && cricketTeams.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
         {/* Icon */}

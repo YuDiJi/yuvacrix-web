@@ -228,7 +228,7 @@ export function OnboardingProfileForm() {
               <input
                 type="text"
                 autoComplete="name"
-                placeholder="e.g. Virat Kohli"
+                placeholder="Full name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onFocus={() => setNameFocus(true)}
