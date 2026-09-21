@@ -45,6 +45,8 @@ import { ScoringShortcutsSheet } from "./scoringShortcuts/ScoringShortcutsSheet"
 import { MatchOversSheet } from "./scoringShortcuts/MatchOversSheet";
 import { WagonWheelSettingsSheet } from "./scoringShortcuts/WagonWheelSettingsSheet";
 import MatchRules from "@/components/cricket/match-rules/MatchRules";
+import { ChangeBattersSheet } from "./ChangeBattersSheet";
+import { ChangeBowlerSheet } from "./ChangeBowlerSheet";
 
 export type DialogType =
   | "WIDE"
@@ -187,6 +189,10 @@ export default function ScoringPage() {
   const [syncMessage, setSyncMessage] = useState("Synced");
 
   const [showStrikeConfirm, setShowStrikeConfirm] = useState(false);
+  const [showChangeBatters, setShowChangeBatters] = useState(false);
+  const [showChangeBowler, setShowChangeBowler] = useState(false);
+  const [isChangingBatters, setIsChangingBatters] = useState(false);
+  const [isChangingBowler, setIsChangingBowler] = useState(false);
   const [pendingWagonWheelRuns, setPendingWagonWheelRuns] = useState<
     number | null
   >(null);
@@ -260,6 +266,8 @@ export default function ScoringPage() {
       !state?.currentNonStrikerId ||
       isChangingStrike ||
       isRecording ||
+      isChangingBatters ||
+      isChangingBowler ||
       scoringLocked
     ) {
       return;
@@ -274,7 +282,9 @@ export default function ScoringPage() {
       !state?.inningsId ||
       !state.currentStrikerId ||
       !state.currentNonStrikerId ||
-      isChangingStrike
+      isChangingStrike ||
+      isChangingBatters ||
+      isChangingBowler
     ) {
       return;
     }
@@ -287,6 +297,7 @@ export default function ScoringPage() {
         inningsId: state.inningsId,
         strikerId: state.currentNonStrikerId,
         nonStrikerId: state.currentStrikerId,
+        reason: "Manual strike swap",
       }).unwrap();
 
       setShowStrikeConfirm(false);
@@ -724,6 +735,23 @@ export default function ScoringPage() {
     setCompletedOverSnapshot(null);
   };
 
+  const scoringCorrectionBusy =
+    isRecording ||
+    isChangingStrike ||
+    isChangingBatters ||
+    isChangingBowler ||
+    scoringLocked ||
+    flow !== "IDLE";
+
+  const handleCorrectionSaved = (message: string) => {
+    setSyncMessage(message);
+    setSyncStatus("synced");
+
+    window.setTimeout(() => {
+      setSyncStatus("idle");
+    }, 1200);
+  };
+
   const handleDeclarePowerplay = async () => {
     const powerplay = state?.powerplay;
     if (
@@ -841,7 +869,32 @@ export default function ScoringPage() {
           <div className="flex border-b border-(--color-bg-border)">
             {/* Striker (Left) */}
 
-            <div className="relative flex-1 border-l-[3px] border-l-(--color-live) p-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                if (
+                  scoringCorrectionBusy ||
+                  !state?.currentStrikerId ||
+                  !state?.currentNonStrikerId
+                ) {
+                  return;
+                }
+
+                setShowChangeBatters(true);
+              }}
+              disabled={
+                scoringCorrectionBusy ||
+                scoringStateRefreshing ||
+                !state?.currentStrikerId ||
+                !state?.currentNonStrikerId
+              }
+              aria-label="Change batters"
+              className={cn(
+                "relative flex-1 border-l-[3px] border-l-(--color-live) p-2.5 text-left transition-colors",
+                "hover:bg-slate-50 active:bg-slate-100",
+                "disabled:pointer-events-none disabled:opacity-70",
+              )}
+            >
               <div className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#4DFFDE] shadow-[0_0_6px_#4DFFDE]" />
 
               <div className="flex items-start gap-3">
@@ -870,11 +923,11 @@ export default function ScoringPage() {
                   </h3>
 
                   <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-widest text-[#4DFFDE]">
-                    On strike
+                    Tap to change batters
                   </span>
                 </div>
               </div>
-            </div>
+            </button>
 
             {/* Non-Striker (Right) */}
 
@@ -930,7 +983,27 @@ export default function ScoringPage() {
           </div>
 
           {/* Bottom Row: Bowler */}
-          <div className="p-2.5 flex items-center justify-between border-l-[3px] border-l-(--color-live) gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              if (scoringCorrectionBusy || !state?.currentBowlerId) {
+                return;
+              }
+
+              setShowChangeBowler(true);
+            }}
+            disabled={
+              scoringCorrectionBusy ||
+              scoringStateRefreshing ||
+              !state?.currentBowlerId
+            }
+            aria-label="Change bowler"
+            className={cn(
+              "w-full p-2.5 flex items-center justify-between border-l-[3px] border-l-(--color-live) gap-3 text-left transition-colors",
+              "hover:bg-slate-50 active:bg-slate-100",
+              "disabled:pointer-events-none disabled:opacity-70",
+            )}
+          >
             {/* Left side: Bowler Info & Balls */}
             {/* Add 'flex-1 min-w-0' to constrain the width of this block to the available space */}
             <div className="flex-1 min-w-0">
@@ -982,7 +1055,7 @@ export default function ScoringPage() {
                     ))}
               </div>
             </div>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -1233,7 +1306,12 @@ export default function ScoringPage() {
           setOpenDialog={setOpenDialog}
           inningsId={state?.inningsId}
           matchId={matchId}
-          isScoringBusy={isRecording || isChangingStrike}
+          isScoringBusy={
+            isRecording ||
+            isChangingStrike ||
+            isChangingBatters ||
+            isChangingBowler
+          }
           onDone={() => {
             setFlow("IDLE");
           }}
@@ -1313,6 +1391,30 @@ export default function ScoringPage() {
           onClose={resetFlow}
           players={matchData?.players}
           state={state}
+        />
+
+        <ChangeBattersSheet
+          open={showChangeBatters}
+          onClose={() => setShowChangeBatters(false)}
+          players={matchData?.players}
+          state={state}
+          isScoringBusy={
+            isRecording || isChangingStrike || isChangingBowler || flow !== "IDLE"
+          }
+          onPendingChange={setIsChangingBatters}
+          onSaved={() => handleCorrectionSaved("Batters changed")}
+        />
+
+        <ChangeBowlerSheet
+          open={showChangeBowler}
+          onClose={() => setShowChangeBowler(false)}
+          players={matchData?.players}
+          state={state}
+          isScoringBusy={
+            isRecording || isChangingStrike || isChangingBatters || flow !== "IDLE"
+          }
+          onPendingChange={setIsChangingBowler}
+          onSaved={() => handleCorrectionSaved("Bowler changed")}
         />
 
         <ScoringShortcutsSheet
