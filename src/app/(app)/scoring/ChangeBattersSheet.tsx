@@ -163,9 +163,13 @@ export function ChangeBattersSheet({
   };
 
   return (
-    <DialogBottom open={open} onClose={handleClose}>
-      <div className="flex flex-col gap-4">
-        <div>
+    <DialogBottom
+      open={open}
+      onClose={handleClose}
+      className="max-h-[min(92dvh,720px)] overflow-hidden"
+    >
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="shrink-0">
           <h3 className="font-display text-lg font-black uppercase tracking-wide text-(--color-text-primary)">
             Change Batters
           </h3>
@@ -177,12 +181,12 @@ export function ChangeBattersSheet({
         </div>
 
         {errorMessage && (
-          <p className="rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 px-3 py-2 text-center text-sm font-semibold text-(--color-live)">
+          <p className="mt-4 shrink-0 rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 px-3 py-2 text-center text-sm font-semibold text-(--color-live)">
             {errorMessage}
           </p>
         )}
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="mt-4 grid shrink-0 grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setEditingRole("STRIKER")}
@@ -220,49 +224,57 @@ export function ChangeBattersSheet({
           </button>
         </div>
 
-        <PlayerPickerSheet
-          open={open}
-          players={battingPlayers}
-          title={editingRole === "STRIKER" ? "Select Striker" : "Select Non-Striker"}
-          subTitle={
-            editingRole === "STRIKER"
-              ? "Choose the batter on strike."
-              : "Choose the batter at the other end."
-          }
-          selectedPlayerId={editingRole === "STRIKER" ? strikerId : nonStrikerId}
-          disabledIds={
-            editingRole === "STRIKER"
-              ? nonStrikerId
-                ? [nonStrikerId]
-                : []
-              : strikerId
-                ? [strikerId]
-                : []
-          }
-          onSelect={(player) => {
-            setErrorMessage("");
-            if (editingRole === "STRIKER") {
-              setStrikerId(player.playerId);
-            } else {
-              setNonStrikerId(player.playerId);
+        <div className="mt-4 min-h-0 flex-1 overflow-hidden overscroll-contain [&>div]:h-full [&>div]:max-h-none">
+          <PlayerPickerSheet
+            open={open}
+            players={battingPlayers}
+            title={
+              editingRole === "STRIKER" ? "Select Striker" : "Select Non-Striker"
             }
-          }}
-        />
+            subTitle={
+              editingRole === "STRIKER"
+                ? "Choose the batter on strike."
+                : "Choose the batter at the other end."
+            }
+            selectedPlayerId={
+              editingRole === "STRIKER" ? strikerId : nonStrikerId
+            }
+            disabledIds={
+              editingRole === "STRIKER"
+                ? nonStrikerId
+                  ? [nonStrikerId]
+                  : []
+                : strikerId
+                  ? [strikerId]
+                  : []
+            }
+            onSelect={(player) => {
+              setErrorMessage("");
+              if (editingRole === "STRIKER") {
+                setStrikerId(player.playerId);
+              } else {
+                setNonStrikerId(player.playerId);
+              }
+            }}
+          />
+        </div>
 
-        <Button
-          fullWidth
-          disabled={
-            isLoading ||
-            isScoringBusy ||
-            !strikerId ||
-            !nonStrikerId ||
-            strikerId === nonStrikerId
-          }
-          loading={isLoading}
-          onClick={handleSave}
-        >
-          Save Batters
-        </Button>
+        <div className="sticky bottom-0 -mx-5 mt-4 shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <Button
+            fullWidth
+            disabled={
+              isLoading ||
+              isScoringBusy ||
+              !strikerId ||
+              !nonStrikerId ||
+              strikerId === nonStrikerId
+            }
+            loading={isLoading}
+            onClick={handleSave}
+          >
+            Save Batters
+          </Button>
+        </div>
       </div>
     </DialogBottom>
   );
