@@ -23,6 +23,7 @@ import {
   ScrollText,
   Share2,
   Contact,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 
@@ -123,6 +124,11 @@ export const cricketDrawerSections: DrawerSection[] = [
       // { label: "Share App", icon: Share2, href: "/shareapp" },
       { label: "About Us", icon: Info, href: "/about-us" },
       { label: "Contact Us", icon: Contact, href: "/contact-us" },
+      {
+        label: "Feedback & Support",
+        icon: MessageSquare,
+        href: "/feedback",
+      },
       // {
       //   label: "Paid Service Terms",
       //   icon: FileText,
@@ -215,6 +221,11 @@ export const volleyballDrawerSections: DrawerSection[] = [
         label: "Contact Us",
         icon: Contact,
         href: "/contact-us",
+      },
+      {
+        label: "Feedback & Support",
+        icon: MessageSquare,
+        href: "/feedback",
       },
       {
         label: "Terms of Service",

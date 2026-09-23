@@ -9,6 +9,7 @@ export type UploadPurpose =
   | "MATCH_IMAGE"
   | "SCORECARD_IMAGE"
   | "HOME_BANNER"
+  | "REPORT_EVIDENCE"
   | "DOCUMENT"
   | "OTHER";
 

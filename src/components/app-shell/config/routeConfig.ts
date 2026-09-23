@@ -394,8 +394,7 @@ export const routeConfig: Record<string, RouteConfig> = {
   "/volleyball/tournaments/[tournamentId]/teams": {
     title: "Teams",
     showBackButton: true,
-    getBackHref: ({ pathname }) =>
-      getVolleyballTournamentDetailPath(pathname),
+    getBackHref: ({ pathname }) => getVolleyballTournamentDetailPath(pathname),
   },
 
   "/volleyball/tournaments/[tournamentId]/admins": {
@@ -416,22 +415,19 @@ export const routeConfig: Record<string, RouteConfig> = {
   "/volleyball/tournaments/[tournamentId]/fixtures": {
     title: "Fixtures",
     showBackButton: true,
-    getBackHref: ({ pathname }) =>
-      getVolleyballTournamentDetailPath(pathname),
+    getBackHref: ({ pathname }) => getVolleyballTournamentDetailPath(pathname),
   },
 
   "/volleyball/tournaments/[tournamentId]/standings": {
     title: "Standings",
     showBackButton: true,
-    getBackHref: ({ pathname }) =>
-      getVolleyballTournamentDetailPath(pathname),
+    getBackHref: ({ pathname }) => getVolleyballTournamentDetailPath(pathname),
   },
 
   "/volleyball/tournaments/[tournamentId]/bracket": {
     title: "Bracket",
     showBackButton: true,
-    getBackHref: ({ pathname }) =>
-      getVolleyballTournamentDetailPath(pathname),
+    getBackHref: ({ pathname }) => getVolleyballTournamentDetailPath(pathname),
   },
 
   "/volleyball/my-performance": {
@@ -448,5 +444,10 @@ export const routeConfig: Record<string, RouteConfig> = {
     back: {
       type: "history",
     },
+  },
+
+  "/feedback": {
+    title: "Feedback & Support",
+    showBackButton: false,
   },
 } as const;
