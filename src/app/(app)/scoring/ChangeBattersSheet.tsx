@@ -1,10 +1,11 @@
 import { Button } from "@/components/common/Button";
 import { DialogBottom } from "@/components/common/DialogBottom";
-import { PlayerPickerSheet } from "@/components/cricket/Players/PlayerPickerSheet";
+import { S3Image } from "@/components/common/S3Image";
 import { cn } from "@/lib/cn";
 import { useChangeStrikeManuallyMutation } from "@/store/api/cricket/scoringApi";
 import { ScoringState } from "@/types/cricket/innings";
 import { MatchDetailsPlayer } from "@/types/cricket/match";
+import { Check, ChevronRight, Search, Users } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type ChangeBattersSheetProps = {
@@ -40,6 +41,57 @@ function playerName(
   return playerId ? playersById.get(playerId)?.playerNameSnapshot : undefined;
 }
 
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function roleTag(player: MatchDetailsPlayer): string {
+  const tags: string[] = [];
+
+  if (player.isCaptain) tags.push("C");
+  if (player.isWicketKeeper) tags.push("WK");
+
+  return tags.join(" / ");
+}
+
+function PlayerAvatar({ player }: { player: MatchDetailsPlayer }) {
+  return (
+    <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border-2 border-(--color-bg-border)">
+      {player.playerProfileImageSnapshot ? (
+        <S3Image
+          imageKey={player.playerProfileImageSnapshot}
+          alt={player.playerNameSnapshot}
+          width={44}
+          height={44}
+          className="h-full w-full object-cover"
+          fallback={
+            <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">
+              <span className="font-display text-sm font-black text-white">
+                {initials(player.playerNameSnapshot)}
+              </span>
+            </div>
+          }
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-(--color-navy)">
+          {player.playerNameSnapshot ? (
+            <span className="font-display text-sm font-black text-white">
+              {initials(player.playerNameSnapshot)}
+            </span>
+          ) : (
+            <Users size={18} className="text-white/40" />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ChangeBattersSheet({
   open,
   onClose,
@@ -54,6 +106,7 @@ export function ChangeBattersSheet({
   const [editingRole, setEditingRole] = useState<"STRIKER" | "NON_STRIKER">(
     "STRIKER",
   );
+  const [query, setQuery] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const submitInFlightRef = useRef(false);
   const [changeStrikeManually, { isLoading }] =
@@ -95,12 +148,23 @@ export function ChangeBattersSheet({
     return new Set(battingPlayers.map((player) => player.playerId));
   }, [battingPlayers]);
 
+  const filteredBattingPlayers = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return normalizedQuery
+      ? battingPlayers.filter((player) =>
+          player.playerNameSnapshot.toLowerCase().includes(normalizedQuery),
+        )
+      : battingPlayers;
+  }, [battingPlayers, query]);
+
   useEffect(() => {
     if (!open) return;
 
     setStrikerId(state?.currentStrikerId ?? "");
     setNonStrikerId(state?.currentNonStrikerId ?? "");
     setEditingRole("STRIKER");
+    setQuery("");
     setErrorMessage("");
   }, [open, state?.currentNonStrikerId, state?.currentStrikerId]);
 
@@ -224,39 +288,117 @@ export function ChangeBattersSheet({
           </button>
         </div>
 
-        <div className="mt-4 min-h-0 flex-1 overflow-hidden overscroll-contain [&>div]:h-full [&>div]:max-h-none">
-          <PlayerPickerSheet
-            open={open}
-            players={battingPlayers}
-            title={
-              editingRole === "STRIKER" ? "Select Striker" : "Select Non-Striker"
-            }
-            subTitle={
-              editingRole === "STRIKER"
+        <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="shrink-0 border-b border-(--color-bg-border) pb-2">
+            <h4 className="font-display text-lg font-black uppercase tracking-wide text-(--color-text-primary)">
+              {editingRole === "STRIKER"
+                ? "Select Striker"
+                : "Select Non-Striker"}
+            </h4>
+            <p className="text-meta mt-0.5">
+              {editingRole === "STRIKER"
                 ? "Choose the batter on strike."
-                : "Choose the batter at the other end."
-            }
-            selectedPlayerId={
-              editingRole === "STRIKER" ? strikerId : nonStrikerId
-            }
-            disabledIds={
-              editingRole === "STRIKER"
-                ? nonStrikerId
-                  ? [nonStrikerId]
-                  : []
-                : strikerId
-                  ? [strikerId]
-                  : []
-            }
-            onSelect={(player) => {
-              setErrorMessage("");
-              if (editingRole === "STRIKER") {
-                setStrikerId(player.playerId);
-              } else {
-                setNonStrikerId(player.playerId);
-              }
-            }}
-          />
+                : "Choose the batter at the other end."}
+            </p>
+          </div>
+
+          <div className="shrink-0 pt-3 pb-2">
+            <label
+              htmlFor="change-batters-search"
+              className="sr-only"
+            >
+              Search players
+            </label>
+            <div className="flex items-center gap-3 rounded-2xl border-2 border-(--color-bg-border) bg-(--color-bg-base) px-4 py-2 transition-all focus-within:border-(--color-sky) focus-within:shadow-[0_0_0_3px_rgba(75,139,255,0.10)]">
+              <Search
+                size={16}
+                className="shrink-0 text-(--color-text-muted)"
+              />
+              <input
+                id="change-batters-search"
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search players..."
+                className="flex-1 bg-transparent text-sm font-medium text-(--color-text-primary) outline-none placeholder:text-(--color-text-muted)"
+              />
+            </div>
+          </div>
+
+          <div className="flex min-h-0 flex-1 touch-pan-y flex-col gap-2 overflow-y-auto overscroll-contain pb-2 scrollbar-none">
+            {filteredBattingPlayers.length === 0 ? (
+              <p className="py-8 text-center text-sm italic text-(--color-text-muted)">
+                No players found
+              </p>
+            ) : (
+              filteredBattingPlayers.map((player) => {
+                const selectedPlayerId =
+                  editingRole === "STRIKER" ? strikerId : nonStrikerId;
+                const disabledPlayerId =
+                  editingRole === "STRIKER" ? nonStrikerId : strikerId;
+                const isSelected = selectedPlayerId === player.playerId;
+                const isDisabled = disabledPlayerId === player.playerId;
+                const tag = roleTag(player);
+
+                return (
+                  <button
+                    key={player.playerId}
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={() => {
+                      if (isDisabled) return;
+
+                      setErrorMessage("");
+
+                      if (editingRole === "STRIKER") {
+                        setStrikerId(player.playerId);
+                      } else {
+                        setNonStrikerId(player.playerId);
+                      }
+                    }}
+                    className={cn(
+                      "flex shrink-0 items-center gap-3.5 rounded-2xl border-2 px-4 py-2 text-left transition-all active:scale-[0.98]",
+                      isDisabled &&
+                        "cursor-not-allowed border-(--color-bg-border) bg-(--color-bg-base) opacity-40",
+                      !isDisabled &&
+                        !isSelected &&
+                        "border-(--color-bg-border) bg-(--color-bg-card) hover:border-(--color-sky)/40 hover:bg-(--color-bg-tint)",
+                      isSelected &&
+                        "border-(--color-sky) bg-(--color-bg-tint) ring-2 ring-(--color-sky)/20",
+                    )}
+                  >
+                    <PlayerAvatar player={player} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-(--color-text-primary)">
+                        {player.playerNameSnapshot}
+                      </span>
+                      {tag && (
+                        <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-wide text-(--color-brand)">
+                          {tag}
+                        </span>
+                      )}
+                      {player.battingOrder !== undefined && (
+                        <span className="text-meta mt-0.5 block">
+                          Batting #{player.battingOrder}
+                        </span>
+                      )}
+                    </span>
+
+                    {isDisabled ? (
+                      <span className="flex items-center gap-1 rounded-full bg-(--color-bg-tint) px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-(--color-brand)">
+                        <Check size={10} strokeWidth={3} /> Selected
+                      </span>
+                    ) : (
+                      <ChevronRight
+                        size={16}
+                        className="shrink-0 text-(--color-text-muted)"
+                      />
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
 
         <div className="sticky bottom-0 -mx-5 mt-4 shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
