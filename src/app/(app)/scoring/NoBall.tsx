@@ -132,9 +132,13 @@ export function NoBallSheet({
             </Button>
             <Button
               onClick={() => {
+                if (isRecording) return;
+
                 onSelect("NO_BALL", Number(extraRuns) || 0);
                 setExtraInput(false);
               }}
+              disabled={isRecording}
+              loading={isRecording}
               fullWidth
             >
               Ok

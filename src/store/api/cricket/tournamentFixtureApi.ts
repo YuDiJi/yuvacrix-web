@@ -37,6 +37,8 @@ export type TournamentBallType = "TENNIS" | "LEATHER" | "OTHER";
 
 export type TournamentFixtureActorType = "USER" | "SYSTEM";
 
+export type TournamentKnockoutNextFixtureSlot = "TEAM_A" | "TEAM_B";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared fixture structures
 // ─────────────────────────────────────────────────────────────────────────────
@@ -89,11 +91,18 @@ export type TournamentFixture = {
   groupId: string | null;
   matchId: string | null;
 
-  teamAId: string;
-  teamBId: string;
+  teamAId: string | null;
+  teamBId: string | null;
 
-  teamASnapshot: TournamentFixtureTeamSnapshot;
-  teamBSnapshot: TournamentFixtureTeamSnapshot;
+  teamASnapshot: TournamentFixtureTeamSnapshot | null;
+  teamBSnapshot: TournamentFixtureTeamSnapshot | null;
+
+  teamASourceFixtureId?: string | null;
+  teamBSourceFixtureId?: string | null;
+  nextFixtureId?: string | null;
+  nextFixtureSlot?: TournamentKnockoutNextFixtureSlot | null;
+  generationKey?: string | null;
+  inconsistency?: string | null;
 
   scheduledAt: string | null;
   timezone: string | null;
@@ -123,6 +132,76 @@ export type TournamentFixture = {
 
   createdAt: string;
   updatedAt: string;
+};
+
+export type GenerateKnockoutFixturesBody =
+  | {
+      seededTeamIds: string[];
+    }
+  | Record<string, never>;
+
+export type GenerateKnockoutFixturesRequest = {
+  tournamentId: string;
+  body: GenerateKnockoutFixturesBody;
+};
+
+export type GeneratedKnockoutFixture = {
+  id: string;
+  tournamentId: string;
+  roundId: string;
+
+  groupId: string | null;
+  matchId: string | null;
+
+  teamAId: string | null;
+  teamBId: string | null;
+
+  teamASnapshot: TournamentFixtureTeamSnapshot | null;
+  teamBSnapshot: TournamentFixtureTeamSnapshot | null;
+
+  teamASourceFixtureId: string | null;
+  teamBSourceFixtureId: string | null;
+  nextFixtureId: string | null;
+  nextFixtureSlot: TournamentKnockoutNextFixtureSlot | null;
+  generationKey: string | null;
+  inconsistency: string | null;
+
+  scheduledAt?: string | null;
+  timezone?: string | null;
+
+  sequenceNumber?: number | null;
+  roundMatchNumber?: number | null;
+  groupMatchNumber?: number | null;
+
+  venueSnapshot?: TournamentFixtureVenue | null;
+  matchRulesSnapshot?: TournamentFixtureRules | null;
+  officialsSnapshot?: TournamentFixtureOfficials | null;
+
+  status?: TournamentFixtureStatus;
+  createdFrom?: TournamentFixtureSource;
+
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type GenerateKnockoutFixturesResponse = {
+  tournamentId: string;
+  fixtures: GeneratedKnockoutFixture[];
+};
+
+export type CreateMatchFromFixtureRequest = {
+  tournamentId: string;
+  fixtureId: string;
+};
+
+export type CreateMatchFromFixtureResponse = {
+  fixture: {
+    id: string;
+    matchId: string;
+    status: "MATCH_CREATED";
+  };
+  matchId: string;
+  created: boolean;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -442,6 +521,57 @@ export const tournamentFixtureApi = baseApi.injectEndpoints({
       ],
     }),
 
+    generateKnockoutFixtures: builder.mutation<
+      GenerateKnockoutFixturesResponse,
+      GenerateKnockoutFixturesRequest
+    >({
+      query: ({ tournamentId, body }) => ({
+        url: `/tournaments/${tournamentId}/fixtures/knockout/generate`,
+        method: "POST",
+        body,
+      }),
+
+      invalidatesTags: (_result, _error, { tournamentId }) => [
+        {
+          type: "Tournament",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: tournamentId,
+        },
+      ],
+    }),
+
+    createMatchFromFixture: builder.mutation<
+      CreateMatchFromFixtureResponse,
+      CreateMatchFromFixtureRequest
+    >({
+      query: ({ tournamentId, fixtureId }) => ({
+        url: `/tournaments/${tournamentId}/fixtures/${fixtureId}/create-match`,
+        method: "POST",
+      }),
+
+      invalidatesTags: (_result, _error, { tournamentId, fixtureId }) => [
+        {
+          type: "Tournament",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: fixtureId,
+        },
+        {
+          type: "TournamentMatch",
+          id: `LIST-${tournamentId}`,
+        },
+      ],
+    }),
+
     // ─────────────────────────────────────────────────────────────────────────
     // Auto-generate fixtures
     // ─────────────────────────────────────────────────────────────────────────
@@ -653,6 +783,8 @@ export const tournamentFixtureApi = baseApi.injectEndpoints({
 
 export const {
   useCreateManualFixtureMutation,
+  useGenerateKnockoutFixturesMutation,
+  useCreateMatchFromFixtureMutation,
   useAutoGenerateFixturesMutation,
   usePreviewAutoFixturesMutation,
   useConfirmAutoFixturesMutation,

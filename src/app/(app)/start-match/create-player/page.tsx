@@ -95,6 +95,7 @@ export default function CreatePlayerPage() {
         isAddingPlayer={isAddingPlayer}
         manualAddPath="/start-match/create-player?manual=true"
         createdSource="MATCH_SCORING"
+        createdByActorType="USER"
         onDone={() => router.push("/start-match/select-players")}
       />
     </div>

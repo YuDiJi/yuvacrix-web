@@ -35,6 +35,8 @@ type CreatePlayerFlowProps = {
     | "TEAM_MANAGEMENT"
     | "TOURNAMENT_REGISTRATION";
 
+  createdByActorType?: "USER" | "SYSTEM";
+
   doneLabel?: (count: number) => string;
 
   isAddingPlayer?: boolean;
@@ -50,6 +52,7 @@ export function CreatePlayerFlow({
   onDone,
   manualAddPath,
   createdSource = "MATCH_SCORING",
+  createdByActorType = "SYSTEM",
   doneLabel,
   isAddingPlayer,
   helperText = "Players are added to the team immediately.",
@@ -167,7 +170,7 @@ export function CreatePlayerFlow({
         fullName: fullName.trim(),
         claimMobile: mobile,
         createdSource,
-        createdByActorType: "SYSTEM",
+        createdByActorType,
         createdByActorId: user.id,
       }).unwrap();
 

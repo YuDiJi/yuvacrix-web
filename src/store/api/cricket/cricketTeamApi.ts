@@ -6,6 +6,7 @@ import {
   GetMyTeamsOverviewResponse,
 } from "@/types/cricket/team";
 import { AddTeamMemberDto, TeamMember } from "@/types/cricket/team";
+import { SPORT_TYPES } from "@/types/sport";
 
 export const cricketTeamApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -67,6 +68,7 @@ export const cricketTeamApi = baseApi.injectEndpoints({
         url: "/teams/me/overview",
         params: {
           filter,
+          sportType: SPORT_TYPES.CRICKET,
           skip,
           limit,
         },

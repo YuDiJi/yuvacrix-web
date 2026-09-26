@@ -77,6 +77,11 @@ export interface RecordBallRequest {
   };
 }
 
+export type RecordBallDraft = Omit<
+  RecordBallRequest,
+  "matchId" | "inningsId" | "clientEventId" | "baseInningsVersion"
+>;
+
 export interface NextAction {
   type: NextActionType;
   reason?: string;

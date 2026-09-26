@@ -230,9 +230,9 @@ export function ChangeBattersSheet({
     <DialogBottom
       open={open}
       onClose={handleClose}
-      className="max-h-[min(92dvh,720px)] overflow-hidden"
+      className="h-[min(92dvh,720px)] max-h-[min(92dvh,720px)] overflow-hidden"
     >
-      <div className="flex h-full min-h-0 flex-col">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
         <div className="shrink-0">
           <h3 className="font-display text-lg font-black uppercase tracking-wide text-(--color-text-primary)">
             Change Batters
@@ -325,7 +325,14 @@ export function ChangeBattersSheet({
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-1 touch-pan-y flex-col gap-2 overflow-y-auto overscroll-contain pb-2 scrollbar-none">
+          <div
+            className="flex min-h-0 flex-1 touch-pan-y flex-col gap-2 overflow-y-auto overscroll-contain pb-2 scrollbar-none"
+            style={{
+              WebkitOverflowScrolling: "touch",
+              overscrollBehavior: "contain",
+              touchAction: "pan-y",
+            }}
+          >
             {filteredBattingPlayers.length === 0 ? (
               <p className="py-8 text-center text-sm italic text-(--color-text-muted)">
                 No players found
@@ -366,6 +373,9 @@ export function ChangeBattersSheet({
                       isSelected &&
                         "border-(--color-sky) bg-(--color-bg-tint) ring-2 ring-(--color-sky)/20",
                     )}
+                    style={{
+                      touchAction: "pan-y",
+                    }}
                   >
                     <PlayerAvatar player={player} />
                     <span className="min-w-0 flex-1">
@@ -401,7 +411,7 @@ export function ChangeBattersSheet({
           </div>
         </div>
 
-        <div className="sticky bottom-0 -mx-5 mt-4 shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="-mx-5 mt-4 shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <Button
             fullWidth
             disabled={

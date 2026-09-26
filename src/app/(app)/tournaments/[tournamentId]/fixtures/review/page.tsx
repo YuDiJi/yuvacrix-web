@@ -14,9 +14,18 @@ import {
 
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/common/Button";
+import { SPORT_TYPES } from "@/types/sport";
+import type { Team } from "@/types/team";
+import { useAppDispatch } from "@/store/hooks";
+import {
+  setMatchContext,
+  setMatchIdMode,
+  setTournamentMatchContext,
+} from "@/store/startMatch/startMatchSlice";
 
 import {
   TournamentFixture,
+  useCreateMatchFromFixtureMutation,
   useDeleteFixtureMutation,
   useGetTournamentFixturesQuery,
   useUpdateFixtureMutation,
@@ -97,6 +106,62 @@ function getApiErrorMessage(error: unknown) {
   }
 
   return "Failed to delete fixture. Please try again.";
+}
+
+function getFixtureSetupErrorMessage(error: unknown) {
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object"
+  ) {
+    const data = error.data as {
+      code?: string;
+      message?: string;
+    };
+
+    if (data.code === "FIXTURE_TEAMS_UNRESOLVED") {
+      return "Teams are not decided yet.";
+    }
+
+    if (data.code === "FIXTURE_MATCH_SETUP_INCOMPLETE") {
+      return data.message ?? "Fixture match setup is incomplete.";
+    }
+
+    if (typeof data.message === "string") {
+      return data.message;
+    }
+  }
+
+  return "Failed to create match from fixture. Please try again.";
+}
+
+function getFixtureTeamName(fixture: TournamentFixture, side: "A" | "B") {
+  const snapshot =
+    side === "A" ? fixture.teamASnapshot : fixture.teamBSnapshot;
+
+  if (snapshot?.name) {
+    return snapshot.name;
+  }
+
+  const sourceFixtureId =
+    side === "A"
+      ? fixture.teamASourceFixtureId
+      : fixture.teamBSourceFixtureId;
+
+  if (sourceFixtureId) {
+    return "Winner of previous match";
+  }
+
+  return "TBD";
+}
+
+function getFixtureMatchupLabel(fixture: TournamentFixture) {
+  return `${getFixtureTeamName(fixture, "A")} vs ${getFixtureTeamName(
+    fixture,
+    "B",
+  )}`;
 }
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -344,16 +409,25 @@ function TeamInitial({ name, ariaLabel }: { name: string; ariaLabel: string }) {
 type FixtureCardProps = {
   fixture: TournamentFixture;
   deleting: boolean;
+  creatingMatch: boolean;
   onEdit: (fixture: TournamentFixture) => void;
   onDelete: (fixture: TournamentFixture) => void;
+  onSetupMatch: (fixture: TournamentFixture) => void;
 };
 
 function FixtureCard({
   fixture,
   deleting,
+  creatingMatch,
   onEdit,
   onDelete,
+  onSetupMatch,
 }: FixtureCardProps) {
+  const teamAName = getFixtureTeamName(fixture, "A");
+  const teamBName = getFixtureTeamName(fixture, "B");
+  const matchupLabel = getFixtureMatchupLabel(fixture);
+  const teamsResolved = Boolean(fixture.teamAId && fixture.teamBId);
+
   const location = [
     fixture.venueSnapshot?.groundName,
     fixture.venueSnapshot?.city,
@@ -402,7 +476,7 @@ function FixtureCard({
             disabled={!canModify || deleting}
             onClick={() => onEdit(fixture)}
             className="flex h-7 w-7 items-center justify-center rounded-full text-(--color-brand) transition-colors hover:bg-(--color-brand)/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-            aria-label={`Edit ${fixture.teamASnapshot.name} versus ${fixture.teamBSnapshot.name}`}
+            aria-label={`Edit ${matchupLabel}`}
           >
             <Pencil size={14} strokeWidth={2.5} />
           </button>
@@ -412,7 +486,7 @@ function FixtureCard({
             disabled={!canModify || deleting}
             onClick={() => onDelete(fixture)}
             className="flex h-7 w-7 items-center justify-center rounded-full text-(--color-live) transition-colors hover:bg-(--color-live)/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-            aria-label={`Delete ${fixture.teamASnapshot.name} versus ${fixture.teamBSnapshot.name}`}
+            aria-label={`Delete ${matchupLabel}`}
           >
             {deleting ? (
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-(--color-live)/30 border-t-(--color-live)" />
@@ -425,13 +499,13 @@ function FixtureCard({
 
       {/* Teams */}
       <div className="mt-2 flex items-center gap-2">
-        <CompactTeam name={fixture.teamASnapshot.name} />
+        <CompactTeam name={teamAName} />
 
         <span className="shrink-0 rounded bg-(--color-navy) px-1.5 py-0.5 font-(family-name:--font-display) text-[9px] font-black text-white">
           VS
         </span>
 
-        <CompactTeam name={fixture.teamBSnapshot.name} align="right" />
+        <CompactTeam name={teamBName} align="right" />
       </div>
 
       {/* Venue and rules */}
@@ -454,6 +528,30 @@ function FixtureCard({
         >
           {formatStatus(fixture.status)}
         </span>
+      </div>
+
+      <div className="mt-2 flex items-center justify-between gap-2">
+        {!teamsResolved ? (
+          <p className="text-[11px] font-semibold text-(--color-text-muted)">
+            Teams are not decided yet
+          </p>
+        ) : (
+          <span />
+        )}
+
+        <button
+          type="button"
+          disabled={!teamsResolved || deleting || creatingMatch}
+          onClick={() => onSetupMatch(fixture)}
+          className={cn(
+            "shrink-0 rounded-lg px-3 py-1.5 font-(family-name:--font-display) text-[10px] font-black uppercase tracking-wide",
+            "bg-(--color-brand) text-white transition-all active:scale-95",
+            "disabled:cursor-not-allowed disabled:bg-(--color-bg-border) disabled:text-(--color-text-muted)",
+          )}
+          title={!teamsResolved ? "Teams are not decided yet" : undefined}
+        >
+          {creatingMatch ? "Setting Up" : "Setup Match"}
+        </button>
       </div>
     </article>
   );
@@ -578,6 +676,7 @@ function EditFixtureDialog({
 
   if (!fixture) return null;
   const currentFixture = fixture;
+  const matchupLabel = getFixtureMatchupLabel(fixture);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -640,7 +739,7 @@ function EditFixtureDialog({
                 </h2>
 
                 <p className="mt-3 font-(family-name:--font-display) text-base font-bold uppercase tracking-wide text-(--color-text-primary)">
-                  {fixture.teamASnapshot.name} vs {fixture.teamBSnapshot.name}
+                  {matchupLabel}
                 </p>
               </div>
 
@@ -788,6 +887,7 @@ function EditFixtureDialog({
 export default function ReviewFixturesPage() {
   const router = useRouter();
   const params = useParams();
+  const dispatch = useAppDispatch();
 
   const tournamentId = params.tournamentId as string;
 
@@ -800,8 +900,13 @@ export default function ReviewFixturesPage() {
     useState<TournamentFixture | null>(null);
 
   const [updateError, setUpdateError] = useState("");
+  const [setupError, setSetupError] = useState("");
+  const [creatingMatchFixtureId, setCreatingMatchFixtureId] = useState<
+    string | null
+  >(null);
 
   const [deleteFixture] = useDeleteFixtureMutation();
+  const [createMatchFromFixture] = useCreateMatchFromFixtureMutation();
 
   const [updateFixture, { isLoading: isUpdating }] = useUpdateFixtureMutation();
 
@@ -877,7 +982,9 @@ export default function ReviewFixturesPage() {
 
   async function handleDelete(fixture: TournamentFixture) {
     const confirmed = window.confirm(
-      `Delete ${fixture.teamASnapshot.name} vs ${fixture.teamBSnapshot.name}?\n\nThis action cannot be undone.`,
+      `Delete ${getFixtureMatchupLabel(
+        fixture,
+      )}?\n\nThis action cannot be undone.`,
     );
 
     if (!confirmed) return;
@@ -901,6 +1008,85 @@ export default function ReviewFixturesPage() {
       setDeleteError(getApiErrorMessage(error));
     } finally {
       setDeletingFixtureId(null);
+    }
+  }
+
+  async function handleSetupMatch(fixture: TournamentFixture) {
+    if (!fixture.teamAId || !fixture.teamBId) {
+      setSetupError("Teams are not decided yet.");
+      return;
+    }
+
+    if (!fixture.teamASnapshot || !fixture.teamBSnapshot) {
+      setSetupError("Fixture team details are not available yet.");
+      return;
+    }
+
+    setSetupError("");
+    setCreatingMatchFixtureId(fixture.id);
+
+    try {
+      const result = await createMatchFromFixture({
+        tournamentId,
+        fixtureId: fixture.id,
+      }).unwrap();
+
+      const lineUpMode = fixture.matchRulesSnapshot?.lineupMode ?? "FLEXIBLE";
+
+      const teamA: Team = {
+        id: fixture.teamAId,
+        name: fixture.teamASnapshot.name,
+        shortName: fixture.teamASnapshot.shortName ?? undefined,
+        logoUrl: fixture.teamASnapshot.logoUrl ?? undefined,
+        sportType: SPORT_TYPES.CRICKET,
+        memberCount: 0,
+      };
+
+      const teamB: Team = {
+        id: fixture.teamBId,
+        name: fixture.teamBSnapshot.name,
+        shortName: fixture.teamBSnapshot.shortName ?? undefined,
+        logoUrl: fixture.teamBSnapshot.logoUrl ?? undefined,
+        sportType: SPORT_TYPES.CRICKET,
+        memberCount: 0,
+      };
+
+      dispatch(
+        setTournamentMatchContext({
+          tournamentId,
+          roundId: fixture.roundId,
+          groupId: fixture.groupId,
+        }),
+      );
+
+      dispatch(
+        setMatchContext({
+          matchId: result.matchId,
+          lineUpMode,
+          teamA,
+          teamB,
+          teamACaptain: null,
+          teamAKeeper: null,
+          teamBCaptain: null,
+          teamBKeeper: null,
+        }),
+      );
+
+      dispatch(
+        setMatchIdMode({
+          matchId: result.matchId,
+          fixtureId: result.fixture.id,
+          lineUpMode,
+        }),
+      );
+
+      router.push(
+        `/start-match/line-up?from=tournament&tournamentId=${tournamentId}`,
+      );
+    } catch (error) {
+      setSetupError(getFixtureSetupErrorMessage(error));
+    } finally {
+      setCreatingMatchFixtureId(null);
     }
   }
 
@@ -928,6 +1114,29 @@ export default function ReviewFixturesPage() {
             <button
               type="button"
               onClick={() => setDeleteError("")}
+              className="text-xs font-bold uppercase text-(--color-live)"
+            >
+              Close
+            </button>
+          </div>
+        )}
+
+        {setupError && (
+          <div className="mx-4 mt-4 flex items-start gap-2.5 rounded-2xl border border-(--color-live)/20 bg-(--color-live)/8 px-4 py-3">
+            <AlertCircle
+              size={16}
+              className="mt-0.5 shrink-0 text-(--color-live)"
+            />
+
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-(--color-live)">
+                {setupError}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSetupError("")}
               className="text-xs font-bold uppercase text-(--color-live)"
             >
               Close
@@ -1008,8 +1217,10 @@ export default function ReviewFixturesPage() {
                   key={fixture.id}
                   fixture={fixture}
                   deleting={deletingFixtureId === fixture.id}
+                  creatingMatch={creatingMatchFixtureId === fixture.id}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onSetupMatch={handleSetupMatch}
                 />
               ))}
             </div>

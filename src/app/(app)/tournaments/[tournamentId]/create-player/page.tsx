@@ -88,6 +88,7 @@ export default function CreatePlayerPage() {
         onRemovePlayer={handleRemovePlayer}
         isAddingPlayer={isAddingPlayer}
         createdSource="TOURNAMENT_REGISTRATION"
+        createdByActorType="USER"
         manualAddPath={`/tournaments/${tournamentId}/create-player?team=${currentTeam}&manual=true`}
         onDone={() =>
           router.push(
