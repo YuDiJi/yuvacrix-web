@@ -79,8 +79,12 @@ export function RunningSheet({
         </Button>
         <Button
           onClick={() => {
+            if (isRecording) return;
+
             onSelect(Number(extraRuns) || 0);
           }}
+          disabled={isRecording}
+          loading={isRecording}
           fullWidth
         >
           Ok

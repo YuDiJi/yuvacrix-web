@@ -121,9 +121,13 @@ export function WideBallSheet({
             </Button>
             <Button
               onClick={() => {
+                if (isRecording) return;
+
                 onSelect("WIDE", Number(extraRuns) || 0);
                 setExtraInput(false);
               }}
+              disabled={isRecording}
+              loading={isRecording}
               fullWidth
             >
               Ok

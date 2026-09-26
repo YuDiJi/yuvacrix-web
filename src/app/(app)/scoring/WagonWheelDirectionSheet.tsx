@@ -27,10 +27,12 @@ type WagonWheelDirectionSheetProps = {
 
   showForRunningRuns: boolean;
   showForBoundaries: boolean;
+  canSkip: boolean;
 
   onClose: () => void;
 
   onSelect: (fieldZone: FieldZone) => void;
+  onSkip: () => void;
 
   onToggleRunningRuns: (enabled: boolean) => Promise<void>;
   onToggleBoundaries: (enabled: boolean) => Promise<void>;
@@ -292,9 +294,11 @@ export function WagonWheelDirectionSheet({
 
   showForRunningRuns,
   showForBoundaries,
+  canSkip,
 
   onClose,
   onSelect,
+  onSkip,
 
   onToggleRunningRuns,
   onToggleBoundaries,
@@ -404,6 +408,17 @@ export function WagonWheelDirectionSheet({
             <p className="mt-1 text-xs text-(--color-text-secondary)">
               Tap where the batter hit the ball
             </p>
+
+            {canSkip && (
+              <button
+                type="button"
+                disabled={isBusy}
+                onClick={onSkip}
+                className="mt-3 rounded-full border border-(--color-bg-border) bg-(--color-bg-card) px-4 py-2 font-display text-[11px] font-black uppercase tracking-[0.08em] text-(--color-text-secondary) transition-colors active:bg-(--color-bg-tint) disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Skip wagon wheel
+              </button>
+            )}
 
             <BattingHandSelector
               value={battingHand}

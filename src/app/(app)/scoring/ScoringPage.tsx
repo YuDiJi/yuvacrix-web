@@ -2,7 +2,10 @@
 
 import { Copy, ChevronUp, User, Volleyball } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectMatchId } from "@/store/startMatch/selectors";
+import {
+  selectMatchId,
+  selectTournamentId,
+} from "@/store/startMatch/selectors";
 import { resetMatch } from "@/store/startMatch/startMatchSlice";
 import {
   useChangeStrikeManuallyMutation,
@@ -10,6 +13,7 @@ import {
   useRecordBallMutation,
   useDeclareBowlingPowerplayMutation,
 } from "@/store/api/cricket/scoringApi";
+import { baseApi } from "@/store/api/baseApi";
 
 import {
   useGetMatchRulesQuery,
@@ -17,8 +21,14 @@ import {
 } from "@/store/api/cricket/matchRulesApi";
 
 import { skipToken, type FetchBaseQueryError } from "@reduxjs/toolkit/query";
-import { ExtraType, FieldZone } from "@/types/cricket/scoring";
-import { useEffect, useState } from "react";
+import {
+  ExtraType,
+  FieldZone,
+  RecordBallDraft,
+  RecordBallRequest,
+  RecordBallResponse,
+} from "@/types/cricket/scoring";
+import { useEffect, useRef, useState } from "react";
 import { WideBallSheet } from "./WideBall";
 import { NoBallSheet } from "./NoBall";
 import { ByeSheet } from "./Bye";
@@ -73,6 +83,18 @@ type ShortcutScreen =
   | "MATCH_OVERS"
   | "WAGON_WHEEL";
 
+type PendingBallContext = {
+  successMessage: string;
+  completedOverSnapshot: ScoringState;
+  closeDialog?: boolean;
+  clearPendingWagonWheel?: boolean;
+};
+
+type PendingBall = {
+  request: RecordBallRequest;
+  context: PendingBallContext;
+};
+
 const RUNNING_RUNS: readonly number[] = [1, 2, 3];
 const BOUNDARY_RUNS: readonly number[] = [4, 6];
 
@@ -122,6 +144,32 @@ function getQueryErrorStatus(error: unknown): FetchBaseQueryError["status"] | nu
   return null;
 }
 
+function getApiErrorMessage(error: unknown): string | undefined {
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object" &&
+    "message" in error.data &&
+    typeof error.data.message === "string"
+  ) {
+    return error.data.message;
+  }
+
+  return undefined;
+}
+
+function isTransportUncertainty(error: unknown): boolean {
+  const status = getQueryErrorStatus(error);
+
+  return (
+    status === "FETCH_ERROR" ||
+    status === "TIMEOUT_ERROR" ||
+    status === "PARSING_ERROR"
+  );
+}
+
 function ScoringRecoveryState({
   title,
   description,
@@ -156,6 +204,8 @@ export default function ScoringPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const matchId = useAppSelector(selectMatchId);
+  const tournamentId = useAppSelector(selectTournamentId);
+  const fixtureId = useAppSelector((state) => state.startMatch.fixtureId);
   const {
     data: matchData,
     isError: isMatchError,
@@ -187,6 +237,12 @@ export default function ScoringPage() {
 
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncMessage, setSyncMessage] = useState("Synced");
+  const [syncErrorMessage, setSyncErrorMessage] = useState("Unable to sync");
+  const [pendingBall, setPendingBall] = useState<PendingBall | null>(null);
+  const [isRecoveringVersionConflict, setIsRecoveringVersionConflict] =
+    useState(false);
+  const [versionConflictRefreshRequired, setVersionConflictRefreshRequired] =
+    useState(false);
 
   const [showStrikeConfirm, setShowStrikeConfirm] = useState(false);
   const [showChangeBatters, setShowChangeBatters] = useState(false);
@@ -203,10 +259,16 @@ export default function ScoringPage() {
     useState<ScoringState | null>(null);
 
   const [shortcutScreen, setShortcutScreen] = useState<ShortcutScreen>(null);
+  const tournamentCompletionRefreshSentRef = useRef(false);
 
   const matchErrorStatus = getQueryErrorStatus(matchError);
   const isStaleMatchError = matchErrorStatus === 404;
   const isCompletedMatch = matchData?.match.status === "COMPLETED";
+  const recordBallWriteLocked =
+    isRecording ||
+    isRecoveringVersionConflict ||
+    versionConflictRefreshRequired ||
+    Boolean(pendingBall);
 
   useEffect(() => {
     if (matchId) return;
@@ -227,6 +289,168 @@ export default function ScoringPage() {
     router.replace(`/matches/${matchId}/scorecard`);
   }, [isCompletedMatch, matchId, router]);
 
+  useEffect(() => {
+    if (
+      !tournamentId ||
+      !state?.inningsCompleted ||
+      state.inningsNumber !== 2 ||
+      tournamentCompletionRefreshSentRef.current
+    ) {
+      return;
+    }
+
+    tournamentCompletionRefreshSentRef.current = true;
+    dispatch(
+      baseApi.util.invalidateTags([
+        { type: "Tournament" as const, id: tournamentId },
+        { type: "TournamentFixture" as const, id: tournamentId },
+        ...(fixtureId
+          ? [{ type: "TournamentFixture" as const, id: fixtureId }]
+          : []),
+        { type: "TournamentMatch" as const, id: `LIST-${tournamentId}` },
+      ]),
+    );
+  }, [
+    dispatch,
+    fixtureId,
+    state?.inningsCompleted,
+    state?.inningsNumber,
+    tournamentId,
+  ]);
+
+  const recoverFromVersionConflict = async () => {
+    setIsRecoveringVersionConflict(true);
+    setVersionConflictRefreshRequired(true);
+    setPendingBall(null);
+    setOpenDialog(null);
+    setPendingWagonWheelRuns(null);
+    setSyncMessage(
+      "Score was updated elsewhere. The latest score has been loaded. Please enter the delivery again if needed.",
+    );
+    setSyncStatus("refreshing");
+
+    try {
+      await refetchScoringState().unwrap();
+      setVersionConflictRefreshRequired(false);
+      setSyncStatus("synced");
+
+      window.setTimeout(() => {
+        setSyncStatus("idle");
+      }, 1200);
+    } catch (error) {
+      console.error("Failed to refresh scoring state after conflict:", error);
+      setSyncErrorMessage(
+        "Score changed elsewhere. Refresh the latest score before scoring again.",
+      );
+      setSyncStatus("error");
+    } finally {
+      setIsRecoveringVersionConflict(false);
+    }
+  };
+
+  const applyRecordBallSuccess = (
+    response: RecordBallResponse,
+    context: PendingBallContext,
+  ) => {
+    setPendingBall(null);
+    setSyncStatus("refreshing");
+    setSyncMessage(context.successMessage);
+    setSyncStatus("synced");
+
+    window.setTimeout(() => {
+      setSyncStatus("idle");
+    }, 1200);
+
+    if (response.nextAction?.type === "SELECT_NEXT_BOWLER") {
+      setCompletedOverSnapshot(context.completedOverSnapshot);
+    }
+
+    if (context.closeDialog) {
+      setOpenDialog(null);
+    }
+
+    if (context.clearPendingWagonWheel) {
+      setPendingWagonWheelRuns(null);
+    }
+  };
+
+  const submitRecordBallRequest = async (
+    request: RecordBallRequest,
+    context: PendingBallContext,
+    { retry = false }: { retry?: boolean } = {},
+  ): Promise<boolean> => {
+    if (
+      isRecording ||
+      isRecoveringVersionConflict ||
+      versionConflictRefreshRequired ||
+      (!retry && pendingBall)
+    ) {
+      return false;
+    }
+
+    setPendingBall({ request, context });
+    setSyncErrorMessage("Unable to sync");
+    setSyncStatus("saving");
+
+    try {
+      const response = await recordBall(request).unwrap();
+      applyRecordBallSuccess(response, context);
+
+      return true;
+    } catch (error) {
+      console.error(error);
+      const message = getApiErrorMessage(error);
+
+      if (message === "SCORING_VERSION_CONFLICT") {
+        await recoverFromVersionConflict();
+
+        return false;
+      }
+
+      if (isTransportUncertainty(error)) {
+        setPendingBall({ request, context });
+        setSyncErrorMessage(
+          "We couldn't confirm whether this delivery was recorded.",
+        );
+        setSyncStatus("error");
+
+        return false;
+      }
+
+      setPendingBall(null);
+      setSyncErrorMessage(message ?? "Ball could not be saved. Please retry.");
+      setSyncStatus("error");
+
+      return false;
+    }
+  };
+
+  const submitNewRecordBall = async (
+    draft: RecordBallDraft,
+    context: PendingBallContext,
+  ): Promise<boolean> => {
+    if (!state || !matchId || recordBallWriteLocked) return false;
+
+    return submitRecordBallRequest(
+      {
+        matchId,
+        inningsId: state.inningsId,
+        clientEventId: crypto.randomUUID(),
+        baseInningsVersion: state.version,
+        ...draft,
+      },
+      context,
+    );
+  };
+
+  const retryPendingBall = () => {
+    if (!pendingBall || isRecording || isRecoveringVersionConflict) return;
+
+    void submitRecordBallRequest(pendingBall.request, pendingBall.context, {
+      retry: true,
+    });
+  };
+
   const isInitialStateLoading = loadingState && !state;
   const isInitialMatchLoading = !matchData;
   const isInitialPageLoading = (loadingState && !state) || !matchData;
@@ -244,6 +468,17 @@ export default function ScoringPage() {
     BOUNDARY_RUNS.every((run) =>
       wagonWheelRules.requiredForBatRuns.includes(run),
     );
+
+  const pendingWagonWheelIsRequired =
+    pendingWagonWheelRuns !== null &&
+    wagonWheelRules?.enabled === true &&
+    wagonWheelRules.requiredForBatRuns.includes(pendingWagonWheelRuns);
+
+  const pendingWagonWheelCanSkip =
+    pendingWagonWheelRuns !== null &&
+    wagonWheelRules?.enabled === true &&
+    !pendingWagonWheelIsRequired &&
+    wagonWheelRules.optionalForBatRuns.includes(pendingWagonWheelRuns);
 
   const playersById = useMemo(() => {
     return new Map(
@@ -265,7 +500,7 @@ export default function ScoringPage() {
       !state?.currentStrikerId ||
       !state?.currentNonStrikerId ||
       isChangingStrike ||
-      isRecording ||
+      recordBallWriteLocked ||
       isChangingBatters ||
       isChangingBowler ||
       scoringLocked
@@ -283,6 +518,7 @@ export default function ScoringPage() {
       !state.currentStrikerId ||
       !state.currentNonStrikerId ||
       isChangingStrike ||
+      recordBallWriteLocked ||
       isChangingBatters ||
       isChangingBowler
     ) {
@@ -481,60 +717,30 @@ export default function ScoringPage() {
   }
 
   async function recordRuns(batRuns: number, fieldZone?: FieldZone) {
-    if (!state || !matchId || isRecording) return;
+    if (!state || !matchId || recordBallWriteLocked) return;
 
-    setSyncStatus("saving");
-
-    try {
-      const response = await recordBall({
-        matchId,
-        inningsId: state.inningsId,
-        clientEventId: Date.now().toString(),
-        baseInningsVersion: state.version,
+    await submitNewRecordBall(
+      {
         runs: {
           batRuns,
         },
         ...(fieldZone && { wagonWheel: { fieldZone } }),
-      }).unwrap();
-
-      setSyncStatus("refreshing");
-
-      // await refetchScoringState().unwrap();
-
-      setSyncMessage(
-        batRuns === 0
-          ? "Dot ball synced"
-          : `${batRuns} ${batRuns === 1 ? "run" : "runs"} synced`,
-      );
-
-      setSyncStatus("synced");
-
-      window.setTimeout(() => {
-        setSyncStatus("idle");
-      }, 1200);
-
-      if (response.nextAction?.type === "SELECT_NEXT_BOWLER") {
-        setCompletedOverSnapshot(state);
-      }
-
-      setOpenDialog(null);
-      setPendingWagonWheelRuns(null);
-    } catch (error) {
-      console.error(error);
-      const message = (error as { data?: { message?: string } })?.data?.message;
-      if (message === "SCORING_VERSION_CONFLICT") {
-        setSyncMessage("Score changed elsewhere. Refreshed latest score.");
-        setSyncStatus("refreshing");
-        await refetchScoringState();
-        setSyncStatus("synced");
-      } else {
-        setSyncMessage("Ball could not be saved. Please retry.");
-        setSyncStatus("error");
-      }
-    }
+      },
+      {
+        completedOverSnapshot: state,
+        successMessage:
+          batRuns === 0
+            ? "Dot ball synced"
+            : `${batRuns} ${batRuns === 1 ? "run" : "runs"} synced`,
+        closeDialog: true,
+        clearPendingWagonWheel: true,
+      },
+    );
   }
 
   function handleRuns(batRuns: number) {
+    if (recordBallWriteLocked) return;
+
     /*
      * Avoid recording a run before the match-rule configuration
      * has loaded, otherwise a required wagon wheel could be skipped.
@@ -562,53 +768,43 @@ export default function ScoringPage() {
   }
 
   const handleExtra = async (type: ExtraType, additionalRuns: number) => {
-    if (!matchId || !state || isRecording) return;
+    if (!matchId || !state || recordBallWriteLocked) return;
 
-    setSyncStatus("saving");
+    const messageByType: Partial<Record<ExtraType, string>> = {
+      WIDE: "Wide synced",
+      NO_BALL: "No ball synced",
+      BYE: "Bye synced",
+      LEG_BYE: "Leg bye synced",
+    };
 
-    try {
-      const response = await recordBall({
-        matchId,
-        inningsId: state.inningsId,
-        clientEventId: Date.now().toString(),
-
+    await submitNewRecordBall(
+      {
         runs: {
           batRuns: 0,
         },
-
         extra: {
           type,
           additionalRuns,
         },
-      }).unwrap();
+      },
+      {
+        completedOverSnapshot: state,
+        successMessage: messageByType[type] ?? "Delivery synced",
+        closeDialog: true,
+      },
+    );
+  };
 
-      setSyncStatus("refreshing");
+  const handleRecordWicket = async (
+    draft: RecordBallDraft,
+  ): Promise<boolean> => {
+    if (!matchId || !state || recordBallWriteLocked) return false;
 
-      // await refetchScoringState().unwrap();
-
-      const messageByType: Partial<Record<ExtraType, string>> = {
-        WIDE: "Wide synced",
-        NO_BALL: "No ball synced",
-        BYE: "Bye synced",
-        LEG_BYE: "Leg bye synced",
-      };
-
-      setSyncMessage(messageByType[type] ?? "Delivery synced");
-      setSyncStatus("synced");
-
-      window.setTimeout(() => {
-        setSyncStatus("idle");
-      }, 1200);
-
-      if (response.nextAction?.type === "SELECT_NEXT_BOWLER") {
-        setCompletedOverSnapshot(state);
-      }
-
-      setOpenDialog(null);
-    } catch (error) {
-      console.error(error);
-      setSyncStatus("error");
-    }
+    return submitNewRecordBall(draft, {
+      completedOverSnapshot: state,
+      successMessage: "Wicket synced",
+      closeDialog: true,
+    });
   };
 
   useEffect(() => {
@@ -679,6 +875,23 @@ export default function ScoringPage() {
     );
   }
 
+  if (versionConflictRefreshRequired) {
+    return (
+      <ScoringRecoveryState
+        title="Refresh Score"
+        description="Score changed elsewhere. Refresh the latest score before scoring again."
+        actionLabel={
+          isRecoveringVersionConflict ? "Refreshing..." : "Refresh Score"
+        }
+        onAction={() => {
+          if (!isRecoveringVersionConflict) {
+            void recoverFromVersionConflict();
+          }
+        }}
+      />
+    );
+  }
+
   if (hasRecoverableMatchError || hasRecoverableScoringStateError) {
     return (
       <ScoringRecoveryState
@@ -736,7 +949,7 @@ export default function ScoringPage() {
   };
 
   const scoringCorrectionBusy =
-    isRecording ||
+    recordBallWriteLocked ||
     isChangingStrike ||
     isChangingBatters ||
     isChangingBowler ||
@@ -937,7 +1150,7 @@ export default function ScoringPage() {
               disabled={
                 isChangingStrike ||
                 scoringStateRefreshing ||
-                isRecording ||
+                recordBallWriteLocked ||
                 scoringLocked ||
                 !state?.currentStrikerId ||
                 !state?.currentNonStrikerId
@@ -1071,7 +1284,7 @@ export default function ScoringPage() {
             disabled={
               loadingState ||
               scoringStateRefreshing ||
-              isRecording ||
+              recordBallWriteLocked ||
               isChangingStrike ||
               scoringLocked
             }
@@ -1088,7 +1301,7 @@ export default function ScoringPage() {
             disabled={
               loadingState ||
               scoringStateRefreshing ||
-              isRecording ||
+              recordBallWriteLocked ||
               isChangingStrike ||
               scoringLocked
             }
@@ -1105,7 +1318,7 @@ export default function ScoringPage() {
             disabled={
               loadingState ||
               scoringStateRefreshing ||
-              isRecording ||
+              recordBallWriteLocked ||
               isChangingStrike ||
               scoringLocked
             }
@@ -1119,15 +1332,15 @@ export default function ScoringPage() {
             2
           </button>
           <button
-            disabled={isRecording || isChangingStrike}
+            disabled={recordBallWriteLocked || isChangingStrike}
             onClick={() => {
-              if (!isRecording && !isChangingStrike) {
+              if (!recordBallWriteLocked && !isChangingStrike) {
                 setOpenDialog("UNDO");
               }
             }}
             className={cn(
               "z-30 flex-1 font-display text-sm font-black text-[#38f5cf] bg-[#38f5cf]/5 uppercase tracking-widest active:bg-slate-50 transition-colors",
-              (isRecording || isChangingStrike) &&
+              (recordBallWriteLocked || isChangingStrike) &&
                 "cursor-not-allowed opacity-50",
             )}
           >
@@ -1147,7 +1360,7 @@ export default function ScoringPage() {
             disabled={
               loadingState ||
               scoringStateRefreshing ||
-              isRecording ||
+              recordBallWriteLocked ||
               isChangingStrike ||
               scoringLocked
             }
@@ -1160,7 +1373,7 @@ export default function ScoringPage() {
             disabled={
               loadingState ||
               scoringStateRefreshing ||
-              isRecording ||
+              recordBallWriteLocked ||
               isChangingStrike ||
               scoringLocked
             }
@@ -1178,7 +1391,7 @@ export default function ScoringPage() {
             disabled={
               loadingState ||
               scoringStateRefreshing ||
-              isRecording ||
+              recordBallWriteLocked ||
               isChangingStrike ||
               scoringLocked
             }
@@ -1200,14 +1413,14 @@ export default function ScoringPage() {
             )}
           >
             <button
-              disabled={scoringLocked}
+              disabled={scoringLocked || recordBallWriteLocked}
               onClick={() => setOpenDialog("RUNNING")}
               className="flex-1 border-b border-(--color-bg-border) bg-[#F8FAFC] font-display text-xl font-black text-(--color-text-body) active:bg-slate-100 transition-colors"
             >
               5, 7
             </button>
             <button
-              disabled={scoringLocked}
+              disabled={scoringLocked || recordBallWriteLocked}
               onClick={() => setOpenDialog("OUT")}
               className="flex-[1.6] bg-[#FFF5F5] font-display text-sm font-black text-(--color-live) uppercase tracking-widest active:bg-red-100 transition-colors"
             >
@@ -1225,28 +1438,28 @@ export default function ScoringPage() {
           )}
         >
           <button
-            disabled={scoringLocked}
+            disabled={scoringLocked || recordBallWriteLocked}
             onClick={() => setOpenDialog("WIDE")}
             className="flex-1 border-r border-(--color-bg-border) font-display text-xl font-black text-(--color-navy) active:bg-slate-50 transition-colors"
           >
             WD
           </button>
           <button
-            disabled={scoringLocked}
+            disabled={scoringLocked || recordBallWriteLocked}
             onClick={() => setOpenDialog("NO_BALL")}
             className="flex-1 border-r border-(--color-bg-border) font-display text-xl font-black text-(--color-navy) active:bg-slate-50 transition-colors"
           >
             NB
           </button>
           <button
-            disabled={scoringLocked}
+            disabled={scoringLocked || recordBallWriteLocked}
             onClick={() => setOpenDialog("BYE")}
             className="flex-1 border-r border-(--color-bg-border) font-display text-xl font-black text-(--color-navy) active:bg-slate-50 transition-colors"
           >
             BYE
           </button>
           <button
-            disabled={scoringLocked}
+            disabled={scoringLocked || recordBallWriteLocked}
             onClick={() => setOpenDialog("LEG_BYE")}
             className="flex-1 font-display text-xl font-black text-(--color-navy) active:bg-slate-50 transition-colors"
           >
@@ -1274,31 +1487,31 @@ export default function ScoringPage() {
           open={openDialog === "WIDE"}
           onClose={() => setOpenDialog(null)}
           onSelect={handleExtra}
-          isRecording={isRecording}
+          isRecording={recordBallWriteLocked}
         />
         <NoBallSheet
           open={openDialog === "NO_BALL"}
           onClose={() => setOpenDialog(null)}
           onSelect={handleExtra}
-          isRecording={isRecording}
+          isRecording={recordBallWriteLocked}
         />
         <ByeSheet
           open={openDialog === "BYE"}
           onClose={() => setOpenDialog(null)}
           onSelect={handleExtra}
-          isRecording={isRecording}
+          isRecording={recordBallWriteLocked}
         />
         <LegByeSheet
           open={openDialog === "LEG_BYE"}
           onClose={() => setOpenDialog(null)}
           onSelect={handleExtra}
-          isRecording={isRecording}
+          isRecording={recordBallWriteLocked}
         />
         <RunningSheet
           open={openDialog === "RUNNING"}
           onClose={() => setOpenDialog(null)}
           onSelect={handleRuns}
-          isRecording={isRecording}
+          isRecording={recordBallWriteLocked}
         />
         <UndoSheet
           open={openDialog === "UNDO"}
@@ -1307,7 +1520,7 @@ export default function ScoringPage() {
           inningsId={state?.inningsId}
           matchId={matchId}
           isScoringBusy={
-            isRecording ||
+            recordBallWriteLocked ||
             isChangingStrike ||
             isChangingBatters ||
             isChangingBowler
@@ -1321,6 +1534,8 @@ export default function ScoringPage() {
           onClose={() => setOpenDialog(null)}
           state={state}
           players={matchData?.players}
+          onRecordWicket={handleRecordWicket}
+          isRecording={recordBallWriteLocked}
         />
         <CompletionSheet
           open={flow === "OVER_COMPLETED"}
@@ -1449,23 +1664,34 @@ export default function ScoringPage() {
         />
       </div>
 
-      <SyncStatusToast status={syncStatus} successMessage={syncMessage} />
+      <SyncStatusToast
+        status={syncStatus}
+        successMessage={syncMessage}
+        errorMessage={syncErrorMessage}
+        onRetry={pendingBall ? retryPendingBall : undefined}
+      />
 
       <WagonWheelDirectionSheet
         open={pendingWagonWheelRuns !== null}
         batRuns={pendingWagonWheelRuns}
-        isRecording={isRecording}
+        isRecording={recordBallWriteLocked}
         isUpdatingSettings={isUpdatingMatchRules}
         showForRunningRuns={showForRunningRuns}
         showForBoundaries={showForBoundaries}
+        canSkip={pendingWagonWheelCanSkip}
         onClose={() => {
-          if (!isRecording && !isUpdatingMatchRules) {
+          if (!recordBallWriteLocked && !isUpdatingMatchRules) {
             setPendingWagonWheelRuns(null);
           }
         }}
         onSelect={(fieldZone) => {
           if (pendingWagonWheelRuns !== null) {
             void recordRuns(pendingWagonWheelRuns, fieldZone);
+          }
+        }}
+        onSkip={() => {
+          if (pendingWagonWheelCanSkip && pendingWagonWheelRuns !== null) {
+            void recordRuns(pendingWagonWheelRuns);
           }
         }}
         onToggleRunningRuns={handleToggleRunningRuns}

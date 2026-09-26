@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DialogBottom } from "@/components/common/DialogBottom"; // Adjust import path
 
 import WicketTypeSelector from "./WicketTypeSelector";
 import { BuildRunsResult, OutFlowStep, WICKET_CONFIG } from "./constant";
 import {
-  RecordBallRequest,
+  RecordBallDraft,
   WicketFlowState,
   WicketType,
 } from "@/types/cricket/scoring";
@@ -14,7 +14,6 @@ import { ScoringState } from "@/types/cricket/innings";
 import { MatchDetailsPlayer } from "@/types/cricket/match";
 import DeliveryTypeRunsSelector from "./DeliveryTypeRunsSelector";
 import Confirm from "./ConfirmSelector";
-import { useRecordBallMutation } from "@/store/api/cricket/scoringApi";
 import { ArrowLeft } from "lucide-react";
 
 interface OutSheetProps {
@@ -22,6 +21,8 @@ interface OutSheetProps {
   onClose: () => void;
   state: ScoringState | undefined;
   players: MatchDetailsPlayer[] | undefined;
+  onRecordWicket: (draft: RecordBallDraft) => Promise<boolean>;
+  isRecording: boolean;
   //   onSelect: (type: OutType) => void;
 }
 
@@ -41,7 +42,14 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
+export function OutSheet({
+  open,
+  onClose,
+  state,
+  players,
+  onRecordWicket,
+  isRecording,
+}: OutSheetProps) {
   const [step, setStep] = useState<OutFlowStep>("SELECT_WICKET_TYPE");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -49,8 +57,15 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
     fielderIds: [],
   });
 
-  const [recordBall, { isLoading: isRecordingWicket }] =
-    useRecordBallMutation();
+  useEffect(() => {
+    if (open) return;
+
+    setErrorMessage("");
+    setStep("SELECT_WICKET_TYPE");
+    setForm({
+      fielderIds: [],
+    });
+  }, [open]);
 
   const handleWicketTypeSelect = (wicketType: WicketType) => {
     setErrorMessage("");
@@ -190,9 +205,9 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
     return {};
   };
 
-  const buildWicketPayload = (form: WicketFlowState): RecordBallRequest => {
+  const buildWicketPayload = (form: WicketFlowState): RecordBallDraft => {
     const scoring = buildRunsAndExtras(form);
-    const wicket: NonNullable<RecordBallRequest["wicket"]> = {
+    const wicket: NonNullable<RecordBallDraft["wicket"]> = {
       type: form.wicketType!,
       dismissedPlayerId: form.dismissedPlayerId!,
     };
@@ -205,11 +220,7 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
       wicket.dismissalEnd = form.dismissalEnd;
     }
 
-    const payload: RecordBallRequest = {
-      matchId: state!.matchId,
-      inningsId: state!.inningsId,
-      clientEventId: crypto.randomUUID(),
-
+    const payload: RecordBallDraft = {
       wicket,
 
       runs: scoring.runs ?? {
@@ -225,14 +236,20 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
   };
 
   const handleOut = async () => {
-    if (!state?.inningsId || !form.wicketType || isRecordingWicket) return;
+    if (!state?.inningsId || !form.wicketType || isRecording) return;
 
     setErrorMessage("");
 
     try {
       const payload = buildWicketPayload(form);
+      const recorded = await onRecordWicket(payload);
 
-      await recordBall(payload).unwrap();
+      if (!recorded) {
+        setErrorMessage(
+          "Unable to record wicket. Please try again or use Retry if shown.",
+        );
+        return;
+      }
 
       onClose();
 
@@ -338,7 +355,7 @@ export function OutSheet({ open, onClose, state, players }: OutSheetProps) {
             form={form}
             setForm={setForm}
             players={players}
-            isLoading={isRecordingWicket}
+            isLoading={isRecording}
             onSubmit={() => {
               handleOut();
             }}

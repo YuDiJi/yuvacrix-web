@@ -129,6 +129,46 @@ function createScheduledAt(date: string, time: string, timezone: string) {
   return new Date(`${date}T${time}:00`).toISOString();
 }
 
+type FixtureTeamLabelSource = {
+  teamA?: {
+    name?: string | null;
+  } | null;
+  teamB?: {
+    name?: string | null;
+  } | null;
+  teamASourceFixtureId?: string | null;
+  teamBSourceFixtureId?: string | null;
+};
+
+function getFixtureTeamName(
+  fixture: FixtureTeamLabelSource,
+  side: "A" | "B",
+) {
+  const team = side === "A" ? fixture.teamA : fixture.teamB;
+
+  if (team?.name) {
+    return team.name;
+  }
+
+  const sourceFixtureId =
+    side === "A"
+      ? fixture.teamASourceFixtureId
+      : fixture.teamBSourceFixtureId;
+
+  if (sourceFixtureId) {
+    return "Winner of previous match";
+  }
+
+  return "TBD";
+}
+
+function getFixtureMatchupLabel(fixture: FixtureTeamLabelSource) {
+  return `${getFixtureTeamName(fixture, "A")} vs ${getFixtureTeamName(
+    fixture,
+    "B",
+  )}`;
+}
+
 // ─── Compact team ─────────────────────────────────────────────────────────────
 
 type CompactTeamProps = {
@@ -163,6 +203,10 @@ function PreviewFixtureCard({
   onEdit,
   onDelete,
 }: PreviewFixtureCardProps) {
+  const teamAName = getFixtureTeamName(fixture, "A");
+  const teamBName = getFixtureTeamName(fixture, "B");
+  const matchupLabel = getFixtureMatchupLabel(fixture);
+
   const location = [fixture.venue.groundName, fixture.venue.city]
     .filter(Boolean)
     .join(", ");
@@ -191,7 +235,7 @@ function PreviewFixtureCard({
             type="button"
             onClick={() => onEdit(fixture)}
             className="flex h-7 w-7 items-center justify-center rounded-full text-(--color-brand) transition-colors hover:bg-(--color-brand)/10 active:scale-95"
-            aria-label={`Edit ${fixture.teamA.name} versus ${fixture.teamB.name}`}
+            aria-label={`Edit ${matchupLabel}`}
           >
             <Pencil size={14} strokeWidth={2.5} />
           </button>
@@ -200,7 +244,7 @@ function PreviewFixtureCard({
             type="button"
             onClick={() => onDelete(fixture)}
             className="flex h-7 w-7 items-center justify-center rounded-full text-(--color-live) transition-colors hover:bg-(--color-live)/10 active:scale-95"
-            aria-label={`Delete ${fixture.teamA.name} versus ${fixture.teamB.name}`}
+            aria-label={`Delete ${matchupLabel}`}
           >
             <Trash2 size={14} strokeWidth={2.5} />
           </button>
@@ -209,13 +253,13 @@ function PreviewFixtureCard({
 
       {/* Teams */}
       <div className="mt-2 flex items-center gap-2">
-        <CompactTeam name={fixture.teamA.name} />
+        <CompactTeam name={teamAName} />
 
         <span className="shrink-0 rounded bg-(--color-navy) px-1.5 py-0.5 font-(family-name:--font-display) text-[9px] font-black text-white">
           VS
         </span>
 
-        <CompactTeam name={fixture.teamB.name} align="right" />
+        <CompactTeam name={teamBName} align="right" />
       </div>
 
       {/* Venue and rules */}
@@ -289,6 +333,7 @@ function EditFixtureDialog({
   if (!fixture) return null;
 
   const currentFixture = fixture;
+  const matchupLabel = getFixtureMatchupLabel(fixture);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -351,7 +396,7 @@ function EditFixtureDialog({
                 </h2>
 
                 <p className="mt-3 truncate font-(family-name:--font-display) text-base font-bold uppercase tracking-wide text-(--color-text-primary)">
-                  {fixture.teamA.name} vs {fixture.teamB.name}
+                  {matchupLabel}
                 </p>
               </div>
 
@@ -541,7 +586,9 @@ export default function AutoFixturesReview({
 
   function handleDelete(fixture: PreviewAutoFixture) {
     const confirmed = window.confirm(
-      `Remove ${fixture.teamA.name} vs ${fixture.teamB.name} from this fixture preview?`,
+      `Remove ${getFixtureMatchupLabel(
+        fixture,
+      )} from this fixture preview?`,
     );
 
     if (!confirmed) return;

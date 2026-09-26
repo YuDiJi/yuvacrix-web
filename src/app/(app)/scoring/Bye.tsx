@@ -116,9 +116,13 @@ export function ByeSheet({
           </Button>
           <Button
             onClick={() => {
+              if (isRecording) return;
+
               onSelect("BYE", Number(extraRuns) || 0);
               setExtraInput(false);
             }}
+            disabled={isRecording}
+            loading={isRecording}
             fullWidth
           >
             Ok

@@ -4,14 +4,19 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { useAppSelector } from "@/store/hooks";
-import { selectTeamA, selectTeamB } from "@/store/startMatch/selectors";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  selectTeamA,
+  selectTeamB,
+  selectTournamentId,
+} from "@/store/startMatch/selectors";
 // import { useHeader } from "@/providers/HeaderProvider";
 
 import {
   useSubmitTossMutation,
   useStartMatchMutation,
 } from "@/store/api/cricket/matchApi";
+import { baseApi } from "@/store/api/baseApi";
 import { Button } from "@/components/common/Button";
 import { S3Image } from "@/components/common/S3Image";
 
@@ -492,12 +497,15 @@ function DecisionCard({
 
 export default function TossClient() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   // const { setHeader } = useHeader();
 
   const teamA = useAppSelector(selectTeamA);
   const teamB = useAppSelector(selectTeamB);
 
   const matchId = useAppSelector((state) => state.startMatch.matchId);
+  const tournamentId = useAppSelector(selectTournamentId);
+  const fixtureId = useAppSelector((state) => state.startMatch.fixtureId);
 
   const [submitToss, { isLoading: isSubmittingToss }] = useSubmitTossMutation();
   const [startMatch, { isLoading: isStartingMatch }] = useStartMatchMutation();
@@ -571,6 +579,19 @@ export default function TossClient() {
       await startMatch({
         matchId,
       }).unwrap();
+
+      if (tournamentId) {
+        dispatch(
+          baseApi.util.invalidateTags([
+            { type: "Tournament" as const, id: tournamentId },
+            { type: "TournamentFixture" as const, id: tournamentId },
+            ...(fixtureId
+              ? [{ type: "TournamentFixture" as const, id: fixtureId }]
+              : []),
+            { type: "TournamentMatch" as const, id: `LIST-${tournamentId}` },
+          ]),
+        );
+      }
 
       router.push("/start-match/start-innings");
     } catch (error) {

@@ -1,4 +1,5 @@
 import { Team } from "../team";
+import type { SportType } from "../sport";
 
 export interface AddTeamMemberDto {
   playerId: string;
@@ -66,6 +67,7 @@ export type TeamOverviewFilter = "YOUR" | "PARTICIPATE" | "ALL"; ////// | "NETWO
 
 export interface GetMyTeamsOverviewParams {
   filter: TeamOverviewFilter;
+  sportType?: SportType;
   skip: number;
   limit: number;
 }

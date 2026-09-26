@@ -116,9 +116,13 @@ export function LegByeSheet({
           </Button>
           <Button
             onClick={() => {
+              if (isRecording) return;
+
               onSelect("LEG_BYE", Number(extraRuns) || 0);
               setExtraInput(false);
             }}
+            disabled={isRecording}
+            loading={isRecording}
             fullWidth
           >
             Ok
