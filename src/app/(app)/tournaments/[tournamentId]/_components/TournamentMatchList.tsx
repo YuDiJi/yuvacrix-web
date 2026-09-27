@@ -2,13 +2,22 @@
 
 import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CalendarDays, Plus, Radio, Volleyball } from "lucide-react";
+import {
+  AlertCircle,
+  CalendarDays,
+  MoreVertical,
+  Radio,
+  Volleyball,
+} from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { Button } from "@/components/common/Button";
+import { DialogBox } from "@/components/common/DialogBox";
 import { MatchesList } from "@/components/cricket/match/MatchesList";
 import { LiveOptionsSheet } from "@/components/cricket/match/LiveOptionsSheet";
 
 import { useGetTournamentMatchesQuery } from "@/store/api/cricket/tournamentMatchApi";
+import { useDeleteFixtureMatchMutation } from "@/store/api/cricket/tournamentFixtureApi";
 import { useAppDispatch } from "@/store/hooks";
 import {
   resetMatch,
@@ -31,6 +40,51 @@ const TOURNAMENT_TAB_LABELS: Record<TournamentMatchTab, string> = {
   PAST: "Past",
 };
 
+function getDeleteFixtureMatchErrorMessage(error: unknown) {
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object"
+  ) {
+    const data = error.data as {
+      code?: string;
+      message?: string;
+    };
+
+    if (data.code === "TOURNAMENT_MATCH_DELETE_LOCKED") {
+      return "This match can no longer be deleted because it has already started or finished.";
+    }
+
+    if (data.code === "MATCH_HAS_SCORING_DATA") {
+      return "This match cannot be deleted because scoring data already exists.";
+    }
+
+    if (data.code === "TOURNAMENT_MATCH_NOT_FOUND_FOR_FIXTURE") {
+      return "No linked match exists for this fixture.";
+    }
+
+    if (typeof data.message === "string") {
+      return data.message;
+    }
+  }
+
+  return "Unable to delete match.";
+}
+
+function canDeleteTournamentMatch(match: MatchCardModel) {
+  return (
+    match.source === "TOURNAMENT" &&
+    match.isAdmin &&
+    Boolean(match.fixtureId) &&
+    match.status !== "LIVE" &&
+    match.status !== "COMPLETED" &&
+    match.status !== "CANCELLED" &&
+    match.status !== "ABANDONED"
+  );
+}
+
 export default function TournamentMatchList() {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -44,6 +98,18 @@ export default function TournamentMatchList() {
     null,
   );
   const [showLiveOptions, setShowLiveOptions] = useState(false);
+  const [openActionsMatchId, setOpenActionsMatchId] = useState<string | null>(
+    null,
+  );
+  const [matchToDelete, setMatchToDelete] = useState<MatchCardModel | null>(
+    null,
+  );
+  const [deletingFixtureId, setDeletingFixtureId] = useState<string | null>(
+    null,
+  );
+  const [deleteMatchError, setDeleteMatchError] = useState("");
+
+  const [deleteFixtureMatch] = useDeleteFixtureMatchMutation();
 
   const {
     data: tournamentMatches = [],
@@ -182,6 +248,75 @@ export default function TournamentMatchList() {
     router.push(`/tournaments/${tournamentId}/start-match`);
   }
 
+  function handleRequestDeleteMatch(match: MatchCardModel) {
+    if (!canDeleteTournamentMatch(match)) return;
+
+    setOpenActionsMatchId(null);
+    setDeleteMatchError("");
+    setMatchToDelete(match);
+  }
+
+  async function handleConfirmDeleteMatch() {
+    if (!matchToDelete?.fixtureId || deletingFixtureId) return;
+
+    setDeleteMatchError("");
+    setDeletingFixtureId(matchToDelete.fixtureId);
+
+    try {
+      await deleteFixtureMatch({
+        tournamentId,
+        fixtureId: matchToDelete.fixtureId,
+      }).unwrap();
+
+      setMatchToDelete(null);
+    } catch (error) {
+      setDeleteMatchError(getDeleteFixtureMatchErrorMessage(error));
+    } finally {
+      setDeletingFixtureId(null);
+    }
+  }
+
+  function renderMatchActions(match: MatchCardModel) {
+    if (!canDeleteTournamentMatch(match)) return null;
+
+    const menuOpen = openActionsMatchId === match.matchId;
+
+    return (
+      <div className="relative">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            setOpenActionsMatchId((current) =>
+              current === match.matchId ? null : match.matchId,
+            );
+          }}
+          className="flex h-8 w-8 items-center justify-center rounded-full text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-tint) hover:text-(--color-text-primary)"
+          aria-label="Open match actions"
+          aria-expanded={menuOpen}
+        >
+          <MoreVertical size={17} />
+        </button>
+
+        {menuOpen && (
+          <div className="absolute right-0 top-9 z-20 min-w-36 overflow-hidden rounded-xl border border-(--color-bg-border) bg-(--color-bg-card) shadow-(--shadow-card)">
+            <button
+              type="button"
+              disabled={deletingFixtureId === match.fixtureId}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleRequestDeleteMatch(match);
+              }}
+              className="w-full px-4 py-3 text-left font-(family-name:--font-display) text-xs font-black uppercase tracking-wide text-(--color-live) transition-colors hover:bg-(--color-live)/8 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Delete Match
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   function getEmptyContent() {
     switch (activeTab) {
       case "LIVE":
@@ -265,6 +400,7 @@ export default function TournamentMatchList() {
             isError={isError}
             errorText="Failed to load tournament matches."
             onMatchClick={handleMatchClick}
+            renderActions={renderMatchActions}
           />
         )}
       </div>
@@ -277,6 +413,65 @@ export default function TournamentMatchList() {
           getMatchRoute={getMatchRoute}
         />
       )}
+
+      <DialogBox
+        open={Boolean(matchToDelete)}
+        onClose={() => {
+          if (deletingFixtureId) return;
+
+          setDeleteMatchError("");
+          setMatchToDelete(null);
+        }}
+      >
+        <div className="p-5">
+          <h2 className="font-(family-name:--font-display) text-xl font-black uppercase text-(--color-text-primary)">
+            Delete match?
+          </h2>
+
+          <p className="mt-2 text-sm leading-5 text-(--color-text-secondary)">
+            This will delete the linked match but keep the fixture, teams,
+            schedule and match number. You can create the match again later.
+          </p>
+
+          {deleteMatchError && (
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-(--color-live)/20 bg-(--color-live)/10 px-3 py-2.5">
+              <AlertCircle
+                size={15}
+                className="mt-0.5 shrink-0 text-(--color-live)"
+              />
+
+              <p className="text-xs font-semibold text-(--color-live)">
+                {deleteMatchError}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={Boolean(deletingFixtureId)}
+              onClick={() => {
+                setDeleteMatchError("");
+                setMatchToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              loading={Boolean(deletingFixtureId)}
+              onClick={() => void handleConfirmDeleteMatch()}
+            >
+              Delete Match
+            </Button>
+          </div>
+        </div>
+      </DialogBox>
     </div>
   );
 }

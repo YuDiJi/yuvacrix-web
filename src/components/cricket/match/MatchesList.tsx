@@ -2,6 +2,7 @@
 
 import { MatchCard } from "@/components/cricket/match/MatchCard";
 import { MatchCardModel } from "@/types/cricket/matchCard";
+import type { ReactNode } from "react";
 import { match } from "assert";
 
 type MatchesListProps = {
@@ -10,6 +11,7 @@ type MatchesListProps = {
   isError?: boolean;
   errorText?: string;
   onMatchClick: (match: MatchCardModel) => void;
+  renderActions?: (match: MatchCardModel) => ReactNode;
 };
 
 function MatchCardSkeleton() {
@@ -43,6 +45,7 @@ export function MatchesList({
   isError = false,
   errorText = "Failed to load matches. Please try again.",
   onMatchClick,
+  renderActions,
 }: MatchesListProps) {
   if (isLoading) {
     return (
@@ -69,6 +72,7 @@ export function MatchesList({
           key={match.matchId}
           match={match}
           onClick={() => onMatchClick(match)}
+          actions={renderActions?.(match)}
         />
       ))}
     </div>

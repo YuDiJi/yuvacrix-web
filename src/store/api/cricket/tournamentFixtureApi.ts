@@ -90,6 +90,7 @@ export type TournamentFixture = {
 
   groupId: string | null;
   matchId: string | null;
+  matchNumber: number | null;
 
   teamAId: string | null;
   teamBId: string | null;
@@ -152,6 +153,7 @@ export type GeneratedKnockoutFixture = {
 
   groupId: string | null;
   matchId: string | null;
+  matchNumber: number | null;
 
   teamAId: string | null;
   teamBId: string | null;
@@ -323,6 +325,7 @@ export type PreviewAutoFixtureOfficials = {
 
 export type PreviewAutoFixture = {
   clientFixtureId: string;
+  matchNumber?: number | null;
 
   sequenceNumber: number;
   roundMatchNumber: number;
@@ -438,6 +441,11 @@ export type DeleteFixtureResponse = {
   message?: string;
 };
 
+export type DeleteFixtureMatchRequest = {
+  tournamentId: string;
+  fixtureId: string;
+};
+
 export type ConfirmAutoFixtureItem = {
   clientFixtureId: string;
 
@@ -550,6 +558,35 @@ export const tournamentFixtureApi = baseApi.injectEndpoints({
       query: ({ tournamentId, fixtureId }) => ({
         url: `/tournaments/${tournamentId}/fixtures/${fixtureId}/create-match`,
         method: "POST",
+      }),
+
+      invalidatesTags: (_result, _error, { tournamentId, fixtureId }) => [
+        {
+          type: "Tournament",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: tournamentId,
+        },
+        {
+          type: "TournamentFixture",
+          id: fixtureId,
+        },
+        {
+          type: "TournamentMatch",
+          id: `LIST-${tournamentId}`,
+        },
+      ],
+    }),
+
+    deleteFixtureMatch: builder.mutation<
+      TournamentFixture,
+      DeleteFixtureMatchRequest
+    >({
+      query: ({ tournamentId, fixtureId }) => ({
+        url: `/tournaments/${tournamentId}/fixtures/${fixtureId}/match`,
+        method: "DELETE",
       }),
 
       invalidatesTags: (_result, _error, { tournamentId, fixtureId }) => [
@@ -785,6 +822,7 @@ export const {
   useCreateManualFixtureMutation,
   useGenerateKnockoutFixturesMutation,
   useCreateMatchFromFixtureMutation,
+  useDeleteFixtureMatchMutation,
   useAutoGenerateFixturesMutation,
   usePreviewAutoFixturesMutation,
   useConfirmAutoFixturesMutation,

@@ -14,6 +14,7 @@ import {
 
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/common/Button";
+import { DialogBox } from "@/components/common/DialogBox";
 import { SPORT_TYPES } from "@/types/sport";
 import type { Team } from "@/types/team";
 import { useAppDispatch } from "@/store/hooks";
@@ -27,6 +28,7 @@ import {
   TournamentFixture,
   useCreateMatchFromFixtureMutation,
   useDeleteFixtureMutation,
+  useDeleteFixtureMatchMutation,
   useGetTournamentFixturesQuery,
   useUpdateFixtureMutation,
 } from "@/store/api/cricket/tournamentFixtureApi";
@@ -135,6 +137,39 @@ function getFixtureSetupErrorMessage(error: unknown) {
   }
 
   return "Failed to create match from fixture. Please try again.";
+}
+
+function getDeleteFixtureMatchErrorMessage(error: unknown) {
+  if (
+    error &&
+    typeof error === "object" &&
+    "data" in error &&
+    error.data &&
+    typeof error.data === "object"
+  ) {
+    const data = error.data as {
+      code?: string;
+      message?: string;
+    };
+
+    if (data.code === "TOURNAMENT_MATCH_DELETE_LOCKED") {
+      return "This match can no longer be deleted because it has already started or finished.";
+    }
+
+    if (data.code === "MATCH_HAS_SCORING_DATA") {
+      return "This match cannot be deleted because scoring data already exists.";
+    }
+
+    if (data.code === "TOURNAMENT_MATCH_NOT_FOUND_FOR_FIXTURE") {
+      return "No linked match exists for this fixture.";
+    }
+
+    if (typeof data.message === "string") {
+      return data.message;
+    }
+  }
+
+  return "Unable to delete match.";
 }
 
 function getFixtureTeamName(fixture: TournamentFixture, side: "A" | "B") {
@@ -268,159 +303,25 @@ function TeamInitial({ name, ariaLabel }: { name: string; ariaLabel: string }) {
 
 // ─── Fixture card ─────────────────────────────────────────────────────────────
 
-// type FixtureCardProps = {
-//   fixture: TournamentFixture;
-//   deleting: boolean;
-//   onEdit: (fixture: TournamentFixture) => void;
-//   onDelete: (fixture: TournamentFixture) => void;
-// };
-
-// function FixtureCard({
-//   fixture,
-//   deleting,
-//   onEdit,
-//   onDelete,
-// }: FixtureCardProps) {
-//   const location = [
-//     fixture.venueSnapshot?.groundName,
-//     fixture.venueSnapshot?.city,
-//   ]
-//     .filter(Boolean)
-//     .join(", ");
-
-//   const overs = fixture.matchRulesSnapshot?.oversLimit;
-
-//   const matchNumber =
-//     fixture.groupMatchNumber ??
-//     fixture.roundMatchNumber ??
-//     fixture.sequenceNumber;
-
-//   const canModify =
-//     fixture.status !== "LIVE" &&
-//     fixture.status !== "COMPLETED" &&
-//     fixture.status !== "CANCELLED";
-
-//   return (
-//     <article
-//       className={cn(
-//         "relative w-full rounded-2xl border bg-(--color-bg-card) p-4 shadow-sm transition-all",
-//         deleting
-//           ? "border-(--color-live)/20 opacity-60"
-//           : "border-(--color-bg-border) hover:border-(--color-brand)/30",
-//       )}
-//     >
-//       {/* Header */}
-//       <div className="flex items-start justify-between gap-3 pr-20">
-//         <div className="min-w-0">
-//           <p className="text-xs font-medium text-(--color-text-secondary)">
-//             {formatFixtureDate(fixture.scheduledAt)}
-//           </p>
-
-//           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-//             <span
-//               className={cn(
-//                 "rounded-full px-2 py-0.5 font-(family-name:--font-display) text-[9px] font-black uppercase tracking-wide",
-//                 getStatusClasses(fixture.status),
-//               )}
-//             >
-//               {formatStatus(fixture.status)}
-//             </span>
-
-//             <span className="rounded-full bg-(--color-bg-tint) px-2 py-0.5 font-(family-name:--font-display) text-[9px] font-black uppercase tracking-wide text-(--color-text-secondary)">
-//               {fixture.createdFrom}
-//             </span>
-
-//             {matchNumber != null && (
-//               <span className="rounded-full bg-(--color-bg-tint) px-2 py-0.5 font-(family-name:--font-display) text-[9px] font-black uppercase tracking-wide text-(--color-text-secondary)">
-//                 Match {matchNumber}
-//               </span>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Teams */}
-//       <div className="mt-4 flex items-center gap-3">
-//         <TeamDisplay team={fixture.teamASnapshot} />
-
-//         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--color-navy)">
-//           <span className="font-(family-name:--font-display) text-[9px] font-black uppercase text-white">
-//             VS
-//           </span>
-//         </div>
-
-//         <TeamDisplay team={fixture.teamBSnapshot} align="right" />
-//       </div>
-
-//       {/* Fixture details */}
-//       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-(--color-bg-border) pt-3 text-xs font-medium text-(--color-text-secondary)">
-//         <div className="flex min-w-0 flex-1 items-start gap-1.5">
-//           <MapPin
-//             size={14}
-//             className="mt-0.5 shrink-0 text-(--color-text-muted)"
-//           />
-
-//           <span className="leading-snug">{location || "Location TBA"}</span>
-//         </div>
-
-//         {overs != null && (
-//           <span className="shrink-0 font-semibold text-(--color-text-secondary)">
-//             {overs} Overs
-//           </span>
-//         )}
-
-//         {fixture.groupId && (
-//           <span className="shrink-0 rounded-full bg-(--color-bg-tint) px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-(--color-text-secondary)">
-//             Group Fixture
-//           </span>
-//         )}
-//       </div>
-
-//       {/* Actions */}
-//       <div className="absolute right-3 top-3 flex items-center gap-1">
-//         <button
-//           type="button"
-//           disabled={!canModify || deleting}
-//           onClick={() => onEdit(fixture)}
-//           className="flex h-9 w-9 items-center justify-center rounded-full text-(--color-brand) transition-all hover:bg-(--color-brand)/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-//           aria-label={`Edit ${fixture.teamASnapshot.name} versus ${fixture.teamBSnapshot.name}`}
-//         >
-//           <Pencil size={17} strokeWidth={2.4} />
-//         </button>
-
-//         <button
-//           type="button"
-//           disabled={!canModify || deleting}
-//           onClick={() => onDelete(fixture)}
-//           className="flex h-9 w-9 items-center justify-center rounded-full text-(--color-brand) transition-all hover:bg-(--color-live)/10 hover:text-(--color-live) active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-//           aria-label={`Delete ${fixture.teamASnapshot.name} versus ${fixture.teamBSnapshot.name}`}
-//         >
-//           {deleting ? (
-//             <span className="h-4 w-4 animate-spin rounded-full border-2 border-(--color-live)/30 border-t-(--color-live)" />
-//           ) : (
-//             <Trash2 size={17} strokeWidth={2.4} />
-//           )}
-//         </button>
-//       </div>
-//     </article>
-//   );
-// }
-
 type FixtureCardProps = {
   fixture: TournamentFixture;
   deleting: boolean;
+  deletingMatch: boolean;
   creatingMatch: boolean;
   onEdit: (fixture: TournamentFixture) => void;
   onDelete: (fixture: TournamentFixture) => void;
+  onDeleteMatch: (fixture: TournamentFixture) => void;
   onSetupMatch: (fixture: TournamentFixture) => void;
 };
 
 function FixtureCard({
   fixture,
   deleting,
+  deletingMatch,
   creatingMatch,
   onEdit,
   onDelete,
+  onDeleteMatch,
   onSetupMatch,
 }: FixtureCardProps) {
   const teamAName = getFixtureTeamName(fixture, "A");
@@ -435,10 +336,7 @@ function FixtureCard({
     .filter(Boolean)
     .join(", ");
 
-  const matchNumber =
-    fixture.groupMatchNumber ??
-    fixture.roundMatchNumber ??
-    fixture.sequenceNumber;
+  const matchNumber = fixture.matchNumber;
 
   const overs = fixture.matchRulesSnapshot?.oversLimit;
 
@@ -446,6 +344,7 @@ function FixtureCard({
     fixture.status !== "LIVE" &&
     fixture.status !== "COMPLETED" &&
     fixture.status !== "CANCELLED";
+  const canDeleteLinkedMatch = Boolean(fixture.matchId) && canModify;
 
   return (
     <article
@@ -463,9 +362,13 @@ function FixtureCard({
             {formatFixtureDate(fixture.scheduledAt)}
           </p>
 
-          {matchNumber != null && (
+          {matchNumber != null ? (
             <span className="shrink-0 rounded-full bg-(--color-bg-tint) px-1.5 py-0.5 text-[9px] font-bold uppercase text-(--color-text-secondary)">
-              M{matchNumber}
+              Match {matchNumber}
+            </span>
+          ) : (
+            <span className="shrink-0 rounded-full bg-(--color-bg-tint) px-1.5 py-0.5 text-[9px] font-bold uppercase text-(--color-text-secondary)">
+              Match
             </span>
           )}
         </div>
@@ -539,19 +442,36 @@ function FixtureCard({
           <span />
         )}
 
-        <button
-          type="button"
-          disabled={!teamsResolved || deleting || creatingMatch}
-          onClick={() => onSetupMatch(fixture)}
-          className={cn(
-            "shrink-0 rounded-lg px-3 py-1.5 font-(family-name:--font-display) text-[10px] font-black uppercase tracking-wide",
-            "bg-(--color-brand) text-white transition-all active:scale-95",
-            "disabled:cursor-not-allowed disabled:bg-(--color-bg-border) disabled:text-(--color-text-muted)",
+        <div className="flex shrink-0 items-center gap-2">
+          {canDeleteLinkedMatch && (
+            <button
+              type="button"
+              disabled={deleting || deletingMatch || creatingMatch}
+              onClick={() => onDeleteMatch(fixture)}
+              className={cn(
+                "rounded-lg px-3 py-1.5 font-(family-name:--font-display) text-[10px] font-black uppercase tracking-wide",
+                "border border-(--color-live)/25 bg-(--color-live)/8 text-(--color-live) transition-all active:scale-95",
+                "disabled:cursor-not-allowed disabled:opacity-50",
+              )}
+            >
+              {deletingMatch ? "Deleting" : "Delete Match"}
+            </button>
           )}
-          title={!teamsResolved ? "Teams are not decided yet" : undefined}
-        >
-          {creatingMatch ? "Setting Up" : "Setup Match"}
-        </button>
+
+          <button
+            type="button"
+            disabled={!teamsResolved || deleting || deletingMatch || creatingMatch}
+            onClick={() => onSetupMatch(fixture)}
+            className={cn(
+              "rounded-lg px-3 py-1.5 font-(family-name:--font-display) text-[10px] font-black uppercase tracking-wide",
+              "bg-(--color-brand) text-white transition-all active:scale-95",
+              "disabled:cursor-not-allowed disabled:bg-(--color-bg-border) disabled:text-(--color-text-muted)",
+            )}
+            title={!teamsResolved ? "Teams are not decided yet" : undefined}
+          >
+            {creatingMatch ? "Setting Up" : "Setup Match"}
+          </button>
+        </div>
       </div>
     </article>
   );
@@ -895,6 +815,12 @@ export default function ReviewFixturesPage() {
     null,
   );
   const [deleteError, setDeleteError] = useState("");
+  const [fixtureMatchToDelete, setFixtureMatchToDelete] =
+    useState<TournamentFixture | null>(null);
+  const [deletingMatchFixtureId, setDeletingMatchFixtureId] = useState<
+    string | null
+  >(null);
+  const [deleteMatchError, setDeleteMatchError] = useState("");
 
   const [editingFixture, setEditingFixture] =
     useState<TournamentFixture | null>(null);
@@ -906,6 +832,7 @@ export default function ReviewFixturesPage() {
   >(null);
 
   const [deleteFixture] = useDeleteFixtureMutation();
+  const [deleteFixtureMatch] = useDeleteFixtureMatchMutation();
   const [createMatchFromFixture] = useCreateMatchFromFixtureMutation();
 
   const [updateFixture, { isLoading: isUpdating }] = useUpdateFixtureMutation();
@@ -1008,6 +935,41 @@ export default function ReviewFixturesPage() {
       setDeleteError(getApiErrorMessage(error));
     } finally {
       setDeletingFixtureId(null);
+    }
+  }
+
+  function handleRequestDeleteMatch(fixture: TournamentFixture) {
+    if (!fixture.matchId) return;
+
+    if (
+      fixture.status === "LIVE" ||
+      fixture.status === "COMPLETED" ||
+      fixture.status === "CANCELLED"
+    ) {
+      return;
+    }
+
+    setDeleteMatchError("");
+    setFixtureMatchToDelete(fixture);
+  }
+
+  async function handleConfirmDeleteMatch() {
+    if (!fixtureMatchToDelete || deletingMatchFixtureId) return;
+
+    setDeleteMatchError("");
+    setDeletingMatchFixtureId(fixtureMatchToDelete.id);
+
+    try {
+      await deleteFixtureMatch({
+        tournamentId,
+        fixtureId: fixtureMatchToDelete.id,
+      }).unwrap();
+
+      setFixtureMatchToDelete(null);
+    } catch (error) {
+      setDeleteMatchError(getDeleteFixtureMatchErrorMessage(error));
+    } finally {
+      setDeletingMatchFixtureId(null);
     }
   }
 
@@ -1217,9 +1179,11 @@ export default function ReviewFixturesPage() {
                   key={fixture.id}
                   fixture={fixture}
                   deleting={deletingFixtureId === fixture.id}
+                  deletingMatch={deletingMatchFixtureId === fixture.id}
                   creatingMatch={creatingMatchFixtureId === fixture.id}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onDeleteMatch={handleRequestDeleteMatch}
                   onSetupMatch={handleSetupMatch}
                 />
               ))}
@@ -1233,7 +1197,7 @@ export default function ReviewFixturesPage() {
             size="sm"
             fullWidth
             onClick={handleDone}
-            disabled={Boolean(deletingFixtureId)}
+            disabled={Boolean(deletingFixtureId || deletingMatchFixtureId)}
             className="shadow-(--shadow-button)"
           >
             Done
@@ -1253,6 +1217,65 @@ export default function ReviewFixturesPage() {
         }}
         onUpdate={handleUpdateFixture}
       />
+
+      <DialogBox
+        open={Boolean(fixtureMatchToDelete)}
+        onClose={() => {
+          if (deletingMatchFixtureId) return;
+
+          setDeleteMatchError("");
+          setFixtureMatchToDelete(null);
+        }}
+      >
+        <div className="p-5">
+          <h2 className="font-(family-name:--font-display) text-xl font-black uppercase text-(--color-text-primary)">
+            Delete match?
+          </h2>
+
+          <p className="mt-2 text-sm leading-5 text-(--color-text-secondary)">
+            This will delete the linked match but keep the fixture, teams,
+            schedule and match number. You can create the match again later.
+          </p>
+
+          {deleteMatchError && (
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-(--color-live)/20 bg-(--color-live)/10 px-3 py-2.5">
+              <AlertCircle
+                size={15}
+                className="mt-0.5 shrink-0 text-(--color-live)"
+              />
+
+              <p className="text-xs font-semibold text-(--color-live)">
+                {deleteMatchError}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={Boolean(deletingMatchFixtureId)}
+              onClick={() => {
+                setDeleteMatchError("");
+                setFixtureMatchToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              loading={Boolean(deletingMatchFixtureId)}
+              onClick={() => void handleConfirmDeleteMatch()}
+            >
+              Delete Match
+            </Button>
+          </div>
+        </div>
+      </DialogBox>
     </div>
   );
 }

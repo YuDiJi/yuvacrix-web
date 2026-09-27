@@ -75,6 +75,7 @@ export type TournamentMatchRoundSummary = {
 export type TournamentMatchListItem = {
   matchId: string;
   fixtureId: string;
+  matchNumber: number | null;
 
   isAdmin: boolean;
   status: TournamentMatchStatus;
