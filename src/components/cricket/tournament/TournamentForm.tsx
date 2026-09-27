@@ -38,10 +38,6 @@ const EMPTY_FORM_VALUES: TournamentFormValues = {
   pitchType: "ASTROTURF",
   matchType: "BOX_TURF",
 
-  enableLastBatterRule: true,
-  needMoreTeams: true,
-  needOfficials: true,
-
   entryFee: "",
   totalTeams: "",
   requiredTeams: "",
@@ -107,10 +103,6 @@ const schema = z
       "TEST",
       "THE_HUNDRED",
     ]),
-
-    enableLastBatterRule: z.boolean(),
-    needMoreTeams: z.boolean(),
-    needOfficials: z.boolean(),
 
     entryFee: z.string().optional(),
     totalTeams: z.string().optional(),
@@ -746,44 +738,6 @@ export default function TournamentForm({
                       ))}
                     </div>
                   </>
-                )}
-              />
-            </section>
-
-            <section className="space-y-4 rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
-              <Controller
-                name="enableLastBatterRule"
-                control={control}
-                render={({ field }) => (
-                  <CheckboxField
-                    checked={field.value}
-                    onChange={field.onChange}
-                    label="Enable last batter batting rule"
-                  />
-                )}
-              />
-
-              <Controller
-                name="needMoreTeams"
-                control={control}
-                render={({ field }) => (
-                  <CheckboxField
-                    checked={field.value}
-                    onChange={field.onChange}
-                    label="Do you need more teams for your tournament?"
-                  />
-                )}
-              />
-
-              <Controller
-                name="needOfficials"
-                control={control}
-                render={({ field }) => (
-                  <CheckboxField
-                    checked={field.value}
-                    onChange={field.onChange}
-                    label="Do you need officials? (e.g. Umpire, Scorer)"
-                  />
                 )}
               />
             </section>

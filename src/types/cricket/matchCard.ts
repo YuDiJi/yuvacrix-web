@@ -55,6 +55,7 @@ export type MatchCardCapabilities = {
 export type MatchCardModel = {
   matchId: string;
   fixtureId?: string | null;
+  matchNumber?: number | null;
 
   status: MatchCardStatus;
   isAdmin: boolean;

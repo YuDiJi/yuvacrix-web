@@ -211,10 +211,7 @@ function PreviewFixtureCard({
     .filter(Boolean)
     .join(", ");
 
-  const matchNumber =
-    fixture.groupMatchNumber ??
-    fixture.roundMatchNumber ??
-    fixture.sequenceNumber;
+  const matchNumber = fixture.matchNumber;
 
   return (
     <article className="relative w-full rounded-xl border border-(--color-bg-border) bg-(--color-bg-card) px-3 py-2.5 shadow-sm transition-all hover:border-(--color-brand)/30">
@@ -225,9 +222,15 @@ function PreviewFixtureCard({
             {formatFixtureDate(fixture.scheduledAt, fixture.timezone)}
           </p>
 
-          <span className="shrink-0 rounded-full bg-(--color-bg-tint) px-1.5 py-0.5 text-[9px] font-bold uppercase text-(--color-text-secondary)">
-            M{matchNumber}
-          </span>
+          {matchNumber != null ? (
+            <span className="shrink-0 rounded-full bg-(--color-bg-tint) px-1.5 py-0.5 text-[9px] font-bold uppercase text-(--color-text-secondary)">
+              Match {matchNumber}
+            </span>
+          ) : (
+            <span className="shrink-0 rounded-full bg-(--color-bg-tint) px-1.5 py-0.5 text-[9px] font-bold uppercase text-(--color-text-secondary)">
+              Match
+            </span>
+          )}
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5">

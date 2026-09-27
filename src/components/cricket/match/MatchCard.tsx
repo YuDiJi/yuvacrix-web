@@ -107,6 +107,7 @@ import { cn } from "@/lib/cn";
 
 import { S3Image } from "../../common/S3Image";
 import { MatchCardModel, MatchCardStatus } from "@/types/cricket/matchCard";
+import type { ReactNode } from "react";
 
 function TeamAvatar({
   initials,
@@ -144,9 +145,11 @@ function TeamAvatar({
 export function MatchCard({
   match,
   onClick,
+  actions,
 }: {
   match: MatchCardModel;
   onClick: () => void;
+  actions?: ReactNode;
 }) {
   const teamAName = match.teamA.name;
   const teamBName = match.teamB.name;
@@ -155,6 +158,10 @@ export function MatchCard({
   const displayDate = resolveDate(match);
   const overs = match.oversLimit;
   const typeLabel = match.matchType ? matchTypeLabel(match.matchType) : "";
+  const canonicalMatchLabel =
+    match.source === "TOURNAMENT" && match.matchNumber != null
+      ? `Match ${match.matchNumber}`
+      : null;
 
   return (
     <button
@@ -166,10 +173,23 @@ export function MatchCard({
       <div
         className={`flex items-center ${match?.matchType ? "justify-between" : "justify-end"} px-4 pt-4 pb-2`}
       >
-        {match?.matchType && (
-          <span className="text-section-label">{typeLabel}</span>
-        )}
-        <StatusBadge status={match?.status} />
+        <div className="flex min-w-0 items-center gap-2">
+          {match?.matchType && (
+            <span className="text-section-label">{typeLabel}</span>
+          )}
+          {canonicalMatchLabel && (
+            <span className="shrink-0 rounded-full bg-(--color-bg-tint) px-2 py-0.5 text-[10px] font-(family-name:--font-display) font-bold uppercase tracking-[0.06em] text-(--color-text-secondary)">
+              {canonicalMatchLabel}
+            </span>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <StatusBadge status={match?.status} />
+
+          {actions && (
+            <div onClick={(event) => event.stopPropagation()}>{actions}</div>
+          )}
+        </div>
       </div>
 
       {/* Date + overs + venue */}
