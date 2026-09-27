@@ -119,7 +119,8 @@ export default function AddTeamPage() {
     );
   }
 
-  const isInitialTeamsLoading = isTeamsLoading || (!isSuccess && isTeamsFetching);
+  const isInitialTeamsLoading =
+    isTeamsLoading || (!isSuccess && isTeamsFetching);
 
   if (isInitialTeamsLoading) {
     return (
@@ -149,8 +150,10 @@ export default function AddTeamPage() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
         {/* Icon */}
-        <div
-          onClick={() => router.push(`tournaments/${tournamentId}/create-team`)}
+        <button
+          onClick={() =>
+            router.push(`/tournaments/${tournamentId}/create-team`)
+          }
           className="relative mb-6"
         >
           <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-(--color-navy) shadow-[0_8px_32px_rgba(13,27,62,0.18)]">
@@ -186,7 +189,7 @@ export default function AddTeamPage() {
           </div>
           {/* Decorative ring */}
           <div className="absolute inset-0 rounded-3xl border-2 border-(--color-brand)/20 scale-110" />
-        </div>
+        </button>
 
         {/* Text */}
         <h3
