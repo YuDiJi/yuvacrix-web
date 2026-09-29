@@ -44,7 +44,7 @@ export function RunningSheet({
       <div className="flex items-center justify-center">
         <input
           min={0}
-          max={7}
+          max={99}
           ref={inputRef}
           type="number"
           value={extraRuns}
@@ -59,7 +59,7 @@ export function RunningSheet({
 
             const num = Number(value);
 
-            if (num >= 1 && num <= 7) {
+            if (num >= 1 && num <= 99) {
               setExtraRuns(value);
             }
           }}
