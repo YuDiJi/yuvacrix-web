@@ -1046,6 +1046,12 @@ export default function ScoringPage() {
             )}
           </p>
 
+          {displayState?.isFreeHitNextBall === true && (
+            <div className="mt-2 rounded-full border border-[#4DFFDE]/40 bg-[#4DFFDE]/15 px-3 py-1 font-display text-[10px] font-black uppercase tracking-widest text-[#4DFFDE]">
+              Free Hit
+            </div>
+          )}
+
           {displayState?.activeSpecialOver ? (
             <div className="mt-2 rounded-full bg-amber-400/15 px-3 py-1 text-[10px] font-bold text-amber-200">
               Bowling powerplay: {displayState.activeSpecialOver.rawRuns}/

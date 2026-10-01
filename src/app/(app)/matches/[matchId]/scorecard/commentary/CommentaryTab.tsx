@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useGetScorecardCommentaryQuery } from "@/store/api/cricket/scorecardApi";
 import { CommentaryItem } from "@/types/cricket/scorecard";
 import CommentaryItemCard from "./CommentaryItemCard";
 import CommentaryFilters, { CommentaryFilterKey } from "./CommentaryFilters";
 import CommentaryTeamSelector, { TeamSide } from "./CommentaryTeamSelector";
-import { Button } from "@/components/common/Button";
 
 type Props = {
   matchId: string;
@@ -38,6 +37,8 @@ export default function CommentaryTab({ matchId }: Props) {
   const [items, setItems] = useState<CommentaryItem[]>([]);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const lastRequestedCursorRef = useRef<string | null>(null);
 
   // Only pass eventType to the API for WICKET (server-supported per spec).
   const eventType = filter === "WICKET" ? "WICKET" : undefined;
@@ -61,6 +62,8 @@ export default function CommentaryTab({ matchId }: Props) {
   useEffect(() => {
     setItems([]);
     setCursor(undefined);
+    setIsLoadingMore(false);
+    lastRequestedCursorRef.current = null;
   }, [filter, activeTeam]);
 
   // Merge incoming page into local state, de-duping by sequence/innings.
@@ -84,12 +87,6 @@ export default function CommentaryTab({ matchId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamBlock]);
 
-  const handleLoadMore = () => {
-    if (!pagination?.nextCursor) return;
-    setIsLoadingMore(true);
-    setCursor(pagination.nextCursor);
-  };
-
   // Apply local-only filtering for FOUR/SIX (server doesn't support these eventTypes).
   const visibleItems = useMemo(() => {
     if (filter === "FOUR" || filter === "SIX") {
@@ -110,8 +107,56 @@ export default function CommentaryTab({ matchId }: Props) {
     return Array.from(map.entries());
   }, [visibleItems]);
 
-  const hasMore = Boolean(pagination?.hasMore);
+  const nextCursor = pagination?.nextCursor ?? null;
+  const hasMore = Boolean(pagination?.hasMore && nextCursor);
   const showInitialLoading = isLoading && items.length === 0;
+  const showNextPageLoading =
+    !showInitialLoading && !isError && items.length > 0 && isLoadingMore;
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+
+    if (
+      !sentinel ||
+      showInitialLoading ||
+      isError ||
+      !hasMore ||
+      !nextCursor
+    ) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        if (isFetching || isLoadingMore) return;
+        if (cursor === nextCursor) return;
+        if (lastRequestedCursorRef.current === nextCursor) return;
+
+        lastRequestedCursorRef.current = nextCursor;
+        setIsLoadingMore(true);
+        setCursor(nextCursor);
+      },
+      {
+        root: null,
+        rootMargin: "200px",
+      },
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [
+    cursor,
+    hasMore,
+    isError,
+    isFetching,
+    isLoadingMore,
+    nextCursor,
+    showInitialLoading,
+  ]);
 
   return (
     <div className="flex flex-col">
@@ -162,19 +207,15 @@ export default function CommentaryTab({ matchId }: Props) {
             </div>
           ))}
 
-        {/* Load more */}
         {!showInitialLoading && !isError && hasMore && (
-          <Button
-            size="xs"
-            variant="ghost"
-            onClick={handleLoadMore}
-            disabled={isFetching || isLoadingMore}
-            // className="mt-1 w-full rounded-xl bg-(--color-navy) py-3 text-center font-display text-[13px] font-bold uppercase tracking-widest text-(--color-text-inverse) shadow-(--shadow-button) transition-opacity disabled:opacity-60"
-          >
-            {isFetching || isLoadingMore
-              ? "Loading..."
-              : "Load More Commentary"}
-          </Button>
+          <div ref={sentinelRef} className="h-1" aria-hidden="true" />
+        )}
+
+        {showNextPageLoading && (
+          <div className="flex items-center justify-center gap-2 py-2 text-xs font-semibold uppercase tracking-wide text-(--color-text-muted)">
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-(--color-bg-border) border-t-(--color-brand)" />
+            Loading commentary
+          </div>
         )}
       </div>
     </div>

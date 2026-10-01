@@ -1,4 +1,4 @@
-import { ScoringState } from "./innings";
+import type { BallEvent, ScoringState } from "./innings";
 
 export type ExtraType = "WIDE" | "NO_BALL" | "BYE" | "LEG_BYE";
 
@@ -88,7 +88,7 @@ export interface NextAction {
 }
 
 export interface RecordBallResponse {
-  ballEvent: unknown;
+  ballEvent: BallEvent;
   state: ScoringState;
   nextAction: NextAction;
 }
