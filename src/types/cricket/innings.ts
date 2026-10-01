@@ -57,10 +57,10 @@ export interface BallRuns {
 export interface BallFlags {
   isLegalDelivery: boolean;
   isBoundary: boolean;
-  isWicket: boolean;
+  isWicket?: boolean;
   isExtra: boolean;
-  isFreeHit: boolean;
-  createsFreeHit: boolean;
+  isFreeHit?: boolean;
+  createsFreeHit?: boolean;
   overCompleted: boolean;
   inningsCompleted: boolean;
 }
@@ -116,6 +116,9 @@ export interface BallEvent {
   wicket: {
     type: WicketType;
     dismissedPlayerId: string;
+    countsAsWicket?: boolean;
+    requiresNewBatter?: boolean;
+    creditedToBowler?: boolean;
   } | null;
 
   flags: BallFlags;
