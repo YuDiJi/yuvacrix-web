@@ -314,6 +314,7 @@ export function OutSheet({
 
         {step === "SELECT_FIELDER" && (
           <FielderSelector
+            wicketType={form.wicketType}
             numberOfFielders={
               form.wicketType
                 ? (WICKET_CONFIG[form.wicketType].fieldersRequired ?? 1)
