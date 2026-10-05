@@ -4,17 +4,20 @@ import { PlayerPickerSheet } from "@/components/cricket/Players/PlayerPickerShee
 import { cn } from "@/lib/cn";
 import { ScoringState } from "@/types/cricket/innings";
 import { MatchDetailsPlayer } from "@/types/cricket/match";
+import type { WicketType } from "@/types/cricket/scoring";
 import { Check, User } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
 const FielderSelector = ({
   players,
   state,
+  wicketType,
   numberOfFielders,
   onContinue,
 }: {
   players: MatchDetailsPlayer[] | undefined;
   state: ScoringState | undefined;
+  wicketType: WicketType | undefined;
   numberOfFielders: 1 | 2;
   onContinue: (fielders: (MatchDetailsPlayer | null)[]) => void;
 }) => {
@@ -35,8 +38,9 @@ const FielderSelector = ({
 
   const disabledIds = useMemo(() => {
     const ids: string[] = [];
+    const bowlerCanBeFielder = wicketType === "RUN_OUT";
 
-    if (state?.currentBowlerId) {
+    if (state?.currentBowlerId && !bowlerCanBeFielder) {
       ids.push(state.currentBowlerId);
     }
 
@@ -47,7 +51,7 @@ const FielderSelector = ({
     });
 
     return ids;
-  }, [fielders, activeSlot, state?.currentBowlerId]);
+  }, [fielders, activeSlot, state?.currentBowlerId, wicketType]);
 
   const slotLabel = (slot: number) =>
     numberOfFielders === 1
