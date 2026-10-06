@@ -1,4 +1,4 @@
-import { Settings, Trophy } from "lucide-react";
+import { Settings, RotateCcw, Trophy } from "lucide-react";
 import { DialogBox } from "@/components/common/DialogBox";
 import { ScoringState } from "@/types/cricket/innings";
 import { Button } from "@/components/common/Button";
@@ -25,6 +25,9 @@ interface Props {
   state: ScoringState | undefined;
 
   onContinueThisOver: () => void;
+  onUndoLastBall?: () => void;
+  undoingLastBall?: boolean;
+  undoErrorMessage?: string;
 }
 
 export function CompletionSheet({
@@ -38,6 +41,9 @@ export function CompletionSheet({
   matchId,
   inningsId,
   state,
+  onUndoLastBall,
+  undoingLastBall = false,
+  undoErrorMessage,
 }: Props) {
   const [completeMatch, { isLoading: isMatchComplete }] =
     useCompleteMatchMutation();
@@ -209,6 +215,10 @@ export function CompletionSheet({
                 </div>
               ))}
           </div>
+
+          <p className="mt-4 text-center text-xs font-semibold text-(--color-text-secondary)">
+            Redirecting to scorecard in about 5 seconds.
+          </p>
         </div>
       )}
 
@@ -222,15 +232,36 @@ export function CompletionSheet({
         >
           {mode === "INNINGS_COMPLETED" && "Start next innings"}
           {mode === "OVER_COMPLETED" && "Start next over"}
-          {mode === "MATCH_COMPLETED" && "End Match"}
+          {mode === "MATCH_COMPLETED" && "View Scorecard"}
         </Button>
-        <Button
-          onClick={handleContinueCurrentOver}
-          size="sm"
-          variant="secondary"
-        >
-          Continue this over
-        </Button>
+        {mode === "MATCH_COMPLETED" ? (
+          <>
+            {undoErrorMessage && (
+              <p className="rounded-xl border border-(--color-live)/20 bg-(--color-live)/8 px-3 py-2 text-center text-sm font-semibold text-(--color-live)">
+                {undoErrorMessage}
+              </p>
+            )}
+
+            <Button
+              onClick={onUndoLastBall}
+              size="sm"
+              variant="secondary"
+              loading={undoingLastBall}
+              disabled={!onUndoLastBall || undoingLastBall}
+              leftIcon={<RotateCcw size={15} />}
+            >
+              Undo Last Ball
+            </Button>
+          </>
+        ) : (
+          <Button
+            onClick={handleContinueCurrentOver}
+            size="sm"
+            variant="secondary"
+          >
+            Continue this over
+          </Button>
+        )}
       </div>
     </DialogBox>
   );

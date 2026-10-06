@@ -12,6 +12,7 @@ import {
   useGetScoringStateQuery,
   useRecordBallMutation,
   useDeclareBowlingPowerplayMutation,
+  useUndoLastBallMutation,
 } from "@/store/api/cricket/scoringApi";
 import { baseApi } from "@/store/api/baseApi";
 
@@ -230,6 +231,8 @@ export default function ScoringPage() {
   });
 
   const [recordBall, { isLoading: isRecording }] = useRecordBallMutation();
+  const [undoFinalBall, { isLoading: isUndoingFinalBall }] =
+    useUndoLastBallMutation();
   const [declareBowlingPowerplay, { isLoading: isDeclaringPowerplay }] =
     useDeclareBowlingPowerplayMutation();
   const [changeStrikeManually, { isLoading: isChangingStrike }] =
@@ -257,13 +260,24 @@ export default function ScoringPage() {
   const [flow, setFlow] = useState<ScoringFlow>("IDLE");
   const [completedOverSnapshot, setCompletedOverSnapshot] =
     useState<ScoringState | null>(null);
+  const [finalUndoErrorMessage, setFinalUndoErrorMessage] = useState("");
 
   const [shortcutScreen, setShortcutScreen] = useState<ShortcutScreen>(null);
   const tournamentCompletionRefreshSentRef = useRef(false);
+  const matchCompletionRedirectTimerRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+  const matchCompletionRedirectedRef = useRef(false);
+  const matchCompletionUndoCancelledRef = useRef(false);
 
   const matchErrorStatus = getQueryErrorStatus(matchError);
   const isStaleMatchError = matchErrorStatus === 404;
   const isCompletedMatch = matchData?.match.status === "COMPLETED";
+  const isFinalInningsCompleted = Boolean(
+    state?.inningsCompleted && state.inningsNumber === 2,
+  );
+  const shouldShowMatchCompletionSheet =
+    flow === "MATCH_COMPLETED" || isFinalInningsCompleted;
   const recordBallWriteLocked =
     isRecording ||
     isRecoveringVersionConflict ||
@@ -285,9 +299,76 @@ export default function ScoringPage() {
 
   useEffect(() => {
     if (!matchId || !isCompletedMatch) return;
+    if (loadingState || isFetchingState) return;
+    if (shouldShowMatchCompletionSheet) return;
+    if (matchCompletionUndoCancelledRef.current) return;
 
     router.replace(`/matches/${matchId}/scorecard`);
-  }, [isCompletedMatch, matchId, router]);
+  }, [
+    isCompletedMatch,
+    isFetchingState,
+    loadingState,
+    matchId,
+    router,
+    shouldShowMatchCompletionSheet,
+  ]);
+
+  const clearMatchCompletionRedirectTimer = () => {
+    if (!matchCompletionRedirectTimerRef.current) return;
+
+    clearTimeout(matchCompletionRedirectTimerRef.current);
+    matchCompletionRedirectTimerRef.current = null;
+  };
+
+  const openScorecardOnce = () => {
+    if (!matchId || isUndoingFinalBall || matchCompletionRedirectedRef.current) {
+      return;
+    }
+
+    clearMatchCompletionRedirectTimer();
+    matchCompletionRedirectedRef.current = true;
+    router.push(`/matches/${matchId}/scorecard`);
+  };
+
+  useEffect(() => {
+    if (flow !== "MATCH_COMPLETED") {
+      clearMatchCompletionRedirectTimer();
+      matchCompletionRedirectedRef.current = false;
+      setFinalUndoErrorMessage("");
+      return;
+    }
+
+    if (
+      !matchId ||
+      isUndoingFinalBall ||
+      matchCompletionUndoCancelledRef.current ||
+      matchCompletionRedirectedRef.current
+    ) {
+      return;
+    }
+
+    clearMatchCompletionRedirectTimer();
+    matchCompletionRedirectTimerRef.current = setTimeout(() => {
+      if (
+        matchCompletionUndoCancelledRef.current ||
+        isUndoingFinalBall ||
+        matchCompletionRedirectedRef.current
+      ) {
+        return;
+      }
+
+      matchCompletionRedirectedRef.current = true;
+      router.push(`/matches/${matchId}/scorecard`);
+    }, 5000);
+
+    return clearMatchCompletionRedirectTimer;
+  }, [flow, isUndoingFinalBall, matchId, router]);
+
+  useEffect(() => {
+    if (isCompletedMatch) return;
+
+    matchCompletionUndoCancelledRef.current = false;
+  }, [isCompletedMatch]);
 
   useEffect(() => {
     if (
@@ -807,6 +888,47 @@ export default function ScoringPage() {
     });
   };
 
+  const handleFinalBallUndo = async () => {
+    if (!matchId || !state?.inningsId || isUndoingFinalBall) return;
+
+    clearMatchCompletionRedirectTimer();
+    matchCompletionUndoCancelledRef.current = true;
+    setFinalUndoErrorMessage("");
+
+    try {
+      await undoFinalBall({
+        matchId,
+        inningsId: state.inningsId,
+        reason: "Undo final ball from match completion",
+      }).unwrap();
+
+      const refreshedState = await refetchScoringState().unwrap();
+      void refetchMatch();
+
+      setCompletedOverSnapshot(null);
+      setOpenDialog(null);
+      setPendingBall(null);
+      setPendingWagonWheelRuns(null);
+      setSyncMessage("Last ball undone");
+      setSyncStatus("synced");
+
+      if (refreshedState.inningsCompleted && refreshedState.inningsNumber === 2) {
+        setFlow("MATCH_COMPLETED");
+        return;
+      }
+
+      setFlow("IDLE");
+    } catch (error) {
+      const message =
+        getApiErrorMessage(error) ??
+        "The final ball could not be undone. Please try again.";
+
+      setFinalUndoErrorMessage(message);
+      setSyncErrorMessage(message);
+      setSyncStatus("error");
+    }
+  };
+
   useEffect(() => {
     if (!state || isFetchingState) return;
 
@@ -866,7 +988,11 @@ export default function ScoringPage() {
     );
   }
 
-  if (isCompletedMatch) {
+  if (
+    isCompletedMatch &&
+    !shouldShowMatchCompletionSheet &&
+    !matchCompletionUndoCancelledRef.current
+  ) {
     return (
       <ScoringRecoveryState
         title="Match Completed"
@@ -1583,7 +1709,7 @@ export default function ScoringPage() {
             resetFlow();
           }}
           onContinue={() => {
-            router.push(`/matches/${matchId}/scorecard`);
+            openScorecardOnce();
           }}
           onContinueThisOver={() => {
             setFlow("AWAITING_NEXT_OVER");
@@ -1593,6 +1719,9 @@ export default function ScoringPage() {
           matchId={matchId}
           inningsId={state?.inningsId}
           state={state}
+          onUndoLastBall={handleFinalBallUndo}
+          undoingLastBall={isUndoingFinalBall}
+          undoErrorMessage={finalUndoErrorMessage}
         />
 
         <NextBowlerSheet
