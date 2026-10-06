@@ -112,18 +112,25 @@ import type { ReactNode } from "react";
 function TeamAvatar({
   initials,
   logoUrl,
+  compact = false,
 }: {
   initials: string;
   logoUrl: string | null;
+  compact?: boolean;
 }) {
   return (
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(--color-bg-base) border border-(--color-bg-border)">
+    <div
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full bg-(--color-bg-base) border border-(--color-bg-border)",
+        compact ? "h-7 w-7" : "h-9 w-9",
+      )}
+    >
       {logoUrl ? (
         <S3Image
           imageKey={logoUrl}
           alt="initials"
-          width={36}
-          height={36}
+          width={compact ? 28 : 36}
+          height={compact ? 28 : 36}
           fallback={
             <span className="font-(family-name:--font-display) text-xs font-black text-(--color-text-secondary) uppercase tracking-wide">
               {initials}
@@ -158,10 +165,135 @@ export function MatchCard({
   const displayDate = resolveDate(match);
   const overs = match.oversLimit;
   const typeLabel = match.matchType ? matchTypeLabel(match.matchType) : "";
+  const isTournamentMatch = match.source === "TOURNAMENT";
+  const roundLabel = isTournamentMatch ? match.roundName : typeLabel;
   const canonicalMatchLabel =
-    match.source === "TOURNAMENT" && match.matchNumber != null
+    isTournamentMatch && match.matchNumber != null
       ? `Match ${match.matchNumber}`
       : null;
+  const venueText = [venue_groundName, venue_city].filter(Boolean).join(", ");
+  const metaItems = [
+    displayDate,
+    overs != null ? `${overs} Ov` : null,
+    venueText || null,
+  ].filter(Boolean);
+
+  if (isTournamentMatch) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="fixture-bar w-full rounded-xl bg-(--color-bg-card) px-3 py-2.5 text-left shadow-(--shadow-card) transition-all duration-150 active:scale-[0.99] hover:shadow-[0_4px_16px_rgba(13,27,62,0.10)]"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            {roundLabel && (
+              <p className="truncate text-[10px] font-(family-name:--font-display) font-black uppercase tracking-[0.08em] text-(--color-text-muted)">
+                {roundLabel}
+              </p>
+            )}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5">
+            {canonicalMatchLabel && (
+              <span className="rounded-full bg-(--color-bg-tint) px-2 py-0.5 text-[9px] font-(family-name:--font-display) font-bold uppercase tracking-[0.06em] text-(--color-text-secondary)">
+                {canonicalMatchLabel}
+              </span>
+            )}
+
+            <StatusBadge status={match.status} />
+
+            {actions && (
+              <div onClick={(event) => event.stopPropagation()}>{actions}</div>
+            )}
+          </div>
+        </div>
+
+        {metaItems.length > 0 && (
+          <p className="mt-1 truncate text-[11px] font-medium text-(--color-text-muted)">
+            {metaItems.join(" | ")}
+          </p>
+        )}
+
+        <div className="mt-2 flex flex-col gap-1.5">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <TeamAvatar
+                initials={teamInitials(teamAName)}
+                logoUrl={match.teamA.logoUrl ?? null}
+                compact
+              />
+              <span className="truncate font-(family-name:--font-display) text-sm font-black uppercase leading-tight text-(--color-navy)">
+                {teamAName}
+              </span>
+            </div>
+
+            {match.teamA.score && (
+              <p className="shrink-0 text-xs font-bold tabular-nums text-(--color-text-body)">
+                {match.teamA.score.runs}/{match.teamA.score.wickets} (
+                {match.teamA.score.oversText})
+              </p>
+            )}
+          </div>
+
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <TeamAvatar
+                initials={teamInitials(teamBName)}
+                logoUrl={match.teamB.logoUrl ?? null}
+                compact
+              />
+              <span className="truncate font-(family-name:--font-display) text-sm font-black uppercase leading-tight text-(--color-navy)">
+                {teamBName}
+              </span>
+            </div>
+
+            {match.teamB.score && (
+              <p className="shrink-0 text-xs font-bold tabular-nums text-(--color-text-body)">
+                {match.teamB.score.runs}/{match.teamB.score.wickets} (
+                {match.teamB.score.oversText})
+              </p>
+            )}
+          </div>
+        </div>
+
+        {(match.summaryText ||
+          match.capabilities?.insightsAvailable ||
+          match.capabilities?.scorecardAvailable) && (
+          <div className="mt-2 flex items-center justify-between gap-2 border-t border-(--color-bg-border) pt-2">
+            <p className="min-w-0 flex-1 truncate text-[11px] font-medium italic leading-4 text-(--color-text-muted)">
+              {match.summaryText}
+            </p>
+
+            <div
+              className="flex shrink-0 items-center gap-2"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {match.capabilities?.insightsAvailable && (
+                <button
+                  type="button"
+                  onClick={onClick}
+                  className="text-[10px] font-(family-name:--font-display) font-black uppercase tracking-[0.07em] text-(--color-brand) transition-opacity hover:opacity-70"
+                >
+                  Insights
+                </button>
+              )}
+
+              {match.capabilities?.scorecardAvailable && (
+                <button
+                  type="button"
+                  onClick={onClick}
+                  className="text-[10px] font-(family-name:--font-display) font-black uppercase tracking-[0.07em] text-(--color-brand) transition-opacity hover:opacity-70"
+                >
+                  Scorecard
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </button>
+    );
+  }
 
   return (
     <button
