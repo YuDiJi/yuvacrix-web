@@ -141,6 +141,14 @@ export default function ModePage() {
           })}
         </div>
 
+        <div className="mt-5 flex items-center justify-center gap-2">
+          <span className="text-sm">✨</span>
+
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-(--color-text-muted)">
+            More sports coming soon
+          </p>
+        </div>
+
         {/* Error */}
         {error && (
           <p className="mt-4 text-center text-sm font-medium text-red-500">
