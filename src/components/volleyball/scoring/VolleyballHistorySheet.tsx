@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRightLeft, RotateCcw, Shield, Trophy, X } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { DialogBottom } from "@/components/common/DialogBottom";
 import { cn } from "@/lib/cn";
@@ -20,10 +21,11 @@ import type { VolleyballHistoryEvent } from "@/types/volleyball/history";
 type Props = {
   open: boolean;
   match: VolleyballMatch;
+  scoreStrip?: ReactNode;
   onClose: () => void;
 };
 
-export function VolleyballHistorySheet({ open, match, onClose }: Props) {
+export function VolleyballHistorySheet({ open, match, scoreStrip, onClose }: Props) {
   const { data, isLoading, isError } = useGetVolleyballMatchHistoryQuery(
     {
       matchId: match.id,
@@ -48,24 +50,27 @@ export function VolleyballHistorySheet({ open, match, onClose }: Props) {
       <div className="flex h-full min-h-0 flex-col bg-(--color-bg-base)">
         {/* HEADER */}
 
-        <div className="flex shrink-0 items-center justify-between border-b border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--color-text-muted)">
-              Match timeline
-            </p>
+        <div className="shrink-0 border-b border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--color-text-muted)">
+                Match timeline
+              </p>
 
-            <h2 className="mt-0.5 text-lg font-black text-(--color-text-primary)">
-              History
-            </h2>
+              <h2 className="mt-0.5 truncate text-lg font-black text-(--color-text-primary)">
+                History
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
-          >
-            <X size={18} />
-          </button>
         </div>
 
         {/* CONTENT */}
@@ -103,6 +108,10 @@ export function VolleyballHistorySheet({ open, match, onClose }: Props) {
                 match={match}
               />
             ))}
+        </div>
+
+        <div className="safe-bottom shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 pb-2 pt-1.5">
+          {scoreStrip}
         </div>
       </div>
     </DialogBottom>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 
 import { AlertTriangle, Check, CircleAlert, X } from "lucide-react";
 
@@ -31,6 +32,7 @@ type Props = {
   open: boolean;
   match: VolleyballMatch;
   sets?: VolleyballSet[];
+  scoreStrip?: ReactNode;
   loading?: boolean;
   error?: string;
   onClose: () => void;
@@ -46,6 +48,7 @@ export function VolleyballMatchRuleCorrectionSheet({
   open,
   match,
   sets = [],
+  scoreStrip,
   loading = false,
   error,
   onClose,
@@ -176,25 +179,28 @@ export function VolleyballMatchRuleCorrectionSheet({
       className="h-[86dvh] max-h-[86dvh] overflow-hidden rounded-t-3xl bg-(--color-bg-card)"
     >
       <div className="flex h-full min-h-0 flex-col">
-        <div className="flex shrink-0 items-center justify-between border-b border-(--color-bg-border) px-1 pb-3">
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--color-brand)">
-              Match rules
-            </p>
+        <div className="shrink-0 border-b border-(--color-bg-border) px-1 pb-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--color-brand)">
+                Match rules
+              </p>
 
-            <h2 className="mt-0.5 text-xl font-black text-(--color-text-primary)">
-              Correct match format
-            </h2>
+              <h2 className="mt-0.5 truncate text-xl font-black text-(--color-text-primary)">
+                Correct match format
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              disabled={loading}
+              onClick={onClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <button
-            type="button"
-            disabled={loading}
-            onClick={onClose}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
-          >
-            <X size={18} />
-          </button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto bg-(--color-bg-base) px-1 py-3 scrollbar-hide">
@@ -318,6 +324,8 @@ export function VolleyballMatchRuleCorrectionSheet({
           >
             Confirm correction
           </Button>
+
+          {scoreStrip}
         </div>
       </div>
     </DialogBottom>

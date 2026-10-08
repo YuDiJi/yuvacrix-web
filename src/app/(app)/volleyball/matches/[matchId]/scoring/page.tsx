@@ -27,6 +27,7 @@ import { VolleyballHistorySheet } from "@/components/volleyball/scoring/Volleyba
 import { VolleyballMatchRuleCorrectionSheet } from "@/components/volleyball/scoring/VolleyballMatchRuleCorrectionSheet";
 import { VolleyballSetCompletedSheet } from "@/components/volleyball/scoring/VolleyballSetCompletedSheet";
 import { VolleyballUndoHistorySheet } from "@/components/volleyball/scoring/VolleyballUndoHistorySheet";
+import { VolleyballDialogScoreStrip } from "@/components/volleyball/scoring/VolleyballDialogScoreStrip";
 
 import { cn } from "@/lib/cn";
 import { getInitials } from "@/lib/getInitials";
@@ -439,6 +440,34 @@ export default function VolleyballScoringPage() {
     match?.status !== VOLLEYBALL_MATCH_STATUSES.COMPLETED &&
     match?.rulesSnapshot.formatType === VOLLEYBALL_RULE_FORMAT_TYPES.BEST_OF &&
     (match?.rulesSnapshot.maxSets ?? 0) > 1;
+  const activeScoreStrip = (
+    <VolleyballDialogScoreStrip
+      match={match}
+      set={completedSet ?? liveSet}
+      loading={isMatchLoading || isSetLoading || isSetsLoading}
+    />
+  );
+  const liveScoreStrip = (
+    <VolleyballDialogScoreStrip
+      match={match}
+      set={liveSet}
+      loading={isMatchLoading || isSetLoading}
+    />
+  );
+  const completedSetScoreStrip = (
+    <VolleyballDialogScoreStrip
+      match={match}
+      set={completedSet}
+      loading={isMatchLoading || isSetsLoading}
+    />
+  );
+  const completedMatchScoreStrip = (
+    <VolleyballDialogScoreStrip
+      match={completedMatch ?? match}
+      set={liveSet}
+      loading={isMatchLoading || isSetsLoading}
+    />
+  );
 
   /* =========================
      POINT
@@ -1095,6 +1124,7 @@ export default function VolleyballScoringPage() {
           players={pointPlayers}
           isSubmitting={isRecordingRally}
           error={pointError}
+          scoreStrip={liveScoreStrip}
           onChangeTeam={(teamId) => {
             setPointError("");
             setPointTeamId(teamId);
@@ -1124,6 +1154,7 @@ export default function VolleyballScoringPage() {
           open={substitutionOpen}
           match={match}
           liveSet={liveSet}
+          scoreStrip={liveScoreStrip}
           onClose={() => setSubstitutionOpen(false)}
           onSuccess={(updatedSet) => {
             setLiveSet(updatedSet);
@@ -1140,6 +1171,7 @@ export default function VolleyballScoringPage() {
           open={liberoReplacementOpen}
           match={match}
           liveSet={liveSet}
+          scoreStrip={liveScoreStrip}
           onClose={() => setLiberoReplacementOpen(false)}
           onSuccess={(updatedSet) => {
             setLiveSet(updatedSet);
@@ -1155,6 +1187,7 @@ export default function VolleyballScoringPage() {
         <VolleyballHistorySheet
           open={historyOpen}
           match={match}
+          scoreStrip={activeScoreStrip}
           onClose={() => setHistoryOpen(false)}
         />
       )}
@@ -1166,6 +1199,7 @@ export default function VolleyballScoringPage() {
           open={undoOpen}
           match={match}
           liveSet={completedSet ?? liveSet}
+          scoreStrip={activeScoreStrip}
           loading={isUndoing}
           error={undoError}
           resetKey={undoHistoryResetKey}
@@ -1185,6 +1219,7 @@ export default function VolleyballScoringPage() {
           open
           match={match}
           set={completedSet}
+          scoreStrip={completedSetScoreStrip}
           isLoading={isRefreshingLifecycle}
           onContinue={() => void handleSetCompletedContinue()}
           onCorrectMatchFormat={
@@ -1203,6 +1238,7 @@ export default function VolleyballScoringPage() {
           open={formatCorrectionOpen}
           match={match}
           sets={sets}
+          scoreStrip={completedSetScoreStrip}
           loading={isCorrectingMatchRules}
           error={formatCorrectionError}
           onClose={() => {
@@ -1221,6 +1257,7 @@ export default function VolleyballScoringPage() {
         <VolleyballEndMatchSheet
           open={endMatchOpen}
           match={completedMatch}
+          scoreStrip={completedMatchScoreStrip}
           isUndoing={isUndoing}
           onUndoLastPoint={() => {
             setEndMatchOpen(false);
@@ -1926,6 +1963,7 @@ function VolleyballPointSheet({
   players,
   isSubmitting,
   error,
+  scoreStrip,
   onChangeTeam,
   onClearError,
   onClose,
@@ -1943,6 +1981,7 @@ function VolleyballPointSheet({
   isSubmitting: boolean;
 
   error?: string;
+  scoreStrip?: ReactNode;
 
   onChangeTeam: (teamId: string) => void;
 
@@ -1994,33 +2033,36 @@ function VolleyballPointSheet({
             HEADER
         ========================= */}
 
-        <div className="flex shrink-0 items-center justify-between border-b border-(--color-bg-border) bg-(--color-bg-card) px-2 py-1.5">
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--color-text-muted)">
-              Rally
-            </p>
+        <div className="shrink-0 border-b border-(--color-bg-border) bg-(--color-bg-card) px-2 py-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--color-text-muted)">
+                Rally
+              </p>
 
-            <h2 className="mt-0.5 truncate text-lg font-black text-(--color-text-primary)">
-              Point for {selectedTeam.name}
-            </h2>
+              <h2 className="mt-0.5 truncate text-lg font-black text-(--color-text-primary)">
+                Point for {selectedTeam.name}
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <TeamBadge
+                imageKey={selectedTeam.logoUrl ?? null}
+                name={selectedTeam.shortName ?? selectedTeam.name}
+                teamColor={selectedTeam.teamColor}
+              />
+
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={onClose}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <TeamBadge
-              imageKey={selectedTeam.logoUrl ?? null}
-              name={selectedTeam.shortName ?? selectedTeam.name}
-              teamColor={selectedTeam.teamColor}
-            />
-
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
-            >
-              <X size={18} />
-            </button>
-          </div>
         </div>
 
         {/* =========================
@@ -2246,6 +2288,8 @@ function VolleyballPointSheet({
           >
             Confirm Point
           </Button>
+
+          {scoreStrip}
         </div>
       </div>
     </DialogBottom>
