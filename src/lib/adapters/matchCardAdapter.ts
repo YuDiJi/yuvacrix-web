@@ -2,11 +2,17 @@ import type { Match } from "@/types/cricket/match";
 import type { MatchCardModel } from "@/types/cricket/matchCard";
 
 export function matchToMatchCard(match: Match): MatchCardModel {
+  const isTournamentMatch =
+    Boolean(match.fixtureId) ||
+    match.matchNumber != null ||
+    Boolean(match.round);
+
   return {
-    source: "MATCH",
+    source: isTournamentMatch ? "TOURNAMENT" : "MATCH",
 
     matchId: match.matchId,
-    fixtureId: null,
+    fixtureId: match.fixtureId ?? null,
+    matchNumber: match.matchNumber ?? null,
 
     isAdmin: match.isAdmin,
     status: match.status,
@@ -76,7 +82,7 @@ export function matchToMatchCard(match: Match): MatchCardModel {
         }
       : null,
 
-    roundId: null,
-    roundName: null,
+    roundId: match.roundId ?? match.round?.roundId ?? null,
+    roundName: match.round?.name ?? null,
   };
 }

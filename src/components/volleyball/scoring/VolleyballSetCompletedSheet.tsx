@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, Trophy } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/common/Button";
 import { DialogBottom } from "@/components/common/DialogBottom";
@@ -21,6 +22,7 @@ type Props = {
   match: VolleyballMatch;
 
   set: VolleyballSet;
+  scoreStrip?: ReactNode;
 
   isLoading?: boolean;
 
@@ -33,6 +35,7 @@ export function VolleyballSetCompletedSheet({
   open,
   match,
   set,
+  scoreStrip,
   isLoading = false,
   onContinue,
   onCorrectMatchFormat,
@@ -113,7 +116,7 @@ export function VolleyballSetCompletedSheet({
           </div>
         )}
 
-        <div className="mt-6">
+        <div className="safe-bottom mt-6">
           <Button
             fullWidth
             loading={isLoading}
@@ -134,6 +137,8 @@ export function VolleyballSetCompletedSheet({
               Correct match format
             </Button>
           )}
+
+          {scoreStrip}
         </div>
       </div>
     </DialogBottom>

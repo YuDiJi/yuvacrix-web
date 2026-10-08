@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { Check, RotateCcw, X } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
@@ -23,6 +24,7 @@ type Props = {
   open: boolean;
   match: VolleyballMatch;
   liveSet: VolleyballSet;
+  scoreStrip?: ReactNode;
   loading: boolean;
   error: string;
   resetKey: number;
@@ -30,7 +32,7 @@ type Props = {
   onUndo: (throughEventId?: string) => void;
 };
 
-export function VolleyballUndoHistorySheet({ open, match, liveSet, loading, error, resetKey, onClose, onUndo }: Props) {
+export function VolleyballUndoHistorySheet({ open, match, liveSet, scoreStrip, loading, error, resetKey, onClose, onUndo }: Props) {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [quickUndoSelected, setQuickUndoSelected] = useState(false);
   const { data, isLoading, isFetching, isError, refetch } = useGetVolleyballScoringHistoryQuery(
@@ -58,14 +60,17 @@ export function VolleyballUndoHistorySheet({ open, match, liveSet, loading, erro
   return (
     <DialogBottom open={open} onClose={onClose} className="h-[88dvh] max-h-[88dvh] overflow-hidden rounded-t-3xl bg-(--color-bg-card)">
       <div className="flex h-full min-h-0 flex-col">
-        <div className="flex shrink-0 items-center justify-between border-b border-(--color-bg-border) px-4 py-3">
-          <div className="min-w-0">
-            <h2 className="text-lg font-black">Score correction</h2>
-            <p className="mt-0.5 truncate text-[10px] font-semibold text-(--color-text-muted)">Choose where the match should return to.</p>
+        <div className="shrink-0 border-b border-(--color-bg-border) px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="truncate text-lg font-black">Score correction</h2>
+              <p className="mt-0.5 truncate text-[10px] font-semibold text-(--color-text-muted)">Choose where the match should return to.</p>
+            </div>
+            <button type="button" disabled={loading} onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-base)">
+              <X size={18} />
+            </button>
           </div>
-          <button type="button" disabled={loading} onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-base)">
-            <X size={18} />
-          </button>
+
         </div>
 
         <div className="shrink-0 border-b border-(--color-bg-border) bg-(--color-bg-base) p-3">
@@ -140,6 +145,10 @@ export function VolleyballUndoHistorySheet({ open, match, liveSet, loading, erro
             </div>
           </div>
         )}
+
+        <div className="safe-bottom shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-3 pb-2 pt-1.5">
+          {scoreStrip}
+        </div>
       </div>
     </DialogBottom>
   );

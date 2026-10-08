@@ -187,8 +187,15 @@ export interface MatchResult {
   summaryText: string;
 }
 
+export interface MatchRoundSummary {
+  roundId?: string;
+  name?: string | null;
+}
+
 export interface Match {
   matchId: string;
+  fixtureId?: string | null;
+  matchNumber?: number | null;
   isAdmin: boolean;
   status: MatchStatus;
   primaryAction: PrimaryAction;
@@ -212,6 +219,9 @@ export interface Match {
 
   venue: Venue;
   ballType: BallType;
+
+  roundId?: string | null;
+  round?: MatchRoundSummary | null;
 
   toss: MatchToss | null;
   result: MatchResult | null;

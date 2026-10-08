@@ -166,6 +166,8 @@ export function MatchCard({
   const overs = match.oversLimit;
   const typeLabel = match.matchType ? matchTypeLabel(match.matchType) : "";
   const isTournamentMatch = match.source === "TOURNAMENT";
+  const useCompactLayout =
+    match.source === "TOURNAMENT" || match.source === "MATCH";
   const roundLabel = isTournamentMatch ? match.roundName : typeLabel;
   const canonicalMatchLabel =
     isTournamentMatch && match.matchNumber != null
@@ -178,7 +180,7 @@ export function MatchCard({
     venueText || null,
   ].filter(Boolean);
 
-  if (isTournamentMatch) {
+  if (useCompactLayout) {
     return (
       <button
         type="button"

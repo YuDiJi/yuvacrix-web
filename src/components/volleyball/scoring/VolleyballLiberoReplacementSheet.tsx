@@ -45,6 +45,7 @@ type Props = {
   open: boolean;
   match: VolleyballMatch;
   liveSet: VolleyballSet;
+  scoreStrip?: ReactNode;
   onClose: () => void;
   onSuccess: (updatedSet: VolleyballSet) => void;
 };
@@ -119,6 +120,7 @@ export function VolleyballLiberoReplacementSheet({
   open,
   match,
   liveSet,
+  scoreStrip,
   onClose,
   onSuccess,
 }: Props) {
@@ -362,31 +364,34 @@ export function VolleyballLiberoReplacementSheet({
             HEADER
         ========================= */}
 
-        <div className="flex shrink-0 items-center justify-between border-b border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--color-bg-tint) text-(--color-brand)">
-              <Shield size={20} />
+        <div className="shrink-0 border-b border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-tint) text-(--color-brand)">
+                <Shield size={20} />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--color-text-muted)">
+                  Player Change
+                </p>
+
+                <h2 className="truncate text-lg font-black text-(--color-text-primary)">
+                  Libero Replacement
+                </h2>
+              </div>
             </div>
 
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--color-text-muted)">
-                Player Change
-              </p>
-
-              <h2 className="text-lg font-black text-(--color-text-primary)">
-                Libero Replacement
-              </h2>
-            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
-          >
-            <X size={18} />
-          </button>
         </div>
 
         {/* =========================
@@ -552,7 +557,7 @@ export function VolleyballLiberoReplacementSheet({
             FIXED CTA
         ========================= */}
 
-        <div className="safe-bottom shrink-0 bg-(--color-bg-card) py-2 ">
+        <div className="safe-bottom shrink-0 bg-(--color-bg-card) px-4 py-2">
           <Button
             fullWidth
             loading={isSubmitting}
@@ -566,6 +571,8 @@ export function VolleyballLiberoReplacementSheet({
           >
             Confirm Libero Replacement
           </Button>
+
+          {scoreStrip}
         </div>
       </div>
     </DialogBottom>

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/common/Button";
 import { DialogBottom } from "@/components/common/DialogBottom";
@@ -38,6 +39,7 @@ type Props = {
   open: boolean;
 
   match: VolleyballMatch;
+  scoreStrip?: ReactNode;
 
   onClose: () => void;
 
@@ -104,6 +106,7 @@ function getTeamLabel(name: string) {
 export function VolleyballEndMatchSheet({
   open,
   match,
+  scoreStrip,
   onClose,
   onFinished,
   onUndoLastPoint,
@@ -218,25 +221,28 @@ export function VolleyballEndMatchSheet({
         <div className="flex h-full min-h-0 flex-col">
           {/* HEADER */}
 
-          <div className="flex shrink-0 items-center justify-between border-b border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-(--color-text-muted)">
-                Match Finished
-              </p>
+          <div className="shrink-0 border-b border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-(--color-text-muted)">
+                  Match Finished
+                </p>
 
-              <h2 className="font-(family-name:--font-display) text-xl font-black uppercase text-(--color-text-primary)">
-                End Match
-              </h2>
+                <h2 className="truncate font-(family-name:--font-display) text-xl font-black uppercase text-(--color-text-primary)">
+                  End Match
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                disabled={isSaving}
+                onClick={onClose}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            <button
-              type="button"
-              disabled={isSaving}
-              onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-bg-base) text-(--color-text-secondary)"
-            >
-              <X size={18} />
-            </button>
           </div>
 
           {/* BODY */}
@@ -403,7 +409,7 @@ export function VolleyballEndMatchSheet({
 
           {/* FOOTER */}
 
-          <div className="safe-bottom shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3 shadow-[0_-8px_24px_rgba(13,27,62,0.06)]">
+          <div className="shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 py-3 shadow-[0_-8px_24px_rgba(13,27,62,0.06)]">
             <div className="space-y-2">
               <Button
                 fullWidth
@@ -461,6 +467,10 @@ export function VolleyballEndMatchSheet({
               </button>
             </div>
           </div>
+
+          <div className="safe-bottom shrink-0 bg-(--color-bg-card) px-4 pb-2 pt-1.5">
+            {scoreStrip}
+          </div>
         </div>
       </DialogBottom>
 
@@ -471,6 +481,7 @@ export function VolleyballEndMatchSheet({
         players={players}
         teamAColor={teamAColor}
         teamBColor={teamBColor}
+        scoreStrip={scoreStrip}
         selectedPlayerId={bestPlayerId}
         onClose={() => setPlayerPickerOpen(false)}
         onSelect={(player) => {
@@ -520,6 +531,7 @@ function BestPlayerPickerSheet({
   players,
   teamAColor,
   teamBColor,
+  scoreStrip,
   selectedPlayerId,
   onClose,
   onSelect,
@@ -529,6 +541,7 @@ function BestPlayerPickerSheet({
   players: PlayerWithTeam[];
   teamAColor: string;
   teamBColor: string;
+  scoreStrip?: ReactNode;
 
   selectedPlayerId: string | null;
 
@@ -547,24 +560,27 @@ function BestPlayerPickerSheet({
       className="h-[82dvh] max-h-[82dvh] overflow-hidden rounded-t-3xl bg-(--color-bg-card)"
     >
       <div className="flex h-full min-h-0 flex-col">
-        <div className="flex shrink-0 items-center justify-between border-b border-(--color-bg-border) px-4 py-3">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--color-text-muted)">
-              Match Award
-            </p>
+        <div className="shrink-0 border-b border-(--color-bg-border) px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-(--color-text-muted)">
+                Match Award
+              </p>
 
-            <h2 className="text-lg font-black text-(--color-text-primary)">
-              Select Best Player
-            </h2>
+              <h2 className="truncate text-lg font-black text-(--color-text-primary)">
+                Select Best Player
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--color-bg-base)"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--color-bg-base)"
-          >
-            <X size={18} />
-          </button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto bg-(--color-bg-base) px-4 py-3">
@@ -585,6 +601,10 @@ function BestPlayerPickerSheet({
               onSelect={onSelect}
             />
           </div>
+        </div>
+
+        <div className="safe-bottom shrink-0 border-t border-(--color-bg-border) bg-(--color-bg-card) px-4 pb-2 pt-1.5">
+          {scoreStrip}
         </div>
       </div>
     </DialogBottom>
