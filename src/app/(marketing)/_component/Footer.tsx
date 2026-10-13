@@ -68,7 +68,7 @@ export function Footer() {
               />
             </div>
             <p className="max-w-[220px] text-[13px] leading-relaxed text-white/40">
-              Every cricket match deserves to be remembered.
+              Every game deserves to be scored, shared and remembered.
             </p>
             {/* Social links */}
             <div className="flex items-center gap-2.5 pt-1">

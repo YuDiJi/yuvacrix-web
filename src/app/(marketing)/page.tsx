@@ -27,7 +27,7 @@ import { useEffect, useRef, useState } from "react";
 import ScoreDemo from "./ScoreDemo";
 
 /* -------------------------------------------------------------------------- */
-/* Match Flow Steps with Exact Image Mappings                                 */
+/* Cricket Match Flow Steps                                                   */
 /* -------------------------------------------------------------------------- */
 
 const matchFlow = [
@@ -116,11 +116,19 @@ const tournamentScreens = [
 
 const audienceItems = [
   "Weekend cricket teams",
+  "Volleyball clubs",
   "Tournament organisers",
-  "Cricket academies",
+  "Sports academies",
   "Schools and colleges",
-  "Corporate cricket teams",
-  "Local cricket leagues",
+  "Corporate sports teams",
+  "Local leagues",
+];
+
+const volleyballHighlights = [
+  "Rally-by-rally scoring",
+  "Set progress",
+  "Serving context",
+  "Undo-ready flow",
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -131,12 +139,17 @@ export default function LandingPage() {
   return (
     <div className="landing-page bg-[#060B1F] text-white selection:bg-[#4B8BFF]/30 selection:text-white">
       <HeroScene />
+      <CricketChapterIntro />
       <LiveScoringScene />
       <MatchJourneyScene />
       <TournamentScene />
-      <PlayerScene />
-      <OnboardingPreviewScene />
-      <AudienceTicker />
+      <SportChapterTransition />
+      <VolleyballIntroScene />
+      <VolleyballScoringScene />
+      <VolleyballTeamScene />
+      <VolleyballMatchSetupScene />
+      <VolleyballTournamentScene />
+      <ComingSoonSportsScene />
       <FinalCtaScene />
     </div>
   );
@@ -149,19 +162,16 @@ export default function LandingPage() {
 function HeroHeadline() {
   return (
     <div className="w-full select-none">
-      {/* Line 1: Cricket. */}
-      <h1 className="font-display text-[clamp(3.2rem,6.8vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-white">
-        Cricket.
+      <h1 className="font-display text-[clamp(2.8rem,8.5vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-white">
+        Every game.
       </h1>
 
-      {/* Line 2: Scored */}
-      <div className="font-display text-[clamp(3.2rem,6.8vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-[#4B8BFF] my-1 sm:my-1.5">
-        Scored
+      <div className="my-1 font-display text-[clamp(2.8rem,8.5vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-[#4B8BFF] sm:my-1.5">
+        Every
       </div>
 
-      {/* Line 3: Everyday. */}
-      <div className="font-display text-[clamp(3.2rem,6.8vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-stroke text-white drop-shadow-[0_4px_24px_rgba(0,214,255,0.2)]">
-        Everyday.
+      <div className="text-stroke font-display text-[clamp(2.8rem,8.5vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-white drop-shadow-[0_4px_24px_rgba(0,214,255,0.2)]">
+        Moment.
       </div>
     </div>
   );
@@ -188,11 +198,11 @@ function HeroScene() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative min-h-[100svh] overflow-hidden bg-[#060B1F]"
+      className="relative min-h-svh overflow-hidden bg-[#060B1F]"
     >
       <HeroBackground />
 
-      <div className="relative z-10 mx-auto grid min-h-[100svh] max-w-7xl items-center gap-12 px-5 pb-16 pt-28 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:px-10 lg:pb-20 lg:pt-28">
+      <div className="relative z-10 mx-auto grid min-h-svh max-w-7xl items-center gap-12 px-5 pb-16 pt-28 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:px-10 lg:pb-20 lg:pt-28">
         <motion.div
           style={
             shouldReduceMotion
@@ -208,7 +218,7 @@ function HeroScene() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65 }}
-            className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 backdrop-blur-xl"
+            className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/6 px-4 py-2 backdrop-blur-xl"
           >
             <span className="relative flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF3B30] opacity-70" />
@@ -216,7 +226,7 @@ function HeroScene() {
             </span>
 
             <span className="font-body text-xs font-bold uppercase tracking-[0.18em] text-white/75">
-              Cricket scoring, made simple
+              Cricket + Volleyball, made simple
             </span>
           </motion.div>
 
@@ -229,8 +239,8 @@ function HeroScene() {
             transition={{ duration: 0.65, delay: 0.55 }}
             className="mt-8 max-w-lg font-body text-base font-medium leading-7 text-white/55 sm:text-lg"
           >
-            Create teams, score every ball, organise tournaments and celebrate
-            every player through one powerful cricket platform.
+            Score matches. Manage teams. Run tournaments. One platform for the
+            sports you love.
           </motion.p>
 
           <motion.div
@@ -248,8 +258,8 @@ function HeroScene() {
             </Link>
 
             <a
-              href="#live-scoring"
-              className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl border border-white/15 bg-white/[0.05] px-7 py-4 font-display text-sm font-bold uppercase tracking-[0.08em] text-white backdrop-blur-xl transition duration-300 hover:border-white/30 hover:bg-white/[0.09]"
+              href="#volleyball-scoring"
+              className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl border border-white/15 bg-white/5 px-7 py-4 font-display text-sm font-bold uppercase tracking-[0.08em] text-white backdrop-blur-xl transition duration-300 hover:border-white/30 hover:bg-white/9"
             >
               <Play className="h-4 w-4 fill-current" />
               Explore YuvaCrix
@@ -262,23 +272,25 @@ function HeroScene() {
             transition={{ delay: 1 }}
             className="mt-9 flex flex-wrap gap-x-6 gap-y-3"
           >
-            {["Live scoring", "Tournament fixtures", "Player stats"].map(
-              (item) => (
-                <div
-                  key={item}
-                  className="flex items-center gap-2 font-body text-xs font-semibold text-white/45"
-                >
-                  <Check className="h-3.5 w-3.5 text-[#5EE8C8]" />
-                  {item}
-                </div>
-              ),
-            )}
+            {[
+              "Cricket scoring",
+              "Volleyball rallies",
+              "Tournament fixtures",
+            ].map((item) => (
+              <div
+                key={item}
+                className="flex items-center gap-2 font-body text-xs font-semibold text-white/45"
+              >
+                <Check className="h-3.5 w-3.5 text-[#5EE8C8]" />
+                {item}
+              </div>
+            ))}
           </motion.div>
         </motion.div>
 
         <motion.div
           style={shouldReduceMotion ? undefined : { y: screenshotY }}
-          className="relative mx-auto w-full max-w-[680px]"
+          className="relative mx-auto w-full max-w-170"
         >
           <HeroScreens />
         </motion.div>
@@ -308,7 +320,7 @@ function HeroScene() {
 function HeroBackground() {
   return (
     <div className="pointer-events-none absolute inset-0">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(75,139,255,0.18),transparent_32%),radial-gradient(circle_at_85%_32%,rgba(124,58,237,0.14),transparent_30%),linear-gradient(180deg,#060B1F_0%,#08112B_60%,#060B1F_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(75,139,255,0.18),transparent_32%),radial-gradient(circle_at_85%_32%,rgba(234,88,12,0.16),transparent_30%),linear-gradient(180deg,#060B1F_0%,#08112B_60%,#060B1F_100%)]" />
 
       <div
         className="absolute inset-0 opacity-[0.07]"
@@ -320,8 +332,8 @@ function HeroBackground() {
         }}
       />
 
-      <div className="absolute -left-32 top-1/4 h-[430px] w-[430px] rounded-full bg-[#1B3FA0]/20 blur-[110px]" />
-      <div className="absolute -right-24 top-16 h-[420px] w-[420px] rounded-full bg-[#7C3AED]/15 blur-[115px]" />
+      <div className="absolute -left-32 top-1/4 h-107.5 w-107.5 rounded-full bg-[#1B3FA0]/20 blur-[110px]" />
+      <div className="absolute -right-24 top-16 h-105 w-105 rounded-full bg-[#EA580C]/15 blur-[115px]" />
 
       <motion.div
         animate={{ rotate: 360 }}
@@ -336,8 +348,8 @@ function HeroBackground() {
 
 function HeroScreens() {
   return (
-    <div className="relative min-h-[580px] sm:min-h-[640px] flex items-center justify-center">
-      {/* Left phone: Team Selection */}
+    <div className="relative flex min-h-130 items-center justify-center sm:min-h-160">
+      {/* Left phone: Sport selection */}
       <motion.div
         initial={{ opacity: 0, y: 70, rotate: -8 }}
         animate={{ opacity: 1, y: 0, rotate: -5 }}
@@ -346,12 +358,12 @@ function HeroScreens() {
           delay: 0.35,
           ease: [0.22, 1, 0.36, 1],
         }}
-        className="absolute left-[2%] top-[14%] z-10 hidden w-[32%] max-w-[210px] overflow-hidden rounded-[26px] border-[3px] border-white/15 bg-[#101A37] p-1 shadow-[0_30px_70px_rgba(0,0,0,0.55)] sm:block"
+        className="absolute left-[2%] top-[14%] z-10 hidden w-[32%] max-w-52.5 overflow-hidden rounded-[26px] border-[3px] border-white/15 bg-[#101A37] p-1 shadow-[0_30px_70px_rgba(0,0,0,0.55)] sm:block"
       >
-        <div className="relative w-full aspect-[862/1598] overflow-hidden rounded-[20px] bg-[#0A0F24]">
+        <div className="relative w-full aspect-720/1280 overflow-hidden rounded-[20px] bg-[#0A0F24]">
           <Image
-            src="/yuvacrixlandingpage/select_team.png"
-            alt="Select teams in YuvaCrix"
+            src="/yuvacrixlandingpage/volleyball/sport-selection.jpeg"
+            alt="Choose Cricket or Volleyball in YuvaCrix"
             fill
             sizes="210px"
             className="object-contain object-top"
@@ -359,7 +371,7 @@ function HeroScreens() {
         </div>
       </motion.div>
 
-      {/* Center main phone: MVP & Match Highlights */}
+      {/* Center main phone: Volleyball scoring */}
       <motion.div
         initial={{ opacity: 0, y: 90, scale: 0.92 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -368,15 +380,15 @@ function HeroScreens() {
           delay: 0.2,
           ease: [0.22, 1, 0.36, 1],
         }}
-        className="relative z-20 w-[62%] max-w-[290px] sm:max-w-[310px] overflow-hidden rounded-[38px] border-[4.5px] border-white/25 bg-[#0B1023] p-1.5 shadow-[0_45px_110px_rgba(0,0,0,0.65),0_0_80px_rgba(75,139,255,0.22)]"
+        className="relative z-20 w-[62%] max-w-72.5 sm:max-w-77.5 overflow-hidden rounded-[38px] border-[4.5px] border-white/25 bg-[#0B1023] p-1.5 shadow-[0_45px_110px_rgba(0,0,0,0.65),0_0_80px_rgba(75,139,255,0.22)]"
       >
-        {/* Dynamic Island Pill */}
         <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-black/80 rounded-full z-20 border border-white/10" />
 
-        <div className="relative w-full aspect-[870/1566] overflow-hidden rounded-[30px] bg-[#10182F]">
+        <div className="relative w-full aspect-720/1280 overflow-hidden rounded-[30px] bg-[#10182F]">
           <Image
-            src="/yuvacrixlandingpage/mvp.png"
-            alt="YuvaCrix MVP awards and match heroes"
+            // src="/yuvacrixlandingpage/volleyball/scoring.jpeg"
+            src="/yuvacrixlandingpage/scorecard.png"
+            alt="YuvaCrix volleyball live scoring"
             fill
             priority
             sizes="310px"
@@ -385,7 +397,7 @@ function HeroScreens() {
         </div>
       </motion.div>
 
-      {/* Right phone: Ball-by-Ball Commentary */}
+      {/* Right phone: Cricket scorecard */}
       <motion.div
         initial={{ opacity: 0, y: 70, rotate: 8 }}
         animate={{ opacity: 1, y: 0, rotate: 5 }}
@@ -394,12 +406,13 @@ function HeroScreens() {
           delay: 0.48,
           ease: [0.22, 1, 0.36, 1],
         }}
-        className="absolute right-[2%] top-[18%] z-10 hidden w-[32%] max-w-[210px] overflow-hidden rounded-[26px] border-[3px] border-white/15 bg-[#101A37] p-1 shadow-[0_30px_70px_rgba(0,0,0,0.55)] sm:block"
+        className="absolute right-[2%] top-[18%] z-10 hidden w-[32%] max-w-52.5 overflow-hidden rounded-[26px] border-[3px] border-white/15 bg-[#101A37] p-1 shadow-[0_30px_70px_rgba(0,0,0,0.55)] sm:block"
       >
-        <div className="relative w-full aspect-[870/1566] overflow-hidden rounded-[20px] bg-[#0A0F24]">
+        <div className="relative w-full aspect-870/1566 overflow-hidden rounded-[20px] bg-[#0A0F24]">
           <Image
-            src="/yuvacrixlandingpage/commentary.png"
-            alt="YuvaCrix ball-by-ball commentary"
+            // src="/yuvacrixlandingpage/scorecard.png"
+            src="/yuvacrixlandingpage/volleyball/scoring.jpeg"
+            alt="YuvaCrix cricket scorecard"
             fill
             sizes="210px"
             className="object-contain object-top"
@@ -424,29 +437,29 @@ function HeroScreens() {
               Match live
             </p>
             <p className="text-[10px] font-medium text-white/40">
-              86/3 · 8.4 overs
+              Cricket + Volleyball
             </p>
           </div>
         </div>
       </motion.div>
 
       <FloatingEvent
-        label="FOUR"
-        color="#22C55E"
+        label="CRICKET"
+        color="#4B8BFF"
         className="left-[0%] top-[4%]"
         delay={0}
       />
 
       <FloatingEvent
-        label="SIX"
-        color="#F59E0B"
+        label="VOLLEYBALL"
+        color="#EA580C"
         className="bottom-[6%] right-[1%]"
         delay={1.3}
       />
 
       <FloatingEvent
-        label="WICKET"
-        color="#FF3B30"
+        label="LIVE"
+        color="#F59E0B"
         className="bottom-[10%] left-[2%]"
         delay={2.2}
       />
@@ -491,6 +504,43 @@ function FloatingEvent({
   );
 }
 
+function CricketChapterIntro() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, {
+    once: true,
+    amount: 0.35,
+  });
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden bg-[#060B1F] px-5 py-20 text-white sm:px-8 lg:py-24"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_50%,rgba(75,139,255,0.16),transparent_36%)]" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        animate={isInView ? { opacity: 1, y: 0 } : undefined}
+        transition={{ duration: 0.75 }}
+        className="relative z-10 mx-auto max-w-5xl text-center"
+      >
+        <p className="font-display text-xs font-bold uppercase tracking-[0.34em] text-[#4B8BFF]">
+          Cricket
+        </p>
+
+        <h2 className="mx-auto mt-5 max-w-4xl font-display text-[clamp(3rem,8vw,6.4rem)] font-black uppercase leading-[0.84] tracking-[-0.035em]">
+          Built for every ball.
+        </h2>
+
+        <p className="mx-auto mt-7 max-w-2xl font-body text-base font-medium leading-7 text-white/52">
+          From team selection to the final scorecard, YuvaCrix keeps grassroots
+          cricket fast, clear and match-ready.
+        </p>
+      </motion.div>
+    </section>
+  );
+}
+
 /* -------------------------------------------------------------------------- */
 /* Live Scoring Scene                                                         */
 /* -------------------------------------------------------------------------- */
@@ -509,8 +559,8 @@ function LiveScoringScene() {
       className="relative min-h-screen overflow-hidden bg-[#060B1F] py-24 lg:py-32"
     >
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-[10%] top-[-10%] h-[60%] w-[55%] bg-[radial-gradient(ellipse,rgba(75,139,255,0.13),transparent_68%)]" />
-        <div className="absolute -bottom-[20%] -right-[10%] h-[70%] w-[55%] bg-[radial-gradient(ellipse,rgba(245,158,11,0.08),transparent_68%)]" />
+        <div className="absolute left-[-10%] top-[-10%] h-[60%] w-[55%] bg-[radial-gradient(ellipse,rgba(75,139,255,0.13),transparent_68%)]" />
+        <div className="absolute bottom-[-20%] right-[-10%] h-[70%] w-[55%] bg-[radial-gradient(ellipse,rgba(245,158,11,0.08),transparent_68%)]" />
 
         <div
           className="absolute inset-y-0 right-[8%] hidden w-[43%] opacity-[0.07] lg:block"
@@ -578,7 +628,7 @@ function LiveScoringScene() {
             ].map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 font-body text-xs font-semibold text-white/60 backdrop-blur"
+                className="rounded-full border border-white/15 bg-white/4 px-4 py-2 font-body text-xs font-semibold text-white/60 backdrop-blur"
               >
                 {tag}
               </span>
@@ -629,6 +679,188 @@ function ScoringStat({ value, label }: { value: string; label: string }) {
         {label}
       </p>
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Volleyball Scoring Scene                                                   */
+/* -------------------------------------------------------------------------- */
+
+function VolleyballScoringScene() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, {
+    amount: 0.28,
+  });
+
+  return (
+    <section
+      ref={sectionRef}
+      id="volleyball-scoring"
+      className="relative overflow-hidden bg-[#081126] py-24 text-white lg:py-32"
+    >
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(234,88,12,0.18),transparent_34%),radial-gradient(circle_at_80%_70%,rgba(75,139,255,0.14),transparent_34%)]" />
+        <div
+          className="absolute inset-x-0 top-14 h-[72%] opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)",
+            backgroundSize: "84px 84px",
+            maskImage:
+              "linear-gradient(to bottom, transparent, black 18%, black 72%, transparent)",
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20 lg:px-10">
+        <motion.div
+          initial={{ opacity: 0, x: -38 }}
+          animate={isInView ? { opacity: 1, x: 0 } : undefined}
+          transition={{ duration: 0.75 }}
+        >
+          <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-[#F59E0B]/80">
+            03 — Volleyball scoring
+          </p>
+
+          <h2 className="mt-7 font-display text-[clamp(3rem,8vw,6.6rem)] font-black uppercase leading-[0.84] tracking-[-0.035em]">
+            Every serve.
+            <span className="block text-[#EA580C]">Every point.</span>
+          </h2>
+
+          <p className="mt-8 max-w-md font-body text-base font-medium leading-7 text-white/55">
+            From the first serve to match point. Capture every rally, track
+            every set, and keep the game moving.
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            {volleyballHighlights.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-white/15 bg-white/4 px-4 py-2 font-body text-xs font-semibold text-white/65 backdrop-blur"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 42, scale: 0.96 }}
+          animate={isInView ? { opacity: 1, y: 0, scale: 1 } : undefined}
+          transition={{ duration: 0.85, delay: 0.12 }}
+          className="relative mx-auto w-full max-w-190"
+        >
+          <div className="absolute left-1/2 top-1/2 h-[78%] w-[76%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EA580C]/18 blur-[90px]" />
+
+          <div className="relative mx-auto grid max-w-175 items-center gap-5 sm:grid-cols-[0.82fr_1fr]">
+            <VolleyballScoreDemo active={isInView} />
+
+            <div className="hidden min-w-0 space-y-4 sm:block">
+              {[
+                {
+                  title: "+1 point",
+                  copy: "The rally is captured with a clear scoring action.",
+                  color: "#EA580C",
+                },
+                {
+                  title: "Set context",
+                  copy: "Current points, sets won and server stay visible.",
+                  color: "#F59E0B",
+                },
+                {
+                  title: "Match ready",
+                  copy: "Results flow naturally into the final match record.",
+                  color: "#4B8BFF",
+                },
+              ].map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, x: 24 }}
+                  animate={isInView ? { opacity: 1, x: 0 } : undefined}
+                  transition={{ delay: 0.25 + index * 0.12 }}
+                  className="rounded-3xl border border-white/12 bg-white/5.5 p-4 shadow-[0_18px_52px_rgba(0,0,0,0.24)] backdrop-blur-xl"
+                >
+                  <p
+                    className="font-display text-sm font-black uppercase tracking-widest"
+                    style={{ color: item.color }}
+                  >
+                    {item.title}
+                  </p>
+                  <p className="mt-1 text-xs font-medium leading-5 text-white/50">
+                    {item.copy}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function VolleyballScoreDemo({ active }: { active: boolean }) {
+  const shouldReduceMotion = useReducedMotion();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    if (!active || shouldReduceMotion) {
+      video.pause();
+      return;
+    }
+
+    void video.play().catch(() => {
+      /*
+       * Autoplay can be blocked by the browser.
+       * The poster image remains visible.
+       */
+    });
+  }, [active, shouldReduceMotion]);
+
+  return (
+    <motion.div
+      animate={shouldReduceMotion ? undefined : { y: [0, -8, 0] }}
+      transition={{ duration: 4.5, repeat: Infinity }}
+      className="relative z-20 mx-auto w-full max-w-82.5 overflow-hidden rounded-[38px] border-4 border-white/20 bg-[#0B1638] p-1.5 shadow-[0_40px_100px_rgba(0,0,0,0.58)]"
+    >
+      <div className="absolute left-1/2 top-3 z-30 h-2 w-14 -translate-x-1/2 rounded-full border border-white/10 bg-black/80" />
+
+      <div className="relative aspect-720/1280 overflow-hidden rounded-[30px] bg-[#0A0F24]">
+        {/* Fallback image */}
+        <Image
+          src="/yuvacrixlandingpage/volleyball/scoring.jpeg"
+          alt="YuvaCrix volleyball scoring"
+          fill
+          sizes="330px"
+          className={`object-cover transition-opacity duration-300 ${
+            videoLoaded ? "opacity-0" : "opacity-100"
+          }`}
+        />
+
+        {/* Video */}
+        <video
+          ref={videoRef}
+          src="/yuvacrixlandingpage/volleyball/scoring-demo.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          onLoadedData={() => setVideoLoaded(true)}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+            videoLoaded ? "opacity-100" : "opacity-0"
+          }`}
+          aria-label="YuvaCrix volleyball scoring demonstration"
+        />
+      </div>
+    </motion.div>
   );
 }
 
@@ -687,7 +919,10 @@ function MatchJourneyScene() {
               {/* Card Header */}
               <div className="mb-4">
                 <div className="flex items-center justify-between">
-                  <span className="inline-flex h-7 px-3 items-center justify-center rounded-full bg-[#1B3FA0] font-display text-xs font-black text-white">
+                  <span
+                    className="inline-flex h-7 items-center justify-center rounded-full px-3 font-display text-xs font-black text-white"
+                    style={{ backgroundColor: "#1B3FA0" }}
+                  >
                     Step {step.number}
                   </span>
                   <span className="text-[11px] font-bold uppercase tracking-wider text-[#1B3FA0]/70">
@@ -706,7 +941,7 @@ function MatchJourneyScene() {
               {/* Phone Mockup Frame - Perfectly Fitted without Overstretching */}
               <div className="mt-2 flex-1 flex items-center justify-center p-3 rounded-[22px] bg-[#F7F9FD] border border-[#E9EEF5]">
                 <div
-                  className={`relative w-full max-w-[210px] sm:max-w-[220px] ${step.aspect} mx-auto rounded-[24px] border-[3.5px] border-[#CBD5E1] bg-[#0A0F24] p-1 shadow-[0_12px_32px_rgba(0,0,0,0.14)] overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}
+                  className={`relative w-full max-w-52.5 sm:max-w-55 ${step.aspect} mx-auto rounded-3xl border-[3.5px] border-[#CBD5E1] bg-[#0A0F24] p-1 shadow-[0_12px_32px_rgba(0,0,0,0.14)] overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}
                 >
                   {/* Notch */}
                   <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-11 h-1.5 bg-black/60 rounded-full z-20" />
@@ -784,7 +1019,7 @@ function TournamentScene() {
                 className="flex items-center gap-3"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1B3FA0]">
-                  <Check className="h-3.5 w-3.5 stroke-[3]" />
+                  <Check className="h-3.5 w-3.5 stroke-3" />
                 </span>
                 <p className="text-sm font-semibold text-white/70">{item}</p>
               </motion.div>
@@ -835,12 +1070,12 @@ function TournamentScene() {
 
                 {/* Phone Device Mockup Frame */}
                 <div
-                  className={`relative w-full max-w-[210px] sm:max-w-[220px] mx-auto ${screen.aspect} rounded-[22px] border-[3px] border-white/20 bg-[#080D1F] p-1 shadow-xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}
+                  className={`relative w-full max-w-52.5 sm:max-w-55 mx-auto ${screen.aspect} rounded-[22px] border-[3px] border-white/20 bg-[#080D1F] p-1 shadow-xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-300`}
                 >
                   {/* Notch */}
                   <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-1.5 bg-black/70 rounded-full z-20" />
 
-                  <div className="relative w-full h-full rounded-[16px] overflow-hidden bg-[#080D1F]">
+                  <div className="relative w-full h-full rounded-2xl overflow-hidden bg-[#080D1F]">
                     <Image
                       src={screen.image}
                       alt={screen.label}
@@ -881,6 +1116,325 @@ function TournamentScene() {
 /* 05 — Player Performance Scene with myperformance.png                       */
 /* -------------------------------------------------------------------------- */
 
+function SportChapterTransition() {
+  return (
+    <section className="relative overflow-hidden bg-[#060B1F] px-5 py-20 text-center text-white sm:px-8">
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(75,139,255,0.16),rgba(234,88,12,0.18))]" />
+      <div className="absolute inset-x-0 top-1/2 h-px bg-linear-to-r from-transparent via-white/25 to-transparent" />
+
+      <div className="relative z-10 mx-auto max-w-4xl">
+        <p className="font-display text-xs font-black uppercase tracking-[0.36em] text-white/45">
+          And now
+        </p>
+        <h2 className="mt-5 font-display text-[clamp(3rem,9vw,6.6rem)] font-black uppercase leading-[0.82] tracking-[-0.035em]">
+          Every rally.
+        </h2>
+      </div>
+    </section>
+  );
+}
+
+function VolleyballIntroScene() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, {
+    once: true,
+    amount: 0.25,
+  });
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden bg-[#0D1B3E] px-5 py-24 text-white sm:px-8 lg:py-32"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_42%,rgba(234,88,12,0.22),transparent_36%)]" />
+
+      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:px-10">
+        <motion.div
+          initial={{ opacity: 0, x: -34 }}
+          animate={isInView ? { opacity: 1, x: 0 } : undefined}
+          transition={{ duration: 0.75 }}
+        >
+          <p className="font-display text-xs font-bold uppercase tracking-[0.34em] text-[#F59E0B]">
+            Volleyball
+          </p>
+
+          <h2 className="mt-6 font-display text-[clamp(3rem,8vw,6.4rem)] font-black uppercase leading-[0.84] tracking-[-0.035em]">
+            Built for
+            <span className="block text-[#EA580C]">every rally.</span>
+          </h2>
+
+          <p className="mt-8 max-w-lg font-body text-base font-medium leading-7 text-white/56">
+            Score every point. Track every set. Run your volleyball tournaments
+            with YuvaCrix.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 42 }}
+          animate={isInView ? { opacity: 1, y: 0 } : undefined}
+          transition={{ duration: 0.85, delay: 0.12 }}
+          className="relative mx-auto w-full max-w-155"
+        >
+          <div className="absolute left-1/2 top-1/2 h-[72%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#EA580C]/18 blur-[90px]" />
+          <PhoneImage
+            src="/yuvacrixlandingpage/volleyball/scoring.jpeg"
+            alt="YuvaCrix volleyball scoring screen"
+          />
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function VolleyballTeamScene() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, {
+    once: true,
+    amount: 0.24,
+  });
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden bg-[#F7F9FD] px-5 py-24 text-[#0D1B3E] sm:px-8 lg:py-32"
+    >
+      <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:px-10">
+        <motion.div
+          initial={{ opacity: 0, y: 42 }}
+          animate={isInView ? { opacity: 1, y: 0 } : undefined}
+          transition={{ duration: 0.8 }}
+          className="relative mx-auto flex w-full max-w-155 justify-center"
+        >
+          <PhoneImage
+            src="/yuvacrixlandingpage/volleyball/team-roster.jpeg"
+            alt="YuvaCrix volleyball team roster"
+            className="relative z-20"
+          />
+          <FloatingLabel
+            label="Roster ready"
+            color="#EA580C"
+            className="left-0 top-[18%]"
+          />
+          <FloatingLabel
+            label="Players added"
+            color="#F59E0B"
+            className="bottom-[12%] right-0"
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 38 }}
+          animate={isInView ? { opacity: 1, x: 0 } : undefined}
+          transition={{ duration: 0.75 }}
+        >
+          <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-[#EA580C]">
+            Volleyball teams
+          </p>
+          <h2 className="mt-6 font-display text-[clamp(3rem,7vw,5.9rem)] font-black uppercase leading-[0.84] tracking-[-0.035em]">
+            Build your team.
+          </h2>
+          <p className="mt-7 max-w-md font-body text-base font-medium leading-7 text-[#667085]">
+            Create volleyball teams, add players and keep the match-day roster
+            ready before the first serve.
+          </p>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+function VolleyballMatchSetupScene() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, {
+    once: true,
+    amount: 0.22,
+  });
+  const shouldReduceMotion = useReducedMotion();
+  const [activeScreen, setActiveScreen] = useState(0);
+  const screens = [
+    {
+      label: "Teams",
+      image: "/yuvacrixlandingpage/volleyball/match-setup 1.jpeg",
+    },
+    {
+      label: "Format",
+      image: "/yuvacrixlandingpage/volleyball/match-setup 2.jpeg",
+    },
+    {
+      label: "Rules",
+      image: "/yuvacrixlandingpage/volleyball/match-setup 3.jpeg",
+    },
+  ];
+
+  useEffect(() => {
+    if (!isInView || shouldReduceMotion) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setActiveScreen((value) => (value + 1) % screens.length);
+    }, 1800);
+
+    return () => window.clearInterval(timer);
+  }, [isInView, screens.length, shouldReduceMotion]);
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden bg-[#0A1025] px-5 py-24 text-white sm:px-8 lg:py-32"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(234,88,12,0.16),transparent_38%)]" />
+
+      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[0.86fr_1.14fr] lg:px-10">
+        <motion.div
+          initial={{ opacity: 0, x: -36 }}
+          animate={isInView ? { opacity: 1, x: 0 } : undefined}
+          transition={{ duration: 0.75 }}
+        >
+          <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-[#F59E0B]">
+            Volleyball setup
+          </p>
+          <h2 className="mt-6 font-display text-[clamp(3rem,7vw,5.9rem)] font-black uppercase leading-[0.84] tracking-[-0.035em]">
+            Set the rules.
+            <span className="block text-[#EA580C]">Start the match.</span>
+          </h2>
+          <p className="mt-7 max-w-md font-body text-base font-medium leading-7 text-white/55">
+            Team selection, match format, points per set, deciding set and win
+            by rules stay focused in one compact flow.
+          </p>
+        </motion.div>
+
+        <div className="relative mx-auto h-140 w-full max-w-155">
+          {screens.map((screen, index) => {
+            const active = activeScreen === index;
+            const offset = index - activeScreen;
+
+            return (
+              <motion.div
+                key={screen.label}
+                animate={{
+                  opacity: active ? 1 : 0.55,
+                  x: offset * 64,
+                  y: Math.abs(offset) * 22,
+                  scale: active ? 1 : 0.88,
+                  zIndex: active ? 30 : 10 - Math.abs(offset),
+                }}
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute left-1/2 top-0 w-65 -translate-x-1/2"
+              >
+                <PhoneImage
+                  src={screen.image}
+                  alt={`YuvaCrix volleyball ${screen.label}`}
+                />
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function VolleyballTournamentScene() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, {
+    once: true,
+    amount: 0.24,
+  });
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden bg-[#F7F9FD] px-5 py-24 text-[#0D1B3E] sm:px-8 lg:py-32"
+    >
+      <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:px-10">
+        <motion.div
+          initial={{ opacity: 0, y: 36 }}
+          animate={isInView ? { opacity: 1, y: 0 } : undefined}
+          transition={{ duration: 0.75 }}
+        >
+          <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-[#EA580C]">
+            Volleyball tournaments
+          </p>
+          <h2 className="mt-6 font-display text-[clamp(3rem,7vw,5.9rem)] font-black uppercase leading-[0.84] tracking-[-0.035em]">
+            Run the whole tournament.
+          </h2>
+          <p className="mt-7 max-w-md font-body text-base font-medium leading-7 text-[#667085]">
+            Move from tournament planning to fixtures, live matches and final
+            results without mixing it into the cricket workflow.
+          </p>
+        </motion.div>
+
+        <div className="relative mx-auto flex w-full max-w-160 items-center justify-center gap-4">
+          <PhoneImage
+            src="/yuvacrixlandingpage/volleyball/tournament.jpeg"
+            alt="YuvaCrix volleyball tournament management"
+            className="z-20"
+          />
+          <div className="hidden sm:block">
+            <PhoneImage
+              src="/yuvacrixlandingpage/volleyball/completed-match.jpeg"
+              alt="YuvaCrix volleyball completed match"
+              className="scale-90 opacity-90"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PhoneImage({
+  src,
+  alt,
+  className = "",
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`relative mx-auto w-full max-w-72.5 overflow-hidden rounded-[34px] border-4 border-white/20 bg-[#10182F] p-1.5 shadow-[0_28px_80px_rgba(13,27,62,0.18)] ${className}`}
+    >
+      <div className="absolute left-1/2 top-3 z-20 h-2 w-14 -translate-x-1/2 rounded-full bg-black/75" />
+      <div className="relative aspect-720/1280 overflow-hidden rounded-[26px] bg-[#0A0F24]">
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="290px"
+          className="object-contain object-top"
+        />
+      </div>
+    </div>
+  );
+}
+
+function FloatingLabel({
+  label,
+  color,
+  className,
+}: {
+  label: string;
+  color: string;
+  className: string;
+}) {
+  return (
+    <motion.div
+      animate={{ y: [0, -8, 0] }}
+      transition={{ duration: 4, repeat: Infinity }}
+      className={`absolute z-30 hidden rounded-2xl border bg-white/95 px-4 py-2 text-xs font-black uppercase tracking-widest shadow-[0_18px_50px_rgba(13,27,62,0.14)] md:block ${className}`}
+      style={{
+        color,
+        borderColor: `${color}44`,
+      }}
+    >
+      {label}
+    </motion.div>
+  );
+}
+
 function PlayerScene() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, {
@@ -895,7 +1449,7 @@ function PlayerScene() {
       className="relative overflow-hidden bg-[#F3F6FB] py-24 text-[#0D1B3E] lg:py-32"
     >
       <div className="mx-auto grid max-w-7xl items-center gap-16 px-5 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-10">
-        <div className="relative mx-auto w-full max-w-[620px]">
+        <div className="relative mx-auto w-full max-w-155">
           <div className="absolute left-1/2 top-1/2 h-[70%] w-[70%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#1B3FA0]/10 blur-[90px]" />
 
           {/* Proper Card Frame around Player Performance Screen */}
@@ -911,12 +1465,12 @@ function PlayerScene() {
                 : undefined
             }
             transition={{ duration: 0.85 }}
-            className="relative mx-auto w-full max-w-70 sm:max-w-[310px] rounded-[36px] border-[4.5px] border-[#CBD5E1] bg-white p-1.5 shadow-[0_30px_80px_rgba(13,27,62,0.16)] overflow-hidden"
+            className="relative mx-auto w-full max-w-70 sm:max-w-77.5 rounded-[36px] border-[4.5px] border-[#CBD5E1] bg-white p-1.5 shadow-[0_30px_80px_rgba(13,27,62,0.16)] overflow-hidden"
           >
             {/* Notch */}
             <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-black/70 rounded-full z-20" />
 
-            <div className="relative w-full aspect-[862/1598] rounded-[28px] overflow-hidden bg-[#0A0F24]">
+            <div className="relative w-full aspect-862/1598 rounded-[28px] overflow-hidden bg-[#0A0F24]">
               <Image
                 src="/yuvacrixlandingpage/myperformance.png"
                 alt="YuvaCrix player performance, stats and match awards"
@@ -1044,7 +1598,7 @@ function PerformanceStat({
       className="rounded-3xl border border-[#DFE5EE] bg-white p-5 shadow-[0_15px_45px_rgba(13,27,62,0.06)]"
     >
       <p className="font-display text-4xl font-black text-[#1B3FA0]">{value}</p>
-      <p className="mt-1 text-xs font-extrabold uppercase tracking-[0.1em] text-[#7C8799]">
+      <p className="mt-1 text-xs font-extrabold uppercase tracking-widest text-[#7C8799]">
         {label}
       </p>
     </motion.div>
@@ -1077,7 +1631,7 @@ function OnboardingPreviewScene() {
             transition={{ duration: 0.8 }}
             className="lg:col-span-6 space-y-6"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 backdrop-blur-xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/6 px-4 py-2 backdrop-blur-xl">
               <Sparkles className="w-3.5 h-3.5 text-[#00D6FF]" />
               <span className="font-body text-xs font-bold uppercase tracking-[0.18em] text-white/80">
                 Frictionless Onboarding
@@ -1096,7 +1650,7 @@ function OnboardingPreviewScene() {
             </p>
 
             <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
+              <div className="p-4 rounded-2xl bg-white/4 border border-white/10">
                 <div className="text-2xl font-display font-black text-[#00D6FF]">
                   100% Free
                 </div>
@@ -1104,7 +1658,7 @@ function OnboardingPreviewScene() {
                   For grassroots & club matches
                 </div>
               </div>
-              <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10">
+              <div className="p-4 rounded-2xl bg-white/4 border border-white/10">
                 <div className="text-2xl font-display font-black text-[#22C55E]">
                   &lt; 10 Sec
                 </div>
@@ -1117,7 +1671,7 @@ function OnboardingPreviewScene() {
             <div className="pt-4">
               <Link
                 href="/mode"
-                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#0050FF] to-[#00D6FF] text-white font-display font-bold text-sm uppercase tracking-wider shadow-[0_15px_40px_rgba(0,214,255,0.35)] hover:scale-105 active:scale-95 transition-all"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-linear-to-r from-[#0050FF] to-[#00D6FF] text-white font-display font-bold text-sm uppercase tracking-wider shadow-[0_15px_40px_rgba(0,214,255,0.35)] hover:scale-105 active:scale-95 transition-all"
               >
                 Sign In to YuvaCrix
                 <ArrowRight className="w-4 h-4" />
@@ -1132,11 +1686,11 @@ function OnboardingPreviewScene() {
             transition={{ duration: 0.85, delay: 0.2 }}
             className="lg:col-span-6 flex justify-center"
           >
-            <div className="relative w-full max-w-70 sm:max-w-[310px] rounded-[36px] border-[4.5px] border-white/20 bg-[#10182F] p-1.5 shadow-[0_35px_90px_rgba(0,0,0,0.65)] overflow-hidden">
+            <div className="relative w-full max-w-70 sm:max-w-77.5 rounded-[36px] border-[4.5px] border-white/20 bg-[#10182F] p-1.5 shadow-[0_35px_90px_rgba(0,0,0,0.65)] overflow-hidden">
               {/* Notch */}
               <div className="absolute top-3 left-1/2 -translate-x-1/2 w-14 h-2 bg-black/80 rounded-full z-20" />
 
-              <div className="relative w-full aspect-[870/1566] rounded-[28px] overflow-hidden bg-[#0A0F24]">
+              <div className="relative w-full aspect-870/1566 rounded-[28px] overflow-hidden bg-[#0A0F24]">
                 <Image
                   src="/yuvacrixlandingpage/login.png"
                   alt="YuvaCrix login and onboarding interface"
@@ -1189,6 +1743,306 @@ function AudienceTicker() {
 }
 
 /* -------------------------------------------------------------------------- */
+/* More Sports Coming Soon                                                    */
+/* -------------------------------------------------------------------------- */
+
+function ComingSoonSportsScene() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const isInView = useInView(sectionRef, {
+    once: true,
+    amount: 0.25,
+  });
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden border-y border-white/10 bg-[#060B1F] px-5 py-20 text-white sm:px-8 lg:py-24"
+    >
+      {/* Background atmosphere */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_45%,rgba(234,88,12,0.12),transparent_34%),radial-gradient(circle_at_82%_50%,rgba(75,139,255,0.12),transparent_34%)]" />
+
+      <div className="absolute -left-32 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-[#EA580C]/10 blur-[120px]" />
+
+      <div className="absolute -right-32 top-1/3 h-80 w-80 rounded-full bg-[#4B8BFF]/10 blur-[130px]" />
+
+      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[0.82fr_1.18fr] lg:gap-16 lg:px-10">
+        {/* =========================================================
+            LEFT — STORY
+        ========================================================= */}
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          animate={isInView ? { opacity: 1, y: 0 } : undefined}
+          transition={{ duration: 0.7 }}
+        >
+          <p className="font-display text-xs font-bold uppercase tracking-[0.3em] text-white/35">
+            06 — Coming soon
+          </p>
+
+          <h2 className="mt-6 max-w-xl font-display text-[clamp(2.8rem,7vw,5.8rem)] font-black uppercase leading-[0.86] tracking-[-0.035em]">
+            More sports.
+            <span className="block text-[#F59E0B]">More possibilities.</span>
+          </h2>
+
+          <p className="mt-7 max-w-lg font-body text-base font-medium leading-7 text-white/52">
+            Built for the games you play today — and the ones you will play
+            tomorrow. YuvaCrix is expanding beyond cricket and volleyball.
+          </p>
+
+          {/* Small vision statement */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={isInView ? { opacity: 1, y: 0 } : undefined}
+            transition={{ duration: 0.6, delay: 0.35 }}
+            className="mt-9 flex items-center gap-3"
+          >
+            <span className="h-px w-10 bg-[#F59E0B]/60" />
+
+            <span className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
+              One platform. Every game.
+            </span>
+          </motion.div>
+        </motion.div>
+
+        {/* =========================================================
+            RIGHT — SPORTS ROADMAP
+        ========================================================= */}
+        <div className="relative min-h-110 sm:min-h-115 lg:min-h-120">
+          {/* Ambient center glow */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={
+              isInView
+                ? {
+                    opacity: 1,
+                    scale: 1,
+                  }
+                : undefined
+            }
+            transition={{ duration: 1.2 }}
+            className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#F59E0B]/10 blur-[90px]"
+          />
+
+          {/* Large orbit */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.75 }}
+            animate={
+              isInView
+                ? {
+                    opacity: 1,
+                    scale: 1,
+                  }
+                : undefined
+            }
+            transition={{ duration: 1, delay: 0.15 }}
+            className="absolute left-1/2 top-1/2 h-90 w-90 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/5.5"
+          />
+
+          {/* Small orbit */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={
+              isInView
+                ? {
+                    opacity: 1,
+                    scale: 1,
+                  }
+                : undefined
+            }
+            transition={{ duration: 1.1, delay: 0.25 }}
+            className="absolute left-1/2 top-1/2 h-63.75 w-63.75 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/5"
+          />
+
+          {/* =======================================================
+              ROADMAP LINE
+          ======================================================= */}
+          <motion.div
+            initial={{ scaleY: 0 }}
+            animate={isInView ? { scaleY: 1 } : undefined}
+            transition={{ duration: 1.1, delay: 0.35 }}
+            style={{ transformOrigin: "top" }}
+            className="absolute left-[8%] top-[12%] h-[72%] w-px bg-linear-to-b from-[#F59E0B] via-white/15 to-transparent sm:left-[12%]"
+          />
+
+          {/* =======================================================
+              BADMINTON
+          ======================================================= */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={
+              isInView
+                ? {
+                    opacity: 1,
+                    x: 0,
+                  }
+                : undefined
+            }
+            transition={{ duration: 0.7, delay: 0.3 }}
+            className="absolute left-[1%] top-[5%] flex items-center gap-4 sm:left-[5%]"
+          >
+            {/* Timeline node */}
+            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#4B8BFF]/40 bg-[#4B8BFF]/10">
+              <div className="h-2 w-2 rounded-full bg-[#4B8BFF] shadow-[0_0_20px_#4B8BFF]" />
+
+              <div className="absolute -inset-1.25 rounded-full border border-[#4B8BFF]/10" />
+            </div>
+
+            <div>
+              <p className="font-body text-[9px] font-bold uppercase tracking-[0.28em] text-[#4B8BFF]/70">
+                01 — Next
+              </p>
+
+              <h3 className="mt-1 font-display text-3xl font-black uppercase leading-none tracking-[-0.02em] text-white sm:text-5xl">
+                Badminton
+              </h3>
+
+              <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.14em] text-white/30 sm:text-xs">
+                Scoring · Matches · Tournaments
+              </p>
+            </div>
+          </motion.div>
+
+          {/* =======================================================
+              PICKLEBALL
+          ======================================================= */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={
+              isInView
+                ? {
+                    opacity: 1,
+                    x: 0,
+                  }
+                : undefined
+            }
+            transition={{ duration: 0.7, delay: 0.5 }}
+            className="absolute left-[12%] top-[39%] flex items-center gap-4 sm:left-[24%]"
+          >
+            {/* Timeline node */}
+            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[#F59E0B]/50 bg-[#F59E0B]/10">
+              <div className="h-2.5 w-2.5 rounded-full bg-[#F59E0B] shadow-[0_0_22px_#F59E0B]" />
+
+              <div className="absolute -inset-1.5 rounded-full border border-[#F59E0B]/10" />
+            </div>
+
+            <div>
+              <p className="font-body text-[9px] font-bold uppercase tracking-[0.28em] text-[#F59E0B]/70">
+                02 — Up next
+              </p>
+
+              <h3 className="mt-1 font-display text-3xl font-black uppercase leading-none tracking-[-0.02em] text-white sm:text-5xl">
+                Pickleball
+              </h3>
+
+              <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.14em] text-white/30 sm:text-xs">
+                Built for the next generation
+              </p>
+            </div>
+          </motion.div>
+
+          {/* =======================================================
+              MORE SPORTS
+          ======================================================= */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={
+              isInView
+                ? {
+                    opacity: 1,
+                    x: 0,
+                  }
+                : undefined
+            }
+            transition={{ duration: 0.7, delay: 0.7 }}
+            className="absolute bottom-[6%] left-[24%] flex items-center gap-4 sm:left-[41%]"
+          >
+            {/* Plus node */}
+            <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/4">
+              <span className="font-display text-3xl font-black text-white/45">
+                +
+              </span>
+
+              <div className="absolute -inset-1.75 rounded-full border border-white/4" />
+            </div>
+
+            <div>
+              <p className="font-body text-[9px] font-bold uppercase tracking-[0.28em] text-white/30">
+                03 — And beyond
+              </p>
+
+              <h3 className="mt-1 font-display text-3xl font-black uppercase leading-none tracking-[-0.02em] text-white/75 sm:text-5xl">
+                More sports
+              </h3>
+
+              <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.14em] text-white/25 sm:text-xs">
+                Your sport could be next
+              </p>
+            </div>
+          </motion.div>
+
+          {/* =======================================================
+              MOVING ACCENT
+          ======================================================= */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={
+              isInView
+                ? {
+                    opacity: [0, 1, 0],
+                    y: [0, 300, 0],
+                  }
+                : undefined
+            }
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute left-[8%] top-[12%] h-20 w-px bg-linear-to-b from-transparent via-[#F59E0B] to-transparent sm:left-[12%]"
+          />
+
+          {/* Decorative floating dots */}
+          <motion.div
+            animate={
+              isInView
+                ? {
+                    y: [0, -10, 0],
+                    opacity: [0.3, 0.7, 0.3],
+                  }
+                : undefined
+            }
+            transition={{
+              duration: 3.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute right-[8%] top-[18%] h-1.5 w-1.5 rounded-full bg-[#4B8BFF]"
+          />
+
+          <motion.div
+            animate={
+              isInView
+                ? {
+                    y: [0, 12, 0],
+                    opacity: [0.2, 0.6, 0.2],
+                  }
+                : undefined
+            }
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.5,
+            }}
+            className="absolute bottom-[18%] right-[18%] h-1 w-1 rounded-full bg-[#F59E0B]"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* Final CTA Scene                                                            */
 /* -------------------------------------------------------------------------- */
 
@@ -1215,7 +2069,7 @@ function FinalCtaScene() {
       <motion.div
         animate={{ rotate: -360 }}
         transition={{ duration: 48, repeat: Infinity, ease: "linear" }}
-        className="absolute left-1/2 top-1/2 h-152.5 w-152.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.04]"
+        className="absolute left-1/2 top-1/2 h-152.5 w-152.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/4"
       />
 
       <div className="relative z-10 mx-auto max-w-4xl">
@@ -1223,7 +2077,7 @@ function FinalCtaScene() {
           initial={{ opacity: 0, scale: 0.85 }}
           animate={isInView ? { opacity: 1, scale: 1 } : undefined}
           transition={{ duration: 0.7 }}
-          className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] text-[#4B8BFF] backdrop-blur"
+          className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-[#4B8BFF] backdrop-blur"
         >
           <Sparkles className="h-7 w-7" />
         </motion.div>
@@ -1234,7 +2088,7 @@ function FinalCtaScene() {
           transition={{ duration: 0.8 }}
           className="font-display text-[clamp(4.2rem,10vw,8rem)] font-black uppercase leading-[0.8] tracking-[-0.03em]"
         >
-          Your next match
+          Your game
           <span className="block text-[#4B8BFF]">starts here.</span>
         </motion.h2>
 
@@ -1244,8 +2098,7 @@ function FinalCtaScene() {
           transition={{ duration: 0.7, delay: 0.15 }}
           className="mx-auto mt-8 max-w-xl font-body text-base font-medium leading-7 text-white/50"
         >
-          Create your teams, set up your match and begin scoring every
-          cricketing moment with YuvaCrix.
+          Cricket. Volleyball. And more to come.
         </motion.p>
 
         <motion.div
@@ -1255,7 +2108,7 @@ function FinalCtaScene() {
         >
           <Link
             href="/mode"
-            className="group mt-10 inline-flex min-h-15 items-center justify-center gap-3 rounded-2xl bg-[#1B3FA0] px-9 py-4 font-display text-sm font-bold uppercase tracking-[0.1em] text-white shadow-[0_22px_60px_rgba(27,63,160,0.42)] transition duration-300 hover:-translate-y-1 hover:bg-[#254EC0]"
+            className="group mt-10 inline-flex min-h-15 items-center justify-center gap-3 rounded-2xl bg-[#1B3FA0] px-9 py-4 font-display text-sm font-bold uppercase tracking-widest text-white shadow-[0_22px_60px_rgba(27,63,160,0.42)] transition duration-300 hover:-translate-y-1 hover:bg-[#254EC0]"
           >
             Start scoring free
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
