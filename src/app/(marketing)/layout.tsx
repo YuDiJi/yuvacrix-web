@@ -9,9 +9,9 @@ import { Footer } from "./_component/Footer";
 
 const NAV_LINKS = [
   { label: "Live Scoring", href: "#live-scoring" },
+  { label: "Volleyball", href: "#volleyball-scoring" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Tournaments", href: "#tournaments" },
-  { label: "Players", href: "#players" },
 ];
 
 export default function MarketingLayout({
