@@ -3,7 +3,7 @@
 import { AlertCircle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 
-import { useGetTournamentDetailsQuery } from "@/store/api/tournamentApi";
+import { useGetTournamentDetailsQuery, useGetAboutQuery } from "@/store/api/tournamentApi";
 import TournamentForm from "@/components/tournament/TournamentForm";
 
 export default function EditTournamentPage() {
@@ -13,12 +13,14 @@ export default function EditTournamentPage() {
   const tournamentId = params.tournamentId as string;
 
   const {
-    data: tournament,
+    currentData: tournament,
     isLoading,
     isError,
-  } = useGetTournamentDetailsQuery(tournamentId);
+  } = useGetTournamentDetailsQuery(tournamentId, { refetchOnMountOrArgChange: true });
+  const { currentData: about, isFetching: checkingPermissions, isError: permissionError } =
+    useGetAboutQuery(tournamentId, { refetchOnMountOrArgChange: true });
 
-  if (isLoading) {
+  if (isLoading || (!about && checkingPermissions)) {
     return (
       <div className="flex min-h-full flex-col gap-4 bg-(--color-bg-base) p-4">
         <div className="h-48 animate-pulse rounded-2xl bg-(--color-bg-card)" />
@@ -29,7 +31,7 @@ export default function EditTournamentPage() {
     );
   }
 
-  if (isError || !tournament) {
+  if (isError || permissionError || !tournament || !about) {
     return (
       <div className="flex min-h-full items-center justify-center bg-(--color-bg-base) p-4">
         <div className="rounded-2xl bg-(--color-bg-card) p-6 text-center shadow-(--shadow-card)">
@@ -51,8 +53,14 @@ export default function EditTournamentPage() {
     );
   }
 
+  if (!about.actions.canEdit) {
+    return <p role="alert" className="p-4">This tournament cannot be edited by your account in its current status.</p>;
+  }
+
   return (
     <TournamentForm
+      key={tournamentId}
+      canEditFormat={about.actions.canEditFormat === true}
       mode="EDIT"
       tournamentId={tournamentId}
       tournament={tournament}

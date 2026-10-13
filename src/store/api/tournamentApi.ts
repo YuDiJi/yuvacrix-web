@@ -12,6 +12,10 @@ export type TournamentFormat =
   | "SUPER_FOUR"
   | "DOUBLE_ELIMINATION";
 
+export type TournamentFormatConfig =
+  | { qualifyingTeamCount: 2; playoffStructure: "TOP_2_FINAL" }
+  | { qualifyingTeamCount: 4; playoffStructure: "SEMIFINAL_FINAL" };
+
 export type TournamentStatus =
   | "DRAFT"
   | "FIXTURES_READY"
@@ -49,6 +53,7 @@ export type Tournament = {
   description?: string | null;
   visibility: TournamentVisibility;
   format: TournamentFormat;
+  formatConfig?: TournamentFormatConfig | null;
   category: TournamentCategory;
   ballType: TournamentBallType;
   status: TournamentStatus;
@@ -140,6 +145,7 @@ export type CreateTournamentRequest = {
   coverImageUrl?: string;
   visibility?: TournamentVisibility;
   format?: TournamentFormat;
+  formatConfig?: TournamentFormatConfig | null;
   category?: TournamentCategory;
   ballType?: TournamentBallType;
   startDate?: string;
@@ -201,6 +207,7 @@ export type TournamentAboutResponse = {
     name: string;
     visibility: TournamentVisibility;
     format: TournamentFormat;
+    formatConfig?: TournamentFormatConfig | null;
     category: TournamentCategory;
     status: TournamentStatus;
     viewsCount: number;
@@ -228,6 +235,7 @@ export type TournamentAboutResponse = {
 
   actions: {
     canEdit: boolean;
+    canEditFormat: boolean;
     canGoLive: boolean;
     canShare: boolean;
     canViewQr: boolean;
@@ -325,10 +333,8 @@ export const tournamentApi = baseApi.injectEndpoints({
         method: "PATCH",
         body,
       }),
-      invalidatesTags: (_result, _error, { tournamentId }) => [
-        "Tournament",
-        { type: "Tournament", id: tournamentId },
-      ],
+      invalidatesTags: (_result, error, { tournamentId }) =>
+        error ? [] : ["Tournament", { type: "Tournament", id: tournamentId }],
     }),
 
     markFixturesReady: builder.mutation<Tournament, string>({
@@ -412,7 +418,7 @@ export const tournamentApi = baseApi.injectEndpoints({
 
     getAbout: builder.query<TournamentAboutResponse, string>({
       query: (tournamentId) => ({
-        url: `/tournaments/${tournamentId}/about`,
+        url: `/tournaments/${tournamentId}/about/me`,
         method: "GET",
       }),
       providesTags: (_result, _error, tournamentId) => [

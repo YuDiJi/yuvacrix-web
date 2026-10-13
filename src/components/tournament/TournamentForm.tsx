@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
 import { ImageUploader } from "@/components/common/ImageUploaderV1";
 import { Button } from "@/components/common/Button";
 import { useUploadFileMutation } from "@/store/api/uploadApi";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   useCreateTournamentMutation,
@@ -54,6 +54,17 @@ const EMPTY_FORM_VALUES: TournamentFormValues = {
   informPreviousPlayers: true,
 };
 
+const formatConfigSchema = z.discriminatedUnion("qualifyingTeamCount", [
+  z.object({ qualifyingTeamCount: z.literal(2), playoffStructure: z.literal("TOP_2_FINAL") }),
+  z.object({ qualifyingTeamCount: z.literal(4), playoffStructure: z.literal("SEMIFINAL_FINAL") }),
+]);
+
+const FORMAT_OPTIONS = [
+  ["LEAGUE", "League"], ["KNOCKOUT", "Knockout"],
+  ["GROUP_STAGE", "Group Stage (manual completion)"], ["CUSTOM", "Custom (manual completion)"],
+  ["GROUP_STAGE_PLUS_KNOCKOUT", "League + Playoffs"],
+] as const;
+
 const schema = z
   .object({
     name: z.string().min(2, "Enter tournament name"),
@@ -86,6 +97,8 @@ const schema = z
       "SUPER_FOUR",
       "DOUBLE_ELIMINATION",
     ]),
+
+    formatConfig: formatConfigSchema.nullish(),
 
     category: z.enum([
       "OPEN",
@@ -303,6 +316,7 @@ function tournamentToFormValues(tournament?: Tournament): TournamentFormValues {
 
     visibility: tournament.visibility ?? "PUBLIC",
     format: tournament.format ?? "LEAGUE",
+    formatConfig: tournament.formatConfig ?? null,
     category: tournament.category ?? "OPEN",
     ballType: tournament.ballType ?? "TENNIS",
   };
@@ -314,12 +328,14 @@ type CreateTournamentFormProps = {
   mode?: TournamentFormMode;
   tournamentId?: string;
   tournament?: Tournament;
+  canEditFormat?: boolean;
 };
 
 export default function TournamentForm({
   mode = "CREATE",
   tournamentId,
   tournament,
+  canEditFormat = true,
 }: CreateTournamentFormProps) {
   const router = useRouter();
 
@@ -343,9 +359,13 @@ export default function TournamentForm({
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<TournamentFormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema.refine(values => !canEditFormat || values.format !== "GROUP_STAGE_PLUS_KNOCKOUT" || !!values.formatConfig, {
+      message: "Select a valid Top 2 or Top 4 playoff configuration", path: ["formatConfig"],
+    })),
     defaultValues: tournamentToFormValues(tournament),
   });
 
@@ -383,7 +403,10 @@ export default function TournamentForm({
         coverImageUrl,
 
         visibility: values.visibility,
-        format: values.format,
+        ...(!isEditMode || canEditFormat ? {
+          format: values.format,
+          formatConfig: values.format === "GROUP_STAGE_PLUS_KNOCKOUT" ? values.formatConfig : null,
+        } : {}),
         category: values.category,
         ballType: values.ballType,
 
@@ -434,8 +457,10 @@ export default function TournamentForm({
     }
   });
 
+  const hydratedId = useRef(tournament?.id);
   useEffect(() => {
-    if (!isEditMode || !tournament) return;
+    if (!isEditMode || !tournament || hydratedId.current === tournament.id) return;
+    hydratedId.current = tournament.id;
 
     reset(tournamentToFormValues(tournament));
   }, [isEditMode, tournament, reset]);
@@ -477,6 +502,43 @@ export default function TournamentForm({
           </section>
 
           <div className="flex flex-col gap-3 p-4">
+            <section className="rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+              <Controller name="format" control={control} render={({ field }) => (
+                <FormInput label="Tournament format" required error={errors.format?.message}>
+                  <select aria-label="Tournament format" className={inputClassName()}
+                    value={field.value} disabled={!canEditFormat || isSubmitting}
+                    onChange={event => {
+                      field.onChange(event.target.value);
+                      setValue("formatConfig", event.target.value === "GROUP_STAGE_PLUS_KNOCKOUT"
+                        ? { qualifyingTeamCount: 2, playoffStructure: "TOP_2_FINAL" } : null,
+                        { shouldValidate: true, shouldDirty: true });
+                    }}>
+                    {FORMAT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    {!FORMAT_OPTIONS.some(([value]) => value === field.value) &&
+                      <option value={field.value}>{field.value.replaceAll("_", " ")} (existing format)</option>}
+                  </select>
+                </FormInput>
+              )} />
+              {watch("format") === "GROUP_STAGE_PLUS_KNOCKOUT" && (
+                <Controller name="formatConfig" control={control} render={({ field }) => (
+                  <FormInput label="Playoffs" required error={errors.formatConfig?.message}>
+                    <select aria-label="Playoffs" className={inputClassName()} disabled={!canEditFormat || isSubmitting}
+                      value={field.value?.qualifyingTeamCount ?? ""}
+                      onChange={event => field.onChange(event.target.value === "2"
+                        ? { qualifyingTeamCount: 2, playoffStructure: "TOP_2_FINAL" }
+                        : { qualifyingTeamCount: 4, playoffStructure: "SEMIFINAL_FINAL" })}>
+                      <option value="" disabled>Select a playoff configuration</option>
+                      <option value="2">Top 2 — direct final</option>
+                      <option value="4">Top 4 — two semifinals and final</option>
+                    </select>
+                    {!field.value && <FieldError message="This tournament is missing its playoff configuration." />}
+                  </FormInput>
+                )} />
+              )}
+              {!canEditFormat && <p className="mt-2 text-xs">Format is locked because fixtures exist. Tournament details can still be edited.</p>}
+              <p className="mt-2 text-xs">Round types are selected separately and do not change the tournament format.</p>
+            </section>
+
             <section className="rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
               <div className="space-y-4">
                 <Controller

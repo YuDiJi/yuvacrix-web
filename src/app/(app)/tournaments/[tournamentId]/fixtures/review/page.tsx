@@ -318,7 +318,7 @@ function TeamInitial({ name, ariaLabel }: { name: string; ariaLabel: string }) {
 //           disabled={!canModify || deleting}
 //           onClick={() => onEdit(fixture)}
 //           className="flex h-9 w-9 items-center justify-center rounded-full text-(--color-brand) transition-all hover:bg-(--color-brand)/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-//           aria-label={`Edit ${fixture.teamASnapshot.name} versus ${fixture.teamBSnapshot.name}`}
+//           aria-label={`Edit ${(fixture.teamASnapshot?.name ?? (fixture.teamASourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))} versus ${(fixture.teamBSnapshot?.name ?? (fixture.teamBSourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))}`}
 //         >
 //           <Pencil size={17} strokeWidth={2.4} />
 //         </button>
@@ -328,7 +328,7 @@ function TeamInitial({ name, ariaLabel }: { name: string; ariaLabel: string }) {
 //           disabled={!canModify || deleting}
 //           onClick={() => onDelete(fixture)}
 //           className="flex h-9 w-9 items-center justify-center rounded-full text-(--color-brand) transition-all hover:bg-(--color-live)/10 hover:text-(--color-live) active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-//           aria-label={`Delete ${fixture.teamASnapshot.name} versus ${fixture.teamBSnapshot.name}`}
+//           aria-label={`Delete ${(fixture.teamASnapshot?.name ?? (fixture.teamASourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))} versus ${(fixture.teamBSnapshot?.name ?? (fixture.teamBSourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))}`}
 //         >
 //           {deleting ? (
 //             <span className="h-4 w-4 animate-spin rounded-full border-2 border-(--color-live)/30 border-t-(--color-live)" />
@@ -402,7 +402,7 @@ function FixtureCard({
             disabled={!canModify || deleting}
             onClick={() => onEdit(fixture)}
             className="flex h-7 w-7 items-center justify-center rounded-full text-(--color-brand) transition-colors hover:bg-(--color-brand)/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-            aria-label={`Edit ${fixture.teamASnapshot.name} versus ${fixture.teamBSnapshot.name}`}
+            aria-label={`Edit ${(fixture.teamASnapshot?.name ?? (fixture.teamASourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))} versus ${(fixture.teamBSnapshot?.name ?? (fixture.teamBSourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))}`}
           >
             <Pencil size={14} strokeWidth={2.5} />
           </button>
@@ -412,7 +412,7 @@ function FixtureCard({
             disabled={!canModify || deleting}
             onClick={() => onDelete(fixture)}
             className="flex h-7 w-7 items-center justify-center rounded-full text-(--color-live) transition-colors hover:bg-(--color-live)/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
-            aria-label={`Delete ${fixture.teamASnapshot.name} versus ${fixture.teamBSnapshot.name}`}
+            aria-label={`Delete ${(fixture.teamASnapshot?.name ?? (fixture.teamASourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))} versus ${(fixture.teamBSnapshot?.name ?? (fixture.teamBSourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))}`}
           >
             {deleting ? (
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-(--color-live)/30 border-t-(--color-live)" />
@@ -425,14 +425,20 @@ function FixtureCard({
 
       {/* Teams */}
       <div className="mt-2 flex items-center gap-2">
-        <CompactTeam name={fixture.teamASnapshot.name} />
+        <CompactTeam name={(fixture.teamASnapshot?.name ?? (fixture.teamASourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))} />
 
         <span className="shrink-0 rounded bg-(--color-navy) px-1.5 py-0.5 font-(family-name:--font-display) text-[9px] font-black text-white">
           VS
         </span>
 
-        <CompactTeam name={fixture.teamBSnapshot.name} align="right" />
+        <CompactTeam name={(fixture.teamBSnapshot?.name ?? (fixture.teamBSourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))} align="right" />
       </div>
+
+      {(!fixture.teamAId || !fixture.teamBId) && (
+        <button type="button" disabled className="mt-2 rounded-lg px-3 py-2 text-xs opacity-50">
+          Start match — awaiting qualifiers
+        </button>
+      )}
 
       {/* Venue and rules */}
       <div className="mt-2 flex items-center gap-2 border-t border-(--color-bg-border) pt-2 text-[10px] font-medium text-(--color-text-secondary)">
@@ -640,7 +646,7 @@ function EditFixtureDialog({
                 </h2>
 
                 <p className="mt-3 font-(family-name:--font-display) text-base font-bold uppercase tracking-wide text-(--color-text-primary)">
-                  {fixture.teamASnapshot.name} vs {fixture.teamBSnapshot.name}
+                  {(fixture.teamASnapshot?.name ?? (fixture.teamASourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))} vs {(fixture.teamBSnapshot?.name ?? (fixture.teamBSourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))}
                 </p>
               </div>
 
@@ -877,7 +883,7 @@ export default function ReviewFixturesPage() {
 
   async function handleDelete(fixture: TournamentFixture) {
     const confirmed = window.confirm(
-      `Delete ${fixture.teamASnapshot.name} vs ${fixture.teamBSnapshot.name}?\n\nThis action cannot be undone.`,
+      `Delete ${(fixture.teamASnapshot?.name ?? (fixture.teamASourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))} vs ${(fixture.teamBSnapshot?.name ?? (fixture.teamBSourceFixtureId ? "Winner of prior fixture" : "Awaiting qualifier"))}?\n\nThis action cannot be undone.`,
     );
 
     if (!confirmed) return;

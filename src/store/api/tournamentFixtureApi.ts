@@ -89,11 +89,12 @@ export type TournamentFixture = {
   groupId: string | null;
   matchId: string | null;
 
-  teamAId: string;
-  teamBId: string;
-
-  teamASnapshot: TournamentFixtureTeamSnapshot;
-  teamBSnapshot: TournamentFixtureTeamSnapshot;
+  teamAId: string | null;
+  teamBId: string | null;
+  teamASnapshot: TournamentFixtureTeamSnapshot | null;
+  teamBSnapshot: TournamentFixtureTeamSnapshot | null;
+  teamASourceFixtureId?: string | null;
+  teamBSourceFixtureId?: string | null;
 
   scheduledAt: string | null;
   timezone: string | null;

@@ -232,6 +232,11 @@ const About = () => {
               <span>
                 {formatDate(about?.tournament.startDate)}-
                 {formatDate(about?.tournament.endDate)}
+                <span className="mt-2 block">
+                  Format: {about?.tournament.format?.replaceAll("_", " ")}
+                  {about?.tournament.formatConfig && ` · Top ${about.tournament.formatConfig.qualifyingTeamCount} — ${about.tournament.formatConfig.qualifyingTeamCount === 2 ? "direct final" : "semifinals and final"}`}
+                  {["GROUP_STAGE", "CUSTOM"].includes(about?.tournament.format ?? "") && " (manual completion)"}
+                </span>
               </span>
             </div>
           </div>

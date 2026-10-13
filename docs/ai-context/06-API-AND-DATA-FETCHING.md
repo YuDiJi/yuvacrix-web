@@ -155,3 +155,25 @@ Next.js `fetch` cache options are **not used** — all data fetching is client-s
 - `axios` dependency unused — do not introduce parallel HTTP client
 - `completeInnings` mutation typed as `builder.mutation<any, ...>` in scoringApi
 - No centralized API error toast — each page handles errors locally
+
+
+## Tournament formats (Workstream 1)
+
+`TournamentForm` exposes League, Knockout, Group Stage (manual completion), Custom (manual completion),
+and League + Playoffs. Mixed format has a discriminated `TournamentFormatConfig`: Top 2/TOP_2_FINAL or
+Top 4/SEMIFINAL_FINAL. One selection supplies both fields; shared create/edit Zod validation rejects missing
+mixed config. Newly choosing mixed defaults visibly to Top 2. Existing missing config remains visibly missing.
+Enum-only existing formats are retained in an existing-value option; no new creation workflow is advertised.
+
+Edit loads current details and authenticated About (`/about/me`) before rendering. `canEdit` guards the page;
+`canEditFormat` disables format/config while allowing metadata changes. Locked forms omit both settings from
+PATCH. Hydration occurs once per tournament identity, so background responses do not erase user edits.
+The backend rejects stale forbidden writes; the inline server error leaves controls usable for retry.
+
+About displays actual parent format/config. Round selection sends only `roundType` and never alters parent
+format. Fixture snapshots/IDs may be null; source-linked slots display Winner of prior fixture or Awaiting
+qualifier and cannot start with missing teams. Server match creation already rejects missing fixture teams.
+
+Existing registered `Tournament` tags invalidate details/About after successful updates; failed updates do not invalidate the form or erase the error. Background About fetches retain the mounted form; no new tag names were added.
+Workstream 1 does not enable Top 3 or claim that automatic playoff progression is ready for release.
+Browser tests live in the sibling `yuvacrix-e2e/tests/cricket/tournament-format.spec.ts`, with local-only helpers.
