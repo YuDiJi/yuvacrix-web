@@ -29,7 +29,9 @@ combineReducers({
 });
 ```
 
-**redux-persist** whitelist: `["auth", "startMatch"]` only. Scoring state and RTK Query cache are **not** persisted.
+**redux-persist** whitelist: `["startMatch"]` only. Authentication is rebuilt
+from the HttpOnly cookie session through `/users/me`; auth, scoring state, and
+RTK Query cache are **not** persisted.
 
 Match Rules and scoring remain server-authoritative. The editor holds only unsaved typed overrides locally. Record Ball sends a stable `clientEventId` and displayed `baseInningsVersion`; conflicts refresh `ScoringState` instead of applying a client-calculated score.
 
@@ -42,7 +44,10 @@ Middleware: default RTK middleware with `serializableCheck: false` + `baseApi.mi
 - `user: User | null`
 - `isAuthenticated: boolean`
 - Actions: `setCredentials`, `logout`
-- Selectors: `src/store/auth/authSelectors.ts` (`selectUser`, `selectIsAuthenticated`)
+- Selectors: `src/store/auth/authSelectors.ts` (`selectUser`, `selectIsAuthenticated`, `selectAuthStatus`)
+- Status is explicit: `initializing`, `authenticated`, or `unauthenticated`.
+  `ProtectedRoute` does not redirect while cookie-backed initialization is in
+  progress.
 - Hydrated by `AuthInitializer` calling `useGetMeQuery()` on app load
 
 ### `startMatchSlice` — `src/store/startMatch/startMatchSlice.ts`

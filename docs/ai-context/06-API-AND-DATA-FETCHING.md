@@ -20,7 +20,11 @@ const baseQuery = fetchBaseQuery({
 ```
 
 - **Cookie-based auth** — `credentials: "include"` sends session cookies
-- **401 interceptor** — attempts `POST /auth/refresh`, retries original request; on failure dispatches `logout()` and redirects to `/login`
+- **401 interceptor** — all simultaneous failures share one in-flight `POST
+  /auth/refresh`; each original request retries at most once after success. A
+  refresh request never recursively refreshes. Failure dispatches `logout()` and
+  redirects once. `ACCOUNT_ACCESS_RESTRICTED` 403 responses use the same
+  one-time auth-failure handling without attempting refresh.
 
 ## Endpoint Modules
 
@@ -81,7 +85,10 @@ export const { useMyEndpointQuery } = teamApi;
 
 1. User enters mobile → `useSendOtpMutation`
 2. OTP verify → `useVerifyOtpMutation` → dispatch `setCredentials`
-3. On app load → `AuthInitializer` runs `useGetMeQuery()` → syncs `authSlice`
+3. On app load → auth status is `initializing`; `AuthInitializer` runs
+   `useGetMeQuery()` and then sets `authenticated` or `unauthenticated`.
+   `ProtectedRoute` waits during initialization, so cleared browser storage with
+   valid HttpOnly cookies does not flash or redirect to login.
 4. Session maintained via HTTP-only cookies (inferred from `credentials: "include"` — cookie details UNCONFIRMED — verify with team)
 
 ## Error Handling Patterns

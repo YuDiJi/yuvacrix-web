@@ -3,7 +3,10 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
-import { selectIsAuthenticated } from "@/store/auth/authSelectors";
+import {
+  selectAuthStatus,
+  selectIsAuthenticated,
+} from "@/store/auth/authSelectors";
 
 export default function ProtectedRoute({
   children,
@@ -12,14 +15,15 @@ export default function ProtectedRoute({
 }) {
   const router = useRouter();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const authStatus = useAppSelector(selectAuthStatus);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (authStatus === "unauthenticated") {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [authStatus, router]);
 
-  if (!isAuthenticated) return null;
+  if (authStatus !== "authenticated" || !isAuthenticated) return null;
 
   return <>{children}</>;
 }

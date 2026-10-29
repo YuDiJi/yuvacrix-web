@@ -22,7 +22,7 @@ const persistConfig = {
   storage,
 
   // Persist only these slices
-  whitelist: ["auth", "startMatch"],
+  whitelist: ["startMatch"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

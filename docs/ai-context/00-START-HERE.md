@@ -24,7 +24,7 @@ Also see lightweight Cursor rules in `/.cursor/rules/` and root `AGENTS.md`.
 3. **Use existing API endpoints.** Add new endpoints by `injectEndpoints` into `baseApi`, not raw `fetch`/`axios`. (`axios` is in `package.json` but has zero imports in `src/`.)
 4. **Respect the mobile-first shell.** Authenticated routes render inside `AppShell` (430px phone frame on desktop). Match existing layout patterns in `(app)/layout.tsx`.
 5. **Follow established styling.** Tailwind v4 with CSS custom properties in `globals.css`. Use `cn()` from `@/lib/cn`. Do not add CSS Modules, styled-components, or a component library without team approval.
-6. **Persist only whitelisted slices.** `redux-persist` whitelists `auth` and `startMatch` only — do not add `scoring` or RTK Query cache to persist without explicit decision.
+6. **Persist only whitelisted slices.** `redux-persist` whitelists `startMatch` only. Cookie-backed `/users/me` initialization is the authentication authority; do not persist `auth`, `scoring`, or RTK Query cache without an explicit decision.
 7. **Do not put secrets in code or docs.** Reference env var names only (`NEXT_PUBLIC_API_URL`).
 8. **Match local conventions over generic best practice.** Mixed export styles and file naming exist — follow the nearest neighbor file in the same folder.
 9. **Flag inconsistencies; do not silently "fix" them** unless the ticket explicitly asks. Document competing patterns under Known Inconsistencies.

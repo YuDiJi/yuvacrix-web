@@ -8,7 +8,6 @@ import {
   Users,
   User,
   Bell,
-  Settings,
   HelpCircle,
   LogOut,
   Zap,
@@ -108,13 +107,6 @@ export const cricketDrawerSections: DrawerSection[] = [
         icon: BarChart3,
         href: "/my-performance",
       },
-      {
-        label: "My Awards",
-        icon: Award,
-        href: "/awards",
-      },
-
-      { label: "Settings", icon: Settings, href: "/settings" },
     ],
   },
   {

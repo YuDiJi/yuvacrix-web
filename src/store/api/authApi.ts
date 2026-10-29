@@ -3,7 +3,15 @@ import { baseApi } from "./baseApi";
 
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    sendOtp: builder.mutation<{ success: boolean; message: string }, string>({
+    sendOtp: builder.mutation<
+      {
+        success: boolean;
+        message: string;
+        cooldownSeconds: number;
+        validForSeconds: number;
+      },
+      string
+    >({
       query: (mobile) => ({
         url: "/auth/send-otp",
         method: "POST",

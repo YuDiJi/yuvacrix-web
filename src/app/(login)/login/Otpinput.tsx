@@ -17,7 +17,7 @@ export function OtpInput({ value, onChange, disabled }: OtpInputProps) {
     const d = char.replace(/\D/g, "").slice(-1);
     const next = digits.slice();
     next[i] = d;
-    onChange(next.join("").replace(/ /g, ""));
+    onChange(next.join(""));
     if (d && i < 5) focus(i + 1);
   };
 
@@ -26,7 +26,7 @@ export function OtpInput({ value, onChange, disabled }: OtpInputProps) {
       if (digits[i]?.trim()) {
         const next = digits.slice();
         next[i] = " ";
-        onChange(next.join("").replace(/ /g, ""));
+        onChange(next.join(""));
       } else if (i > 0) {
         focus(i - 1);
       }
@@ -36,12 +36,14 @@ export function OtpInput({ value, onChange, disabled }: OtpInputProps) {
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, 6);
+    const pasted = e.clipboardData.getData("text");
+    if (!/^\d{6}$/.test(pasted)) {
+      onChange("");
+      focus(0);
+      return;
+    }
     onChange(pasted);
-    focus(Math.min(pasted.length, 5));
+    focus(5);
   };
 
   return (

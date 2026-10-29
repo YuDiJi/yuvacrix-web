@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, RotateCcw, ShieldCheck, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -22,7 +22,7 @@ type Step = "phone" | "otp";
 
 // ─── Countdown hook ───────────────────────────────────────────────────────────
 
-function useCountdown(from: number, active: boolean) {
+function useCountdown(from: number, active: boolean, resetKey: number) {
   const [seconds, setSeconds] = useState(from);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ function useCountdown(from: number, active: boolean) {
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [active, from]);
+  }, [active, from, resetKey]);
 
   return seconds;
 }
@@ -55,10 +55,17 @@ export function LoginForm() {
   const [otp, setOtp] = useState("");
   const [shaking, setShaking] = useState(false);
   const [mobile, setMobile] = useState("");
+  const [mobileInteracted, setMobileInteracted] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(30);
+  const [validForSeconds, setValidForSeconds] = useState(300);
+  const [countdownResetKey, setCountdownResetKey] = useState(0);
+  const verifyInFlight = useRef(false);
 
-  const countdown = useCountdown(30, step === "otp");
+  const countdown = useCountdown(cooldownSeconds, step === "otp", countdownResetKey);
   const phoneValid = /^\d{10}$/.test(mobile);
-  const otpComplete = otp.replace(/\D/g, "").length === 6;
+  const showMobileError = mobileInteracted && !phoneValid;
+  const otpDigits = otp.replace(/\D/g, "");
+  const otpComplete = /^\d{6}$/.test(otpDigits);
 
   const [sendOtp, sendOtpState] = useSendOtpMutation();
   const [verifyOtp, verifyOtpState] = useVerifyOtpMutation();
@@ -75,7 +82,7 @@ export function LoginForm() {
 
   // Auto-submit when all 6 digits are entered
   useEffect(() => {
-    if (otpComplete) handleVerifyOtp();
+    if (otpComplete) void handleVerifyOtp();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp]);
 
@@ -87,14 +94,17 @@ export function LoginForm() {
   // ── Step 1: Send OTP ────────────────────────────────────────────────────────
 
   async function handleSendOtp() {
+    setMobileInteracted(true);
     if (!phoneValid) return;
 
     try {
-      await sendOtp(mobile).unwrap();
+      const policy = await sendOtp(mobile).unwrap();
+      setCooldownSeconds(policy.cooldownSeconds);
+      setValidForSeconds(policy.validForSeconds);
+      setCountdownResetKey((key) => key + 1);
 
       setStep("otp");
-    } catch (error) {
-      console.error(error);
+    } catch {
       shake();
     }
   }
@@ -102,12 +112,13 @@ export function LoginForm() {
   // ── Step 2: Verify OTP ──────────────────────────────────────────────────────
 
   async function handleVerifyOtp() {
-    if (!otpComplete) return;
+    if (!otpComplete || verifyInFlight.current) return;
+    verifyInFlight.current = true;
 
     try {
       const response = await verifyOtp({
         mobile,
-        otp,
+        otp: otpDigits,
       }).unwrap();
 
       dispatch(setCredentials(response));
@@ -118,9 +129,8 @@ export function LoginForm() {
       } else {
         router.push("/on-boarding");
       }
-    } catch (error) {
-      console.error(error);
-
+    } catch {
+      verifyInFlight.current = false;
       setOtp("");
       shake();
     }
@@ -133,9 +143,10 @@ export function LoginForm() {
     setOtp("");
     // setLoading(true);
     try {
-      await sendOtp(mobile).unwrap();
-      setStep("phone");
-      setTimeout(() => setStep("otp"), 50);
+      const policy = await sendOtp(mobile).unwrap();
+      setCooldownSeconds(policy.cooldownSeconds);
+      setValidForSeconds(policy.validForSeconds);
+      setCountdownResetKey((key) => key + 1);
     } finally {
       //   setLoading(false);
     }
@@ -166,7 +177,10 @@ export function LoginForm() {
           <div className="mt-7 flex flex-1 flex-col gap-5">
             {/* Phone input */}
             <div>
-              <label className="text-section-label mb-2 block">
+              <label
+                htmlFor="mobile-number"
+                className="text-section-label mb-2 block"
+              >
                 Mobile Number
               </label>
               <div
@@ -188,21 +202,27 @@ export function LoginForm() {
 
                 {/* Number field */}
                 <input
+                  id="mobile-number"
                   type="tel"
                   inputMode="numeric"
-                  pattern="[0-9]*"
+                  pattern="[0-9]{10}"
                   placeholder="99999 99999"
-                  maxLength={10}
                   value={mobile}
+                  aria-invalid={showMobileError}
+                  aria-describedby={showMobileError ? "mobile-number-error" : undefined}
                   onChange={(e) => {
                     // dispatch(clearError());
                     sendOtpState.reset();
                     verifyOtpState.reset();
-                    setMobile(e.target.value.replace(/\D/g, "").slice(0, 10));
+                    setMobileInteracted(true);
+                    setMobile(e.target.value);
                   }}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" && phoneValid && handleSendOtp()
-                  }
+                  onBlur={() => setMobileInteracted(true)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    void handleSendOtp();
+                  }}
                   className={cn(
                     "h-14 flex-1 bg-transparent px-4 outline-none",
                     "font-(family-name:--font-display) text-xl font-bold tracking-[0.08em] text-(--color-text-primary)",
@@ -218,6 +238,15 @@ export function LoginForm() {
                   />
                 )}
               </div>
+              {showMobileError && (
+                <p
+                  id="mobile-number-error"
+                  role="alert"
+                  className="mt-2 text-sm font-medium text-(--color-live)"
+                >
+                  Enter exactly 10 numeric digits.
+                </p>
+              )}
             </div>
 
             {/* Error */}
@@ -371,7 +400,7 @@ export function LoginForm() {
             <p className="text-center text-xs text-(--color-text-muted)">
               OTP is valid for{" "}
               <span className="font-semibold text-(--color-text-secondary)">
-                10 minutes
+                {Math.round(validForSeconds / 60)} minutes
               </span>
             </p>
           </div>
