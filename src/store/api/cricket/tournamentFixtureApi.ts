@@ -135,61 +135,29 @@ export type TournamentFixture = {
   updatedAt: string;
 };
 
-export type GenerateKnockoutFixturesBody =
-  | {
-      seededTeamIds: string[];
-    }
-  | Record<string, never>;
+export type GenerateTournamentBracketRulesDto = {
+  oversLimit?: number;
+  oversPerBowler?: number;
+  venue?: {
+    city?: string;
+    groundName?: string;
+    pitchType?: "ROUGH" | "CEMENT" | "TURF" | "ASTROTURF" | "MATTING";
+  };
+};
+
+export type GenerateKnockoutFixturesBody = {
+  /** Only for pure KNOCKOUT tournaments. Omit for league + playoffs. */
+  seededTeamIds?: string[];
+  rulesOverrides?: GenerateTournamentBracketRulesDto;
+};
 
 export type GenerateKnockoutFixturesRequest = {
   tournamentId: string;
   body: GenerateKnockoutFixturesBody;
 };
 
-export type GeneratedKnockoutFixture = {
-  id: string;
-  tournamentId: string;
-  roundId: string;
-
-  groupId: string | null;
-  matchId: string | null;
-  matchNumber: number | null;
-
-  teamAId: string | null;
-  teamBId: string | null;
-
-  teamASnapshot: TournamentFixtureTeamSnapshot | null;
-  teamBSnapshot: TournamentFixtureTeamSnapshot | null;
-
-  teamASourceFixtureId: string | null;
-  teamBSourceFixtureId: string | null;
-  nextFixtureId: string | null;
-  nextFixtureSlot: TournamentKnockoutNextFixtureSlot | null;
-  generationKey: string | null;
-  inconsistency: string | null;
-
-  scheduledAt?: string | null;
-  timezone?: string | null;
-
-  sequenceNumber?: number | null;
-  roundMatchNumber?: number | null;
-  groupMatchNumber?: number | null;
-
-  venueSnapshot?: TournamentFixtureVenue | null;
-  matchRulesSnapshot?: TournamentFixtureRules | null;
-  officialsSnapshot?: TournamentFixtureOfficials | null;
-
-  status?: TournamentFixtureStatus;
-  createdFrom?: TournamentFixtureSource;
-
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-export type GenerateKnockoutFixturesResponse = {
-  tournamentId: string;
-  fixtures: GeneratedKnockoutFixture[];
-};
+export type GeneratedKnockoutFixture = TournamentFixture;
+export type GenerateKnockoutFixturesResponse = TournamentFixture[];
 
 export type CreateMatchFromFixtureRequest = {
   tournamentId: string;
@@ -539,7 +507,10 @@ export const tournamentFixtureApi = baseApi.injectEndpoints({
         body,
       }),
 
-      invalidatesTags: (_result, _error, { tournamentId }) => [
+      invalidatesTags: (_result, error, { tournamentId }) => error ? [] : [
+        { type: "TournamentMatch", id: `LIST-${tournamentId}` },
+        { type: "TournamentRound", id: tournamentId },
+        { type: "TournamentPointsTable", id: `TOURNAMENT-${tournamentId}` },
         {
           type: "Tournament",
           id: tournamentId,
@@ -686,6 +657,38 @@ export const tournamentFixtureApi = baseApi.injectEndpoints({
     // Get tournament fixtures
     // ─────────────────────────────────────────────────────────────────────────
 
+    // Exhaust the documented array pagination before deciding playoff readiness.
+    getTournamentPlayoffFixtures: builder.query<TournamentFixture[], string>({
+      async queryFn(tournamentId, _api, _options, baseQuery) {
+        const fixtures: TournamentFixture[] = [];
+        const ids = new Set<string>();
+        for (let skip = 0; skip < 100000; ) {
+          const result = await baseQuery({
+            url: `/tournaments/${tournamentId}/fixtures`,
+            method: "GET",
+            params: { skip, limit: 100 },
+          });
+          if (result.error) return { error: result.error };
+          if (!Array.isArray(result.data)) return { error: { status: "CUSTOM_ERROR", error: "Invalid fixture response" } };
+          if (result.data.length === 0) return { data: fixtures };
+          const page = result.data as TournamentFixture[];
+          for (const fixture of page) {
+            if (!fixture?.id || ids.has(fixture.id)) {
+              return { error: { status: "CUSTOM_ERROR", error: "Unable to verify complete fixture list" } };
+            }
+            ids.add(fixture.id);
+          }
+          fixtures.push(...page);
+          skip += page.length;
+        }
+        return { error: { status: "CUSTOM_ERROR", error: "Fixture list is too large to verify" } };
+      },
+      providesTags: (_result, _error, tournamentId) => [
+        { type: "TournamentFixture", id: tournamentId },
+        "Matches",
+      ],
+    }),
+
     getTournamentFixtures: builder.query<
       GetTournamentFixturesResponse,
       GetTournamentFixturesQuery
@@ -827,6 +830,7 @@ export const {
   usePreviewAutoFixturesMutation,
   useConfirmAutoFixturesMutation,
   useGetTournamentFixturesQuery,
+  useGetTournamentPlayoffFixturesQuery,
   useLazyGetTournamentFixturesQuery,
   useGetFixtureDetailsQuery,
   useLazyGetFixtureDetailsQuery,

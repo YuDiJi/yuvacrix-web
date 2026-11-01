@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useGetTournamentDetailsQuery, type TournamentFormatConfig } from "@/store/api/cricket/tournamentApi";
+import { qualificationLabel, validPlayoffConfig } from "@/components/cricket/tournament/playoffs";
+
+import { Fragment, useEffect, useState } from "react";
 import {
   AlertCircle,
   ChevronDown,
@@ -165,9 +168,11 @@ function EmptyStandingsState({ scopeName }: { scopeName: string }) {
 function StandingsTable({
   data,
   title,
+  config,
 }: {
   data: TournamentPointsTableResponse;
   title: string;
+  config?: TournamentFormatConfig;
 }) {
   const calculatedAt = formatCalculatedAt(data.calculatedAt);
 
@@ -215,7 +220,8 @@ function StandingsTable({
             </tr>
           </thead>
           <tbody>
-            {data.rows.map((row) => (
+            {data.rows.map((row, index) => (
+              <Fragment key={row.teamId}>
               <tr
                 key={row.teamId}
                 className="border-b border-(--color-bg-border) last:border-b-0"
@@ -225,6 +231,7 @@ function StandingsTable({
                   <p className="truncate font-(family-name:--font-display) text-[13px] font-black uppercase text-(--color-navy)">
                     {row.teamNameSnapshot}
                   </p>
+                  {config && qualificationLabel(config, index) && <span className={index === 0 && config.qualifyingTeamCount === 3 ? "text-[10px] font-bold text-emerald-700" : "text-[10px] font-bold text-(--color-brand)"}>{qualificationLabel(config, index)}</span>}
                   {(row.bonusPoints > 0 || row.penaltyPoints > 0) && (
                     <div className="flex gap-1 mt-0.5">
                       {row.bonusPoints > 0 && (
@@ -287,6 +294,8 @@ function StandingsTable({
                   </div>
                 </td>
               </tr>
+              {config && index + 1 === config.qualifyingTeamCount && data.rows.length > config.qualifyingTeamCount && <tr><td colSpan={8} className="border-t border-dashed border-(--color-brand) py-1 text-center text-[10px] font-bold text-(--color-brand)">Playoff Cutoff</td></tr>}
+              </Fragment>
             ))}
           </tbody>
         </table>
@@ -315,6 +324,7 @@ export default function TournamentPointsTable({
   const params = useParams();
 
   const tournamentId = params.tournamentId as string;
+  const { data: tournament } = useGetTournamentDetailsQuery(tournamentId);
 
   /*
    * null = Overall Tournament
@@ -839,12 +849,14 @@ export default function TournamentPointsTable({
               onRetry={handleRetryPoints}
             />
           </div>
+        ) : data.validationError ? (
+          <ErrorState title="Standings Unavailable" description={data.validationError} onRetry={handleRetryPoints} />
         ) : data.rows.length === 0 ? (
           <div className="p-4">
             <EmptyStandingsState scopeName={scopeName} />
           </div>
         ) : (
-          <StandingsTable data={data} title={scopeName} />
+          <StandingsTable data={data} title={scopeName} config={selectedRoundId === null && tournament?.format === "GROUP_STAGE_PLUS_KNOCKOUT" && validPlayoffConfig(tournament.formatConfig) ? tournament.formatConfig : undefined} />
         )}
       </div>
 

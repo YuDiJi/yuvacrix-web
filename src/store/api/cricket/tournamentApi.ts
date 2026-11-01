@@ -2,6 +2,16 @@ import { baseApi } from "../baseApi";
 
 export type TournamentVisibility = "PUBLIC" | "PRIVATE";
 
+export type TournamentPlayoffStructure =
+  | "TOP_2_FINAL"
+  | "TOP_3_FIRST_TO_FINAL"
+  | "SEMIFINAL_FINAL";
+
+export type TournamentFormatConfig =
+  | { qualifyingTeamCount: 2; playoffStructure: "TOP_2_FINAL" }
+  | { qualifyingTeamCount: 3; playoffStructure: "TOP_3_FIRST_TO_FINAL" }
+  | { qualifyingTeamCount: 4; playoffStructure: "SEMIFINAL_FINAL" };
+
 export type TournamentFormat =
   | "LEAGUE"
   | "GROUP_STAGE"
@@ -49,6 +59,7 @@ export type Tournament = {
   description?: string | null;
   visibility: TournamentVisibility;
   format: TournamentFormat;
+  formatConfig?: TournamentFormatConfig | null;
   category: TournamentCategory;
   ballType: TournamentBallType;
   status: TournamentStatus;
@@ -99,6 +110,7 @@ export type TournamentDashboard = {
     name: string;
     visibility: TournamentVisibility;
     format: TournamentFormat;
+    formatConfig?: TournamentFormatConfig | null;
     status: TournamentStatus;
     startDate?: string | null;
     endDate?: string | null;
@@ -140,6 +152,7 @@ export type CreateTournamentRequest = {
   coverImageUrl?: string;
   visibility?: TournamentVisibility;
   format?: TournamentFormat;
+  formatConfig?: TournamentFormatConfig | null;
   category?: TournamentCategory;
   ballType?: TournamentBallType;
   startDate?: string;
@@ -198,9 +211,11 @@ export type TournamentAboutBallType = "TENNIS" | "LEATHER" | "OTHER";
 export type TournamentAboutResponse = {
   tournament: {
     id: string;
+    publicCode?: string;
     name: string;
     visibility: TournamentVisibility;
     format: TournamentFormat;
+    formatConfig?: TournamentFormatConfig | null;
     category: TournamentCategory;
     status: TournamentStatus;
     viewsCount: number;
@@ -228,6 +243,7 @@ export type TournamentAboutResponse = {
 
   actions: {
     canEdit: boolean;
+    canEditFormat: boolean;
     canGoLive: boolean;
     canShare: boolean;
     canViewQr: boolean;
@@ -309,6 +325,7 @@ export const tournamentApi = baseApi.injectEndpoints({
         method: "GET",
       }),
       providesTags: (_result, _error, tournamentId) => [
+        "Matches",
         { type: "Tournament", id: tournamentId },
       ],
     }),

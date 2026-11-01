@@ -14,9 +14,18 @@ import { useEffect, useState } from "react";
 
 import {
   useCreateTournamentMutation,
+  useGetAboutQuery,
   useUpdateTournamentMutation,
   type Tournament,
 } from "@/store/api/cricket/tournamentApi";
+
+import {
+  PLAYOFF_OPTIONS,
+  tournamentFormatFields,
+  playoffConfig,
+  validPlayoffConfig,
+  tournamentPlayoffError,
+} from "./playoffs";
 
 const EMPTY_FORM_VALUES: TournamentFormValues = {
   name: "",
@@ -32,6 +41,7 @@ const EMPTY_FORM_VALUES: TournamentFormValues = {
 
   visibility: "PUBLIC",
   format: "LEAGUE",
+  playoffStructure: "",
   category: "OPEN",
   ballType: "TENNIS",
 
@@ -81,6 +91,13 @@ const schema = z
       "SUPER_THREE",
       "SUPER_FOUR",
       "DOUBLE_ELIMINATION",
+    ]),
+
+    playoffStructure: z.enum([
+      "",
+      "TOP_2_FINAL",
+      "TOP_3_FIRST_TO_FINAL",
+      "SEMIFINAL_FINAL",
     ]),
 
     category: z.enum([
@@ -295,6 +312,9 @@ function tournamentToFormValues(tournament?: Tournament): TournamentFormValues {
 
     visibility: tournament.visibility ?? "PUBLIC",
     format: tournament.format ?? "LEAGUE",
+    playoffStructure: validPlayoffConfig(tournament.formatConfig)
+      ? tournament.formatConfig.playoffStructure
+      : "",
     category: tournament.category ?? "OPEN",
     ballType: tournament.ballType ?? "TENNIS",
   };
@@ -316,6 +336,12 @@ export default function TournamentForm({
   const router = useRouter();
 
   const isEditMode = mode === "EDIT";
+  const aboutQuery = useGetAboutQuery(tournamentId ?? "", {
+    skip: !isEditMode || !tournamentId,
+  });
+  // Missing permission must never unlock the format.
+  const canEditFormat =
+    !isEditMode || aboutQuery.data?.actions.canEditFormat === true;
 
   const [createTournament, { isLoading: isCreating }] =
     useCreateTournamentMutation();
@@ -335,6 +361,9 @@ export default function TournamentForm({
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
+    setError,
     formState: { errors },
   } = useForm<TournamentFormValues>({
     resolver: zodResolver(schema),
@@ -343,6 +372,14 @@ export default function TournamentForm({
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError("");
+    if (
+      canEditFormat &&
+      values.format === "GROUP_STAGE_PLUS_KNOCKOUT" &&
+      !playoffConfig(values.playoffStructure)
+    ) {
+      setError("playoffStructure", { message: "Select a playoff structure." });
+      return;
+    }
 
     try {
       let logoUrl = tournament?.logoUrl ?? undefined;
@@ -375,7 +412,11 @@ export default function TournamentForm({
         coverImageUrl,
 
         visibility: values.visibility,
-        format: values.format,
+        ...tournamentFormatFields(
+          canEditFormat,
+          values.format,
+          values.playoffStructure,
+        ),
         category: values.category,
         ballType: values.ballType,
 
@@ -422,7 +463,7 @@ export default function TournamentForm({
             ? "Failed to update tournament. Please try again."
             : "Failed to create tournament. Please try again.";
 
-      setSubmitError(message);
+      setSubmitError(tournamentPlayoffError(error, message));
     }
   });
 
@@ -576,6 +617,7 @@ export default function TournamentForm({
               </div>
             </section>
 
+            {/* Tournament dates */}
             <section className="rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
               <p className="mb-3 text-sm font-bold text-(--color-text-primary)">
                 Tournament dates
@@ -620,6 +662,111 @@ export default function TournamentForm({
               </div>
             </section>
 
+            <section className="rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
+              <p className="text-section-label mb-3">Tournament format</p>
+              {isEditMode && !canEditFormat && (
+                <p className="mb-3 text-xs text-(--color-text-secondary)">
+                  {aboutQuery.isLoading
+                    ? "Checking format permissions..."
+                    : aboutQuery.data?.actions.canEditFormat === false
+                      ? "Tournament format and playoff structure are locked because fixtures have already been created or format editing is not permitted."
+                      : "Format editing is unavailable until permissions can be verified. You can still update metadata."}
+                </p>
+              )}
+              <fieldset
+                disabled={!canEditFormat || isSubmitting}
+                className="disabled:opacity-60"
+              >
+                <Controller
+                  name="format"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        "LEAGUE",
+                        "KNOCKOUT",
+                        "GROUP_STAGE",
+                        "CUSTOM",
+                        "GROUP_STAGE_PLUS_KNOCKOUT",
+                      ].map((item) => (
+                        <Chip
+                          key={item}
+                          active={field.value === item}
+                          onClick={() => {
+                            field.onChange(item);
+                            if (
+                              item === "GROUP_STAGE_PLUS_KNOCKOUT" &&
+                              !watch("playoffStructure")
+                            ) {
+                              setValue(
+                                "playoffStructure",
+                                "TOP_3_FIRST_TO_FINAL",
+                              );
+                            }
+                          }}
+                        >
+                          {item === "GROUP_STAGE_PLUS_KNOCKOUT"
+                            ? "League + Playoffs"
+                            : item.replaceAll("_", " ")}
+                        </Chip>
+                      ))}
+                    </div>
+                  )}
+                />
+                {watch("format") === "GROUP_STAGE_PLUS_KNOCKOUT" && (
+                  <Controller
+                    name="playoffStructure"
+                    control={control}
+                    render={({ field }) => (
+                      <div
+                        className="mt-4 space-y-2"
+                        role="radiogroup"
+                        aria-label="Playoff structure"
+                      >
+                        {PLAYOFF_OPTIONS.map((option) => (
+                          <label
+                            key={option.config.playoffStructure}
+                            className="flex items-start gap-2 rounded-xl border border-(--color-bg-border) p-3 text-sm"
+                          >
+                            <input
+                              type="radio"
+                              name={field.name}
+                              checked={
+                                field.value === option.config.playoffStructure
+                              }
+                              onChange={() =>
+                                field.onChange(option.config.playoffStructure)
+                              }
+                              className="mt-1"
+                            />
+                            <span>
+                              <span className="block font-bold">
+                                {option.label}
+                              </span>
+                              <span className="text-xs text-(--color-text-secondary)">
+                                {option.description}
+                              </span>
+                            </span>
+                          </label>
+                        ))}
+                        {!field.value && (
+                          <p className="text-xs">
+                            This tournament has no saved playoff configuration.
+                            Select one if format editing is permitted.
+                          </p>
+                        )}
+                        <FieldError
+                          message={errors.playoffStructure?.message}
+                        />
+                      </div>
+                    )}
+                  />
+                )}
+              </fieldset>
+              {submitError.includes("locked") && (
+                <FieldError message={submitError} />
+              )}
+            </section>
             <section className="rounded-2xl bg-(--color-bg-card) p-4 shadow-(--shadow-card)">
               <Controller
                 name="category"
