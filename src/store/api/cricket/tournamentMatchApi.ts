@@ -147,6 +147,7 @@ export const tournamentMatchApi = baseApi.injectEndpoints({
       providesTags: (result, _error, { tournamentId }) =>
         result
           ? [
+              "Matches",
               ...result.map((match) => ({
                 type: "TournamentMatch" as const,
                 id: match.matchId,
@@ -157,6 +158,7 @@ export const tournamentMatchApi = baseApi.injectEndpoints({
               },
             ]
           : [
+              "Matches",
               {
                 type: "TournamentMatch" as const,
                 id: `LIST-${tournamentId}`,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -75,6 +75,7 @@ function getDeleteFixtureMatchErrorMessage(error: unknown) {
 
 function canDeleteTournamentMatch(match: MatchCardModel) {
   return (
+    Boolean(match.matchId?.trim()) &&
     match.source === "TOURNAMENT" &&
     match.isAdmin &&
     Boolean(match.fixtureId) &&
@@ -85,7 +86,7 @@ function canDeleteTournamentMatch(match: MatchCardModel) {
   );
 }
 
-export default function TournamentMatchList() {
+export default function TournamentMatchList({ showUpcoming = false }: { showUpcoming?: boolean }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const params = useParams();
@@ -93,6 +94,7 @@ export default function TournamentMatchList() {
   const tournamentId = params.tournamentId as string;
 
   const [activeTab, setActiveTab] = useState<TournamentMatchTab>("PAST");
+  useEffect(() => { if (showUpcoming) setActiveTab("UPCOMING"); }, [showUpcoming]);
 
   const [selectedMatch, setSelectedMatch] = useState<MatchCardModel | null>(
     null,
@@ -112,7 +114,7 @@ export default function TournamentMatchList() {
   const [deleteFixtureMatch] = useDeleteFixtureMatchMutation();
 
   const {
-    data: tournamentMatches = [],
+    currentData: tournamentMatches = [],
     isLoading,
     isFetching,
     isError,
@@ -121,14 +123,17 @@ export default function TournamentMatchList() {
     filter: activeTab,
     skip: 0,
     limit: 50,
-  });
+  }, { refetchOnMountOrArgChange: true });
 
   const matches = useMemo<MatchCardModel[]>(
-    () => tournamentMatches.map(tournamentMatchToMatchCard),
+    () => tournamentMatches.filter((match) => !!match.matchId?.trim()).map(tournamentMatchToMatchCard),
     [tournamentMatches],
   );
 
+  const pendingMatches = tournamentMatches.filter((match) => !match.matchId?.trim());
+
   function getMatchRoute(match: MatchCardModel) {
+    if (!match.matchId?.trim()) return `/tournaments/${tournamentId}`;
     switch (match.status) {
       case "DRAFT":
       case "SCHEDULED":
@@ -160,6 +165,7 @@ export default function TournamentMatchList() {
   }
 
   function setSelectedMatchContext(match: MatchCardModel) {
+    if (!match.matchId?.trim()) return;
     dispatch(
       setTournamentMatchContext({
         tournamentId,
@@ -220,6 +226,7 @@ export default function TournamentMatchList() {
   }
 
   function handleMatchClick(match: MatchCardModel) {
+    if (!match.matchId?.trim()) return;
     setSelectedMatchContext(match);
 
     if (!match.isAdmin) {
@@ -277,6 +284,7 @@ export default function TournamentMatchList() {
   }
 
   function renderMatchActions(match: MatchCardModel) {
+    if (!match.matchId?.trim()) return <span className="text-xs text-(--color-text-muted)">Awaiting linked match</span>;
     if (!canDeleteTournamentMatch(match)) return null;
 
     const menuOpen = openActionsMatchId === match.matchId;
@@ -371,7 +379,11 @@ export default function TournamentMatchList() {
       </div>
 
       <div className="flex-1 px-4 py-4">
-        {!loading && !isError && matches.length === 0 ? (
+        {!loading && !isError && pendingMatches.map((match) => <div key={match.fixtureId} className="mb-3 rounded-xl border border-(--color-bg-border) bg-(--color-bg-card) p-4 text-sm">
+          <p>{match.teamA?.name ?? "Team to be confirmed"} vs {match.teamB?.name ?? "Team to be confirmed"}</p>
+          <p className="mt-1 text-xs text-(--color-text-muted)">Awaiting linked match</p>
+        </div>)}
+        {!loading && !isError && matches.length === 0 && pendingMatches.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-(--color-bg-tint)">
               {activeTab === "UPCOMING" ? (

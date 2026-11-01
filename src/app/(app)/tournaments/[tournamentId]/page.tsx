@@ -7,6 +7,8 @@ import { Shield, AlertCircle } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { useGetTournamentDetailsQuery } from "@/store/api/cricket/tournamentApi";
+import TournamentPlayoffs from "@/components/cricket/tournament/TournamentPlayoffs";
+import TournamentResult from "@/components/cricket/tournament/TournamentResult";
 import About from "./_components/About";
 import Teams from "./_components/Teams";
 import { S3Image } from "@/components/common/S3Image";
@@ -33,12 +35,13 @@ export default function TournamentDetailsPage() {
   const tournamentId = params.tournamentId as string;
 
   const [activeTab, setActiveTab] = useState("Teams");
+  const [playoffSuccess, setPlayoffSuccess] = useState(false);
 
   const {
     data: tournament,
     isLoading: isTournamentLoading,
     isError: isTournamentError,
-  } = useGetTournamentDetailsQuery(tournamentId);
+  } = useGetTournamentDetailsQuery(tournamentId, { refetchOnMountOrArgChange: true });
 
   const isLoading = isTournamentLoading;
 
@@ -156,6 +159,8 @@ export default function TournamentDetailsPage() {
           </div>
         </div>
 
+        {tournament.status === "COMPLETED" && tournament.winnerTeamId && <TournamentResult tournament={tournament} />}
+
         {/* Sticky tabs */}
         <div className="sticky top-0 z-40 border-b border-(--color-bg-border) bg-white shadow-sm">
           <div className="scrollbar-hide flex items-center overflow-x-auto px-2">
@@ -179,9 +184,12 @@ export default function TournamentDetailsPage() {
 
         {/* Tab content */}
         <div className="min-h-full">
+          {playoffSuccess && <p role="status" className="m-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">Playoff fixtures generated successfully! Resolved matches are scheduled. <button type="button" className="underline" onClick={() => setPlayoffSuccess(false)}>Dismiss</button></p>}
+          {tournament.format === "GROUP_STAGE_PLUS_KNOCKOUT" && (activeTab === "Matches" || activeTab === "Points Table") && <TournamentPlayoffs tournament={tournament} showBracket={activeTab === "Matches"} onGenerated={() => { setPlayoffSuccess(true); setActiveTab("Matches"); }} />}
+
           {activeTab === "About" && <About />}
 
-          {activeTab === "Matches" && <Matches isAdmin={tournament.isAdmin} />}
+          {activeTab === "Matches" && <Matches isAdmin={tournament.isAdmin} playoffsGenerated={playoffSuccess} />}
 
           {activeTab === "Teams" && <Teams isAdmin={tournament.isAdmin} />}
 

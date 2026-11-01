@@ -10,7 +10,7 @@ import {
   setMatchCreationMode,
 } from "@/store/startMatch/startMatchSlice";
 
-const Matches = ({ isAdmin }: { isAdmin: boolean }) => {
+const Matches = ({ isAdmin, playoffsGenerated = false }: { isAdmin: boolean; playoffsGenerated?: boolean }) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const params = useParams();
@@ -20,7 +20,7 @@ const Matches = ({ isAdmin }: { isAdmin: boolean }) => {
   return (
     <div className="flex flex-col h-full">
       <div className="pb-20">
-        <TournamentMatchList />
+        <TournamentMatchList showUpcoming={playoffsGenerated} />
       </div>
 
       {/* 3. Bottom Action Buttons (Flush edge-to-edge like the image) */}
