@@ -163,15 +163,15 @@ function HeroHeadline() {
   return (
     <div className="w-full select-none">
       <h1 className="font-display text-[clamp(2.8rem,8.5vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-white">
-        Every game.
+        One Platform.
       </h1>
 
       <div className="my-1 font-display text-[clamp(2.8rem,8.5vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-[#4B8BFF] sm:my-1.5">
-        Every
+        Multiple
       </div>
 
       <div className="text-stroke font-display text-[clamp(2.8rem,8.5vw,5.6rem)] font-black uppercase leading-[0.88] tracking-[-0.03em] text-white drop-shadow-[0_4px_24px_rgba(0,214,255,0.2)]">
-        Moment.
+        Sports.
       </div>
     </div>
   );
@@ -226,7 +226,7 @@ function HeroScene() {
             </span>
 
             <span className="font-body text-xs font-bold uppercase tracking-[0.18em] text-white/75">
-              Cricket + Volleyball, made simple
+              Live scoring and tournament management for Cricket and Volleyball.
             </span>
           </motion.div>
 
@@ -239,8 +239,8 @@ function HeroScene() {
             transition={{ duration: 0.65, delay: 0.55 }}
             className="mt-8 max-w-lg font-body text-base font-medium leading-7 text-white/55 sm:text-lg"
           >
-            Score matches. Manage teams. Run tournaments. One platform for the
-            sports you love.
+            Create tournaments, manage teams and fixtures, score matches live,
+            and track player performance with YuvaCrix.
           </motion.p>
 
           <motion.div

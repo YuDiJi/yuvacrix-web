@@ -24,12 +24,12 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.yuvacrix.in"),
 
   title: {
-    default: "YuvaCrix – Cricket Scoring App & Tournament Management",
+    default: "YuvaCrix – Multi-Sport Scoring & Tournament Management",
     template: "%s | YuvaCrix",
   },
 
   description:
-    "YuvaCrix is a cricket scoring and tournament management platform to score matches live, manage tournaments, view scorecards, track player stats and awards.",
+    "Organize tournaments, score matches live, and track player performance with YuvaCrix. A multi-sport platform for cricket and volleyball.",
 
   keywords: [
     "cricket scoring app",
@@ -39,6 +39,9 @@ export const metadata: Metadata = {
     "online cricket scoring",
     "player stats cricket",
     "cricket tournament organizer",
+    "volleyball scoring app",
+    "volleyball tournament management",
+    "multi-sport tournament platform",
   ],
 
   authors: [{ name: "YuvaCrix" }],
@@ -59,24 +62,24 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: "/",
     siteName: "YuvaCrix",
-    title: "YuvaCrix – Cricket Scoring App & Tournament Management",
+    title: "YuvaCrix – Multi-Sport Scoring & Tournament Management",
     description:
-      "Score cricket matches live, manage tournaments, view scorecards and track player performance with YuvaCrix.",
+      "Organize tournaments, score matches live, and track player performance with YuvaCrix. A multi-sport platform for cricket and volleyball.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "YuvaCrix Cricket Scoring and Tournament Management",
+        alt: "YuvaCrix Multi-Sport Scoring and Tournament Management",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "YuvaCrix – Cricket Scoring App & Tournament Management",
+    title: "YuvaCrix – Multi-Sport Scoring & Tournament Management",
     description:
-      "Score cricket matches live, manage tournaments, view scorecards and track player performance with YuvaCrix.",
+      "Organize tournaments, score matches live, and track player performance with YuvaCrix. A multi-sport platform for cricket and volleyball.",
     images: ["/og-image.jpg"],
   },
 
