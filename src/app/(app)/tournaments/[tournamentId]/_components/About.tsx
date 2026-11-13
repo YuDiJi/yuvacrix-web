@@ -90,9 +90,9 @@ const About = () => {
           <h3 className="font-(family-name:--font-display) text-base font-black uppercase text-(--color-navy) tracking-wide">
             Tournament Setup Guide
           </h3>
-          <HelpCircle size={18} className="text-(--color-brand)" />
+          {/* <HelpCircle size={18} className="text-(--color-brand)" /> */}
         </div>
-        <div className="p-4 flex gap-3">
+        {/* <div className="p-4 flex gap-3">
           <button className="flex-1 flex items-center justify-center gap-2 border border-(--color-bg-border) rounded-xl py-3 text-(--color-navy) font-semibold text-sm hover:bg-(--color-bg-tint) transition-all active:scale-[0.98]">
             <Phone size={18} className="text-(--color-brand)" />
             Call Helpline
@@ -101,6 +101,25 @@ const About = () => {
             <MessageCircle size={18} className="text-[#25D366]" />
             WhatsApp
           </button>
+        </div> */}
+        <div className="p-4 flex gap-3">
+          <a
+            href="tel:+919137368167"
+            className="flex-1 flex items-center justify-center gap-2 border border-(--color-bg-border) rounded-xl py-3 text-(--color-navy) font-semibold text-sm hover:bg-(--color-bg-tint) transition-all active:scale-[0.98]"
+          >
+            <Phone size={18} className="text-(--color-brand)" />
+            Call Helpline
+          </a>
+
+          <a
+            href="https://wa.me/919137368167"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 border border-(--color-bg-border) rounded-xl py-3 text-(--color-navy) font-semibold text-sm hover:bg-(--color-bg-tint) transition-all active:scale-[0.98]"
+          >
+            <MessageCircle size={18} className="text-[#25D366]" />
+            WhatsApp
+          </a>
         </div>
       </div>
 
